@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第五人格 勝率計算アプリ</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+      color: white;
+      padding: 25px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    
+    .perspective-tabs {
+      display: flex;
+      background: #f8f9fa;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .perspective-tab {
+      flex: 1;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      background: #f8f9fa;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .perspective-tab.active {
+      background: white;
+      color: #0f3460;
+      border-bottom: 3px solid #0f3460;
+    }
+    
+    .perspective-tab:hover {
+      background: #e9ecef;
+    }
+    
+    .main-tabs {
+      display: flex;
+      background: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      overflow-x: auto;
+    }
+    
+    .main-tab {
+      padding: 12px 20px;
+      cursor: pointer;
+      background: #f8f9fa;
+      border: none;
+      font-size: 14px;
+      white-space: nowrap;
+      transition: all 0.3s;
+    }
+    
+    .main-tab.active {
+      background: white;
+      color: #0f3460;
+      border-bottom: 2px solid #0f3460;
+    }
+    
+    .main-tab:hover {
+      background: #e9ecef;
+    }
+    
+    .content {
+      padding: 25px;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+    }
+    
+    select:focus {
+      outline: none;
+      border-color: #0f3460;
+    }
+    
+    .character-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .result-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .result-button {
+      padding: 15px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .result-button:hover {
+      border-color: #0f3460;
+      background: #e6f0ff;
+    }
+    
+    .result-button.selected {
+      background: #0f3460;
+      color: white;
+      border-color: #0f3460;
+    }
+    
+    .submit-button {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #0f3460 0%, #533483 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: transform 0.2s;
+    }
+    
+    .submit-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(15, 52, 96, 0.4);
+    }
+    
+    .submit-button:active {
+      transform: translateY(0);
+    }
+    
+    .stats-card {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .stats-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #333;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    
+    .stat-item {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      border-left: 4px solid #0f3460;
+    }
+    
+    .stat-name {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f3460;
+    }
+    
+    .stat-detail {
+      font-size: 12px;
+      color: #999;
+      margin-top: 5px;
+    }
+    
+    .match-history {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    
+    .match-item {
+      padding: 15px;
+      border-bottom: 1px solid #dee2e6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .match-item:last-child {
+      border-bottom: none;
+    }
+    
+    .match-info {
+      flex: 1;
+    }
+    
+    .match-result {
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 10px;
+    }
+    
+    .match-result.win {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .match-result.lose {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .match-result.draw {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .match-actions button {
+      margin-left: 5px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .edit-button {
+      background: #ffc107;
+      color: #000;
+    }
+    
+    .delete-button {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .reset-button {
+      background: #dc3545;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+    
+    .reset-button:hover {
+      background: #c82333;
+    }
+    
+    .chart-container {
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid #dee2e6;
+    }
+    
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .bar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .bar-label {
+      min-width: 120px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    
+    .bar-wrapper {
+      flex: 1;
+      height: 30px;
+      background: #e9ecef;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0f3460 0%, #533483 100%);
+      border-radius: 4px;
+      transition: width 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .bar-stats {
+      min-width: 100px;
+      text-align: right;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+    
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>第五人格 勝率計算アプリ</h1>
+    </div>
+    
+    <div class="perspective-tabs">
+      <button class="perspective-tab active" onclick="switchPerspective('survivor')">サバイバー視点</button>
+      <button class="perspective-tab" onclick="switchPerspective('hunter')">ハンター視点</button>
+    </div>
+    
+    <div class="main-tabs">
+      <button class="main-tab active" onclick="switchTab('input')">試合入力</button>
+      <button class="main-tab" onclick="switchTab('overall')">総合勝率</button>
+      <button class="main-tab" onclick="switchTab('character')">自キャラ別勝率</button>
+      <button class="main-tab" onclick="switchTab('map')">マップ別勝率</button>
+      <button class="main-tab" onclick="switchTab('opponent')">対戦相手別勝率</button>
+      <button class="main-tab" onclick="switchTab('history')">試合履歴</button>
+    </div>
+    
+    <div class="content">
+      <!-- 試合入力タブ -->
+      <div id="input-tab" class="tab-content active">
+        <div id="survivor-input">
+          <div class="form-group">
+            <label class="form-label">自分のサバイバー</label>
+            <select id="my-survivor">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">味方サバイバー1</label>
+            <select id="teammate-1">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">味方サバイバー2</label>
+            <select id="teammate-2">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">味方サバイバー3</label>
+            <select id="teammate-3">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">相手ハンター</label>
+            <select id="opponent-hunter">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">マップ</label>
+            <select id="survivor-map">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">試合結果</label>
+            <div class="result-buttons">
+              <button class="result-button" onclick="selectResult('survivor', 'survivor_win')">勝利</button>
+              <button class="result-button" onclick="selectResult('survivor', 'hunter_win')">敗北</button>
+              <button class="result-button" onclick="selectResult('survivor', 'draw')">引き分け</button>
+            </div>
+          </div>
+          
+          <button class="submit-button" onclick="submitMatch('survivor')">試合を記録</button>
+        </div>
+        
+        <div id="hunter-input" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">自分のハンター</label>
+            <select id="my-hunter">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">相手サバイバー1</label>
+            <select id="opponent-survivor-1">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">相手サバイバー2</label>
+            <select id="opponent-survivor-2">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">相手サバイバー3</label>
+            <select id="opponent-survivor-3">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">相手サバイバー4</label>
+            <select id="opponent-survivor-4">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">マップ</label>
+            <select id="hunter-map">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">試合結果</label>
+            <div class="result-buttons">
+              <button class="result-button" onclick="selectResult('hunter', 'hunter_win')">勝利</button>
+              <button class="result-button" onclick="selectResult('hunter', 'survivor_win')">敗北</button>
+              <button class="result-button" onclick="selectResult('hunter', 'draw')">引き分け</button>
+            </div>
+          </div>
+          
+          <button class="submit-button" onclick="submitMatch('hunter')">試合を記録</button>
+        </div>
+      </div>
+      
+      <!-- 総合勝率タブ -->
+      <div id="overall-tab" class="tab-content">
+        <div id="overall-stats"></div>
+      </div>
+      
+      <!-- 自キャラ別勝率タブ -->
+      <div id="character-tab" class="tab-content">
+        <div id="character-stats"></div>
+      </div>
+      
+      <!-- マップ別勝率タブ -->
+      <div id="map-tab" class="tab-content">
+        <div id="map-stats"></div>
+      </div>
+      
+      <!-- 対戦相手別勝率タブ -->
+      <div id="opponent-tab" class="tab-content">
+        <div id="opponent-stats"></div>
+      </div>
+      
+      <!-- 試合履歴タブ -->
+      <div id="history-tab" class="tab-content">
+        <div id="match-history"></div>
+        <button class="reset-button" onclick="resetAllData()">全データをリセット</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SURVIVORS = ['幸運児', '医師', '弁護士', '泥棒', '庭師', 'マジシャン', '冒険家', '傭兵', '祭司', '空軍', '機械技師', 'オフェンス', '心眼', '調香師', 'カウボーイ', '踊り子', '占い師', '納棺師', '探鉱者', '呪術師', '野人', '曲芸師', '一等航海士', 'バーメイド', 'ポストマン', '墓守', '「囚人」', '昆虫学者', '画家', 'バッツマン', '玩具職人', '患者', '「心理学者」', '小説家', '「少女」', '泣きピエロ', '教授', '骨董商', '作曲家', '記者', '航空エンジニア', '応援団', '人形師', '火災調査員', '「レディ・ファウロ」', '「騎士」', '気象学者', '弓使い', '「脱出マスター」', '幻灯師', '闘牛士'];
+    
+    const HUNTERS = ['復讐者', '道化師', '断罪狩人', 'リッパー', '結魂者', '芸者', '白黒無常', '写真家', '狂眼', '黄衣の王', '夢の魔女', '泣き虫', '魔トカゲ', '血の女王', 'ガードNo.26', '「使徒」', 'ヴァイオリニスト', '彫刻師', 'アンデッド', '破輪', '漁師', '蝋人形師', '「悪夢」', '書記官', '隠者', '夜の番人', 'オペラ歌手', '「フールズ・ゴールド」', '時空の影', '「足萎えの羊」', '「フラバルー」', '雑貨商', '「ビリヤードプレイヤー」', '「女王蜂」'];
+    
+    const MAPS = ['軍需工場', '赤の教会', '聖心病院', '湖景村', '月の河公園', 'レオの思い出', '永眠町', '中華街', '罪の森'];
+    
+    let currentPerspective = 'survivor';
+    let selectedResult = { survivor: null, hunter: null };
+    let matches = [];
+    let editingMatchId = null;
+    
+    // 初期化
+    function init() {
+      loadData();
+      populateSelects();
+      updateAllStats();
+    }
+    
+    // セレクトボックスにオプションを追加
+    function populateSelects() {
+      const survivorSelects = ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'];
+      survivorSelects.forEach(id => {
+        const select = document.getElementById(id);
+        SURVIVORS.forEach(survivor => {
+          const option = document.createElement('option');
+          option.value = survivor;
+          option.textContent = survivor;
+          select.appendChild(option);
+        });
+      });
+      
+      const hunterSelects = ['my-hunter', 'opponent-hunter'];
+      hunterSelects.forEach(id => {
+        const select = document.getElementById(id);
+        HUNTERS.forEach(hunter => {
+          const option = document.createElement('option');
+          option.value = hunter;
+          option.textContent = hunter;
+          select.appendChild(option);
+        });
+      });
+      
+      const mapSelects = ['survivor-map', 'hunter-map'];
+      mapSelects.forEach(id => {
+        const select = document.getElementById(id);
+        MAPS.forEach(map => {
+          const option = document.createElement('option');
+          option.value = map;
+          option.textContent = map;
+          select.appendChild(option);
+        });
+      });
+    }
+    
+    // 視点を切り替え
+    function switchPerspective(perspective) {
+      currentPerspective = perspective;
+      
+      document.querySelectorAll('.perspective-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      if (perspective === 'survivor') {
+        document.getElementById('survivor-input').style.display = 'block';
+        document.getElementById('hunter-input').style.display = 'none';
+      } else {
+        document.getElementById('survivor-input').style.display = 'none';
+        document.getElementById('hunter-input').style.display = 'block';
+      }
+      
+      updateAllStats();
+    }
+    
+    // タブを切り替え
+    function switchTab(tabName) {
+      document.querySelectorAll('.main-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById(tabName + '-tab').classList.add('active');
+      
+      updateAllStats();
+    }
+    
+    // 結果を選択
+    function selectResult(perspective, result) {
+      selectedResult[perspective] = result;
+      
+      const container = perspective === 'survivor' ? document.getElementById('survivor-input') : document.getElementById('hunter-input');
+      container.querySelectorAll('.result-button').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+      event.target.classList.add('selected');
+    }
+    
+    // 試合を記録
+    function submitMatch(perspective) {
+      let match = {
+        id: editingMatchId || Date.now(),
+        perspective: perspective,
+        timestamp: new Date().toISOString()
+      };
+      
+      if (perspective === 'survivor') {
+        const mySurvivor = document.getElementById('my-survivor').value;
+        const teammate1 = document.getElementById('teammate-1').value;
+        const teammate2 = document.getElementById('teammate-2').value;
+        const teammate3 = document.getElementById('teammate-3').value;
+        const opponentHunter = document.getElementById('opponent-hunter').value;
+        const map = document.getElementById('survivor-map').value;
+        const result = selectedResult.survivor;
+        
+        if (!mySurvivor || !teammate1 || !teammate2 || !teammate3 || !opponentHunter || !map || !result) {
+          alert('全ての項目を入力してください');
+          return;
+        }
+        
+        const teammates = [teammate1, teammate2, teammate3];
+        if (teammates.includes(mySurvivor)) {
+          alert('自分のキャラクターと味方が重複しています');
+          return;
+        }
+        if (new Set(teammates).size !== teammates.length) {
+          alert('味方のキャラクターが重複しています');
+          return;
+        }
+        
+        match.myCharacter = mySurvivor;
+        match.teammates = teammates;
+        match.opponentHunter = opponentHunter;
+        match.map = map;
+        match.result = result;
+      } else {
+        const myHunter = document.getElementById('my-hunter').value;
+        const opponentSurvivor1 = document.getElementById('opponent-survivor-1').value;
+        const opponentSurvivor2 = document.getElementById('opponent-survivor-2').value;
+        const opponentSurvivor3 = document.getElementById('opponent-survivor-3').value;
+        const opponentSurvivor4 = document.getElementById('opponent-survivor-4').value;
+        const map = document.getElementById('hunter-map').value;
+        const result = selectedResult.hunter;
+        
+        if (!myHunter || !opponentSurvivor1 || !opponentSurvivor2 || !opponentSurvivor3 || !opponentSurvivor4 || !map || !result) {
+          alert('全ての項目を入力してください');
+          return;
+        }
+        
+        const opponents = [opponentSurvivor1, opponentSurvivor2, opponentSurvivor3, opponentSurvivor4];
+        if (new Set(opponents).size !== opponents.length) {
+          alert('相手のキャラクターが重複しています');
+          return;
+        }
+        
+        match.myCharacter = myHunter;
+        match.opponentSurvivors = opponents;
+        match.map = map;
+        match.result = result;
+      }
+      
+      if (editingMatchId) {
+        matches = matches.filter(m => m.id !== editingMatchId);
+        editingMatchId = null;
+      }
+      
+      matches.push(match);
+      saveData();
+      resetForm(perspective);
+      alert('試合を記録しました！');
+      updateAllStats();
+    }
+    
+    // フォームをリセット
+    function resetForm(perspective) {
+      if (perspective === 'survivor') {
+        document.getElementById('my-survivor').value = '';
+        document.getElementById('teammate-1').value = '';
+        document.getElementById('teammate-2').value = '';
+        document.getElementById('teammate-3').value = '';
+        document.getElementById('opponent-hunter').value = '';
+        document.getElementById('survivor-map').value = '';
+        selectedResult.survivor = null;
+        document.querySelectorAll('#survivor-input .result-button').forEach(btn => {
+          btn.classList.remove('selected');
+        });
+      } else {
+        document.getElementById('my-hunter').value = '';
+        document.getElementById('opponent-survivor-1').value = '';
+        document.getElementById('opponent-survivor-2').value = '';
+        document.getElementById('opponent-survivor-3').value = '';
+        document.getElementById('opponent-survivor-4').value = '';
+        document.getElementById('hunter-map').value = '';
+        selectedResult.hunter = null;
+        document.querySelectorAll('#hunter-input .result-button').forEach(btn => {
+          btn.classList.remove('selected');
+        });
+      }
+    }
+    
+    // データを保存
+    function saveData() {
+      localStorage.setItem('identity5_matches', JSON.stringify(matches));
+    }
+    
+    // データを読み込み
+    function loadData() {
+      const saved = localStorage.getItem('identity5_matches');
+      if (saved) {
+        matches = JSON.parse(saved);
+      }
+    }
+    
+    // 全ての統計を更新
+    function updateAllStats() {
+      updateOverallStats();
+      updateCharacterStats();
+      updateMapStats();
+      updateOpponentStats();
+      updateMatchHistory();
+    }
+    
+    // 勝率を計算
+    function calculateWinrate(matches, perspective) {
+      const filtered = matches.filter(m => m.result !== 'draw');
+      if (filtered.length === 0) return { wins: 0, losses: 0, draws: 0, winrate: 0, total: 0 };
+      
+      const wins = filtered.filter(m => {
+        if (perspective === 'survivor') {
+          return m.result === 'survivor_win';
+        } else {
+          return m.result === 'hunter_win';
+        }
+      }).length;
+      
+      const losses = filtered.length - wins;
+      const draws = matches.filter(m => m.result === 'draw').length;
+      const winrate = (wins / filtered.length * 100).toFixed(1);
+      
+      return { wins, losses, draws, winrate, total: matches.length };
+    }
+    
+    // 総合勝率を更新
+    function updateOverallStats() {
+      const container = document.getElementById('overall-stats');
+      const perspectiveMatches = matches.filter(m => m.perspective === currentPerspective);
+      
+      if (perspectiveMatches.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><p>まだ試合データがありません</p></div>';
+        return;
+      }
+      
+      const stats = calculateWinrate(perspectiveMatches, currentPerspective);
+      
+      container.innerHTML = `
+        <div class="stats-card">
+          <div class="stats-title">総合勝率（${currentPerspective === 'survivor' ? 'サバイバー視点' : 'ハンター視点'}）</div>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-name">総試合数</div>
+              <div class="stat-value">${stats.total}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-name">勝利数</div>
+              <div class="stat-value">${stats.wins}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-name">敗北数</div>
+              <div class="stat-value">${stats.losses}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-name">引き分け</div>
+              <div class="stat-value">${stats.draws}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-name">勝率（引き分け除く）</div>
+              <div class="stat-value">${stats.winrate}%</div>
+              <div class="stat-detail">${stats.wins}勝 ${stats.losses}敗</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 自キャラ別勝率を更新
+    function updateCharacterStats() {
+      const container = document.getElementById('character-stats');
+      const perspectiveMatches = matches.filter(m => m.perspective === currentPerspective);
+      
+      if (perspectiveMatches.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎭</div><p>まだ試合データがありません</p></div>';
+        return;
+      }
+      
+      const characterStats = {};
+      
+      perspectiveMatches.forEach(match => {
+        const char = match.myCharacter;
+        if (!characterStats[char]) {
+          characterStats[char] = [];
+        }
+        characterStats[char].push(match);
+      });
+      
+      const sortedChars = Object.keys(characterStats).sort((a, b) => {
+        const statsA = calculateWinrate(characterStats[a], currentPerspective);
+        const statsB = calculateWinrate(characterStats[b], currentPerspective);
+        return parseFloat(statsB.winrate) - parseFloat(statsA.winrate);
+      });
+      
+      let html = `<div class="stats-card">
+        <div class="stats-title">キャラクター別勝率（${currentPerspective === 'survivor' ? 'サバイバー' : 'ハンター'}）</div>
+        <div class="stats-grid">`;
+      
+      sortedChars.forEach(char => {
+        const stats = calculateWinrate(characterStats[char], currentPerspective);
+        html += `
+          <div class="stat-item">
+            <div class="stat-name">${char}</div>
+            <div class="stat-value">${stats.winrate}%</div>
+            <div class="stat-detail">${stats.wins}勝 ${stats.losses}敗 ${stats.draws}分 (${stats.total}試合)</div>
+          </div>
+        `;
+      });
+      
+      html += '</div></div>';
+      container.innerHTML = html;
+    }
+    
+    // マップ別勝率を更新
+    function updateMapStats() {
+      const container = document.getElementById('map-stats');
+      const perspectiveMatches = matches.filter(m => m.perspective === currentPerspective);
+      
+      if (perspectiveMatches.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🗺️</div><p>まだ試合データがありません</p></div>';
+        return;
+      }
+      
+      const mapStats = {};
+      
+      perspectiveMatches.forEach(match => {
+        const map = match.map;
+        if (!mapStats[map]) {
+          mapStats[map] = [];
+        }
+        mapStats[map].push(match);
+      });
+      
+      const sortedMaps = Object.keys(mapStats).sort((a, b) => {
+        const statsA = calculateWinrate(mapStats[a], currentPerspective);
+        const statsB = calculateWinrate(mapStats[b], currentPerspective);
+        return parseFloat(statsB.winrate) - parseFloat(statsA.winrate);
+      });
+      
+      let html = `<div class="stats-card">
+        <div class="stats-title">マップ別勝率</div>
+        <div class="stats-grid">`;
+      
+      sortedMaps.forEach(map => {
+        const stats = calculateWinrate(mapStats[map], currentPerspective);
+        html += `
+          <div class="stat-item">
+            <div class="stat-name">${map}</div>
+            <div class="stat-value">${stats.winrate}%</div>
+            <div class="stat-detail">${stats.wins}勝 ${stats.losses}敗 ${stats.draws}分 (${stats.total}試合)</div>
+          </div>
+        `;
+      });
+      
+      html += '</div></div>';
+      container.innerHTML = html;
+    }
+    
+    // 対戦相手別勝率を更新
+    function updateOpponentStats() {
+      const container = document.getElementById('opponent-stats');
+      const perspectiveMatches = matches.filter(m => m.perspective === currentPerspective);
+      
+      if (perspectiveMatches.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚔️</div><p>まだ試合データがありません</p></div>';
+        return;
+      }
+      
+      if (currentPerspective === 'survivor') {
+        // サバイバー視点: 相手ハンター別と味方編成別
+        const hunterStats = {};
+        const teammateStats = {};
+        
+        perspectiveMatches.forEach(match => {
+          // 相手ハンター別
+          const hunter = match.opponentHunter;
+          if (!hunterStats[hunter]) {
+            hunterStats[hunter] = [];
+          }
+          hunterStats[hunter].push(match);
+          
+          // 味方編成別
+          match.teammates.forEach(teammate => {
+            if (!teammateStats[teammate]) {
+              teammateStats[teammate] = [];
+            }
+            teammateStats[teammate].push(match);
+          });
+        });
+        
+        let html = `<div class="stats-card">
+          <div class="stats-title">対戦相手ハンター別勝率</div>
+          <div class="stats-grid">`;
+        
+        Object.keys(hunterStats).sort((a, b) => {
+          const statsA = calculateWinrate(hunterStats[a], currentPerspective);
+          const statsB = calculateWinrate(hunterStats[b], currentPerspective);
+          return parseFloat(statsB.winrate) - parseFloat(statsA.winrate);
+        }).forEach(hunter => {
+          const stats = calculateWinrate(hunterStats[hunter], currentPerspective);
+          html += `
+            <div class="stat-item">
+              <div class="stat-name">vs ${hunter}</div>
+              <div class="stat-value">${stats.winrate}%</div>
+              <div class="stat-detail">${stats.wins}勝 ${stats.losses}敗 ${stats.draws}分 (${stats.total}試合)</div>
+            </div>
+          `;
+        });
+        
+        html += `</div></div>
+          <div class="stats-card">
+            <div class="stats-title">味方編成別勝率（グラフ）</div>
+            <div class="chart-container">
+              <div class="bar-chart">`;
+        
+        const sortedTeammates = Object.keys(teammateStats).sort((a, b) => {
+          return teammateStats[b].length - teammateStats[a].length;
+        });
+        
+        sortedTeammates.forEach(teammate => {
+          const stats = calculateWinrate(teammateStats[teammate], currentPerspective);
+          const winrateNum = parseFloat(stats.winrate) || 0;
+          html += `
+            <div class="bar-item">
+              <div class="bar-label">${teammate}</div>
+              <div class="bar-wrapper">
+                <div class="bar-fill" style="width: ${winrateNum}%">${stats.winrate}%</div>
+              </div>
+              <div class="bar-stats">${stats.wins}勝${stats.losses}敗 (${stats.total}試合)</div>
+            </div>
+          `;
+        });
+        
+        html += '</div></div></div>';
+        container.innerHTML = html;
+        
+      } else {
+        // ハンター視点: 相手サバイバー別
+        const survivorStats = {};
+        
+        perspectiveMatches.forEach(match => {
+          match.opponentSurvivors.forEach(survivor => {
+            if (!survivorStats[survivor]) {
+              survivorStats[survivor] = [];
+            }
+            survivorStats[survivor].push(match);
+          });
+        });
+        
+        let html = `<div class="stats-card">
+          <div class="stats-title">対戦相手サバイバー別勝率（グラフ）</div>
+          <div class="chart-container">
+            <div class="bar-chart">`;
+        
+        const sortedSurvivors = Object.keys(survivorStats).sort((a, b) => {
+          return survivorStats[b].length - survivorStats[a].length;
+        });
+        
+        sortedSurvivors.forEach(survivor => {
+          const stats = calculateWinrate(survivorStats[survivor], currentPerspective);
+          const winrateNum = parseFloat(stats.winrate) || 0;
+          html += `
+            <div class="bar-item">
+              <div class="bar-label">${survivor}</div>
+              <div class="bar-wrapper">
+                <div class="bar-fill" style="width: ${winrateNum}%">${stats.winrate}%</div>
+              </div>
+              <div class="bar-stats">${stats.wins}勝${stats.losses}敗 (${stats.total}試合)</div>
+            </div>
+          `;
+        });
+        
+        html += '</div></div></div>';
+        container.innerHTML = html;
+      }
+    }
+    
+    // 試合履歴を更新
+    function updateMatchHistory() {
+      const container = document.getElementById('match-history');
+      const perspectiveMatches = matches.filter(m => m.perspective === currentPerspective).reverse();
+      
+      if (perspectiveMatches.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><p>まだ試合データがありません</p></div>';
+        return;
+      }
+      
+      let html = '<div class="match-history">';
+      
+      perspectiveMatches.forEach(match => {
+        const resultClass = match.result === 'survivor_win' ? 'win' : match.result === 'hunter_win' ? 'lose' : 'draw';
+        const resultText = match.result === 'survivor_win' ? 'サバイバー勝利' : match.result === 'hunter_win' ? 'ハンター勝利' : '引き分け';
+        const isWin = (currentPerspective === 'survivor' && match.result === 'survivor_win') || 
+                      (currentPerspective === 'hunter' && match.result === 'hunter_win');
+        const displayResultClass = isWin ? 'win' : match.result === 'draw' ? 'draw' : 'lose';
+        
+        let details = '';
+        if (match.perspective === 'survivor') {
+          details = `${match.myCharacter} + ${match.teammates.join(', ')} vs ${match.opponentHunter} @ ${match.map}`;
+        } else {
+          details = `${match.myCharacter} vs ${match.opponentSurvivors.join(', ')} @ ${match.map}`;
+        }
+        
+        html += `
+          <div class="match-item">
+            <div class="match-info">
+              <span class="match-result ${displayResultClass}">${resultText}</span>
+              <span>${details}</span>
+            </div>
+            <div class="match-actions">
+              <button class="edit-button" onclick="editMatch(${match.id})">編集</button>
+              <button class="delete-button" onclick="deleteMatch(${match.id})">削除</button>
+            </div>
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      container.innerHTML = html;
+    }
+    
+    // 試合を編集
+    function editMatch(id) {
+      const match = matches.find(m => m.id === id);
+      if (!match) return;
+      
+      editingMatchId = id;
+      
+      if (match.perspective === 'survivor') {
+        currentPerspective = 'survivor';
+        document.getElementById('my-survivor').value = match.myCharacter;
+        document.getElementById('teammate-1').value = match.teammates[0];
+        document.getElementById('teammate-2').value = match.teammates[1];
+        document.getElementById('teammate-3').value = match.teammates[2];
+        document.getElementById('opponent-hunter').value = match.opponentHunter;
+        document.getElementById('survivor-map').value = match.map;
+        selectedResult.survivor = match.result;
+        
+        document.querySelectorAll('.perspective-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.perspective-tab')[0].classList.add('active');
+        document.getElementById('survivor-input').style.display = 'block';
+        document.getElementById('hunter-input').style.display = 'none';
+        
+        document.querySelectorAll('#survivor-input .result-button').forEach(btn => {
+          btn.classList.remove('selected');
+          if (btn.onclick.toString().includes(match.result)) {
+            btn.classList.add('selected');
+          }
+        });
+      } else {
+        currentPerspective = 'hunter';
+        document.getElementById('my-hunter').value = match.myCharacter;
+        document.getElementById('opponent-survivor-1').value = match.opponentSurvivors[0];
+        document.getElementById('opponent-survivor-2').value = match.opponentSurvivors[1];
+        document.getElementById('opponent-survivor-3').value = match.opponentSurvivors[2];
+        document.getElementById('opponent-survivor-4').value = match.opponentSurvivors[3];
+        document.getElementById('hunter-map').value = match.map;
+        selectedResult.hunter = match.result;
+        
+        document.querySelectorAll('.perspective-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.perspective-tab')[1].classList.add('active');
+        document.getElementById('survivor-input').style.display = 'none';
+        document.getElementById('hunter-input').style.display = 'block';
+        
+        document.querySelectorAll('#hunter-input .result-button').forEach(btn => {
+          btn.classList.remove('selected');
+          if (btn.onclick.toString().includes(match.result)) {
+            btn.classList.add('selected');
+          }
+        });
+      }
+      
+      // 試合入力タブに切り替え
+      document.querySelectorAll('.main-tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.main-tab')[0].classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.getElementById('input-tab').classList.add('active');
+      
+      window.scrollTo(0, 0);
+    }
+    
+    // 試合を削除
+    function deleteMatch(id) {
+      if (!confirm('この試合データを削除しますか？')) return;
+      
+      matches = matches.filter(m => m.id !== id);
+      saveData();
+      updateAllStats();
+      alert('試合データを削除しました');
+    }
+    
+    // 全データをリセット
+    function resetAllData() {
+      if (!confirm('本当に全てのデータをリセットしますか？この操作は取り消せません。')) return;
+      
+      matches = [];
+      saveData();
+      updateAllStats();
+      alert('全データをリセットしました');
+    }
+    
+    // ページ読み込み時に初期化
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

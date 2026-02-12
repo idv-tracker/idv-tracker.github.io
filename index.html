@@ -450,11 +450,13 @@
           </div>
           
           <div class="form-group">
-            <label class="form-label">試合結果</label>
-            <div class="result-buttons">
-              <button class="result-button" onclick="selectResult('survivor', 'survivor_win')">勝利</button>
-              <button class="result-button" onclick="selectResult('survivor', 'hunter_win')">敗北</button>
-              <button class="result-button" onclick="selectResult('survivor', 'draw')">引き分け</button>
+            <label class="form-label">脱出人数</label>
+            <div class="result-buttons" style="grid-template-columns: repeat(5, 1fr);">
+              <button class="result-button" onclick="selectEscapeCount('survivor', 0)">0人</button>
+              <button class="result-button" onclick="selectEscapeCount('survivor', 1)">1人</button>
+              <button class="result-button" onclick="selectEscapeCount('survivor', 2)">2人</button>
+              <button class="result-button" onclick="selectEscapeCount('survivor', 3)">3人</button>
+              <button class="result-button" onclick="selectEscapeCount('survivor', 4)">4人</button>
             </div>
           </div>
           
@@ -505,11 +507,13 @@
           </div>
           
           <div class="form-group">
-            <label class="form-label">試合結果</label>
-            <div class="result-buttons">
-              <button class="result-button" onclick="selectResult('hunter', 'hunter_win')">勝利</button>
-              <button class="result-button" onclick="selectResult('hunter', 'survivor_win')">敗北</button>
-              <button class="result-button" onclick="selectResult('hunter', 'draw')">引き分け</button>
+            <label class="form-label">脱出人数</label>
+            <div class="result-buttons" style="grid-template-columns: repeat(5, 1fr);">
+              <button class="result-button" onclick="selectEscapeCount('hunter', 0)">0人</button>
+              <button class="result-button" onclick="selectEscapeCount('hunter', 1)">1人</button>
+              <button class="result-button" onclick="selectEscapeCount('hunter', 2)">2人</button>
+              <button class="result-button" onclick="selectEscapeCount('hunter', 3)">3人</button>
+              <button class="result-button" onclick="selectEscapeCount('hunter', 4)">4人</button>
             </div>
           </div>
           
@@ -553,7 +557,7 @@
     const MAPS = ['軍需工場', '赤の教会', '聖心病院', '湖景村', '月の河公園', 'レオの思い出', '永眠町', '中華街', '罪の森'];
     
     let currentPerspective = 'survivor';
-    let selectedResult = { survivor: null, hunter: null };
+    let selectedEscapeCount = { survivor: null, hunter: null };
     let matches = [];
     let editingMatchId = null;
     
@@ -635,15 +639,28 @@
       updateAllStats();
     }
     
-    // 結果を選択
-    function selectResult(perspective, result) {
-      selectedResult[perspective] = result;
+    // 脱出人数を選択
+    function selectEscapeCount(perspective, count) {
+      selectedEscapeCount[perspective] = count;
       
       const container = perspective === 'survivor' ? document.getElementById('survivor-input') : document.getElementById('hunter-input');
       container.querySelectorAll('.result-button').forEach(btn => {
         btn.classList.remove('selected');
       });
       event.target.classList.add('selected');
+    }
+    
+    // 脱出人数から勝敗を判定
+    function getResultFromEscapeCount(escapeCount, perspective) {
+      if (perspective === 'survivor') {
+        if (escapeCount >= 3) return 'survivor_win';
+        if (escapeCount === 2) return 'draw';
+        return 'hunter_win';
+      } else {
+        if (escapeCount <= 1) return 'hunter_win';
+        if (escapeCount === 2) return 'draw';
+        return 'survivor_win';
+      }
     }
     
     // 試合を記録
@@ -661,9 +678,9 @@
         const teammate3 = document.getElementById('teammate-3').value;
         const opponentHunter = document.getElementById('opponent-hunter').value;
         const map = document.getElementById('survivor-map').value;
-        const result = selectedResult.survivor;
+        const escapeCount = selectedEscapeCount.survivor;
         
-        if (!mySurvivor || !teammate1 || !teammate2 || !teammate3 || !opponentHunter || !map || !result) {
+        if (!mySurvivor || !teammate1 || !teammate2 || !teammate3 || !opponentHunter || !map || escapeCount === null) {
           alert('全ての項目を入力してください');
           return;
         }
@@ -682,7 +699,8 @@
         match.teammates = teammates;
         match.opponentHunter = opponentHunter;
         match.map = map;
-        match.result = result;
+        match.escapeCount = escapeCount;
+        match.result = getResultFromEscapeCount(escapeCount, perspective);
       } else {
         const myHunter = document.getElementById('my-hunter').value;
         const opponentSurvivor1 = document.getElementById('opponent-survivor-1').value;
@@ -690,9 +708,9 @@
         const opponentSurvivor3 = document.getElementById('opponent-survivor-3').value;
         const opponentSurvivor4 = document.getElementById('opponent-survivor-4').value;
         const map = document.getElementById('hunter-map').value;
-        const result = selectedResult.hunter;
+        const escapeCount = selectedEscapeCount.hunter;
         
-        if (!myHunter || !opponentSurvivor1 || !opponentSurvivor2 || !opponentSurvivor3 || !opponentSurvivor4 || !map || !result) {
+        if (!myHunter || !opponentSurvivor1 || !opponentSurvivor2 || !opponentSurvivor3 || !opponentSurvivor4 || !map || escapeCount === null) {
           alert('全ての項目を入力してください');
           return;
         }
@@ -706,7 +724,8 @@
         match.myCharacter = myHunter;
         match.opponentSurvivors = opponents;
         match.map = map;
-        match.result = result;
+        match.escapeCount = escapeCount;
+        match.result = getResultFromEscapeCount(escapeCount, perspective);
       }
       
       if (editingMatchId) {
@@ -730,7 +749,7 @@
         document.getElementById('teammate-3').value = '';
         document.getElementById('opponent-hunter').value = '';
         document.getElementById('survivor-map').value = '';
-        selectedResult.survivor = null;
+        selectedEscapeCount.survivor = null;
         document.querySelectorAll('#survivor-input .result-button').forEach(btn => {
           btn.classList.remove('selected');
         });
@@ -741,7 +760,7 @@
         document.getElementById('opponent-survivor-3').value = '';
         document.getElementById('opponent-survivor-4').value = '';
         document.getElementById('hunter-map').value = '';
-        selectedResult.hunter = null;
+        selectedEscapeCount.hunter = null;
         document.querySelectorAll('#hunter-input .result-button').forEach(btn => {
           btn.classList.remove('selected');
         });
@@ -1059,12 +1078,13 @@
         const isWin = (currentPerspective === 'survivor' && match.result === 'survivor_win') || 
                       (currentPerspective === 'hunter' && match.result === 'hunter_win');
         const displayResultClass = isWin ? 'win' : match.result === 'draw' ? 'draw' : 'lose';
+        const escapeInfo = match.escapeCount !== undefined ? ` (脱出${match.escapeCount}人)` : '';
         
         let details = '';
         if (match.perspective === 'survivor') {
-          details = `${match.myCharacter} + ${match.teammates.join(', ')} vs ${match.opponentHunter} @ ${match.map}`;
+          details = `${match.myCharacter} + ${match.teammates.join(', ')} vs ${match.opponentHunter} @ ${match.map}${escapeInfo}`;
         } else {
-          details = `${match.myCharacter} vs ${match.opponentSurvivors.join(', ')} @ ${match.map}`;
+          details = `${match.myCharacter} vs ${match.opponentSurvivors.join(', ')} @ ${match.map}${escapeInfo}`;
         }
         
         html += `
@@ -1100,16 +1120,16 @@
         document.getElementById('teammate-3').value = match.teammates[2];
         document.getElementById('opponent-hunter').value = match.opponentHunter;
         document.getElementById('survivor-map').value = match.map;
-        selectedResult.survivor = match.result;
+        selectedEscapeCount.survivor = match.escapeCount !== undefined ? match.escapeCount : null;
         
         document.querySelectorAll('.perspective-tab').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.perspective-tab')[0].classList.add('active');
         document.getElementById('survivor-input').style.display = 'block';
         document.getElementById('hunter-input').style.display = 'none';
         
-        document.querySelectorAll('#survivor-input .result-button').forEach(btn => {
+        document.querySelectorAll('#survivor-input .result-button').forEach((btn, index) => {
           btn.classList.remove('selected');
-          if (btn.onclick.toString().includes(match.result)) {
+          if (match.escapeCount !== undefined && index === match.escapeCount) {
             btn.classList.add('selected');
           }
         });
@@ -1121,16 +1141,16 @@
         document.getElementById('opponent-survivor-3').value = match.opponentSurvivors[2];
         document.getElementById('opponent-survivor-4').value = match.opponentSurvivors[3];
         document.getElementById('hunter-map').value = match.map;
-        selectedResult.hunter = match.result;
+        selectedEscapeCount.hunter = match.escapeCount !== undefined ? match.escapeCount : null;
         
         document.querySelectorAll('.perspective-tab').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.perspective-tab')[1].classList.add('active');
         document.getElementById('survivor-input').style.display = 'none';
         document.getElementById('hunter-input').style.display = 'block';
         
-        document.querySelectorAll('#hunter-input .result-button').forEach(btn => {
+        document.querySelectorAll('#hunter-input .result-button').forEach((btn, index) => {
           btn.classList.remove('selected');
-          if (btn.onclick.toString().includes(match.result)) {
+          if (match.escapeCount !== undefined && index === match.escapeCount) {
             btn.classList.add('selected');
           }
         });

@@ -3,28 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>第五人格トラッカー | 戦績管理・勝率計算アプリ</title>
-  <meta name="description" content="第五人格（Identity V）のランク戦の戦績を簡単に記録・管理できる無料ツール。勝率、キャラ別統計、マップ別データを自動計算。サバイバー/ハンター両対応で完全無料。">
-  <meta name="keywords" content="第五人格,Identity V,戦績,勝率,トラッカー,ランク戦,統計,サバイバー,ハンター">
-
-  <!-- OGP（SNS共有用） -->
-  <meta property="og:title" content="第五人格トラッカー | 戦績管理・勝率計算">
-  <meta property="og:description" content="第五人格のランク戦戦績を簡単に記録・管理">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://idv-tracker.github.io/">
+  <title>第五人格トラッカー | 戦績管理・勝率計算アプリ</title>
+  <meta name="description" content="第五人格のランク戦戦績を簡単に記録・管理。勝率、キャラ別・マップ別・相手別の統計を自動計算。サバイバー/ハンター両対応。完全無料で使えるツール。">
   
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="第五人格トラッカー">
-  <meta name="twitter:description" content="戦績管理・勝率計算アプリ">
-  
-  <!-- アイコン設定 -->
-  <link rel="apple-touch-icon" href="icon.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
-  <link rel="shortcut icon" href="icon.png">
-  
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312"
-     crossorigin="anonymous"></script>
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f3460">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="第五トラッカー">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%230f3460' width='180' height='180' rx='32'/><text x='90' y='125' font-size='110' text-anchor='middle' fill='white'>V</text></svg>">
   
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-EL23B3L2TD"></script>
@@ -400,6 +388,24 @@
       padding-left: 10px;
     }
     
+    .bar-value-outside {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .bar-value-outside .bar-visual {
+      padding-right: 4px;
+    }
+    .bar-value-outside .bar-pct {
+      font-size: 11px;
+      font-weight: 700;
+      color: #3b82f6;
+      white-space: nowrap;
+    }
+    body.dark-mode .bar-value-outside .bar-pct {
+      color: #60a5fa;
+    }
+    
     .match-history {
       background: white;
       border: 1px solid #dee2e6;
@@ -458,6 +464,114 @@
     .edit-button {
       background: #ffc107;
       color: #000;
+    }
+    
+    .match-comment {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+      color: #6b7280;
+      padding-left: 2px;
+    }
+    .match-comment::before {
+      content: '💬 ';
+    }
+    
+    /* ===== 複数選択ドロップダウン ===== */
+    .multi-rank-wrapper {
+      position: relative;
+      width: 100%;
+    }
+    .multi-rank-trigger {
+      width: 100%;
+      padding: 10px 35px 10px 12px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+      color: #3b82f6;
+      cursor: pointer;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .multi-rank-trigger::after {
+      content: '▼';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: #6b7280;
+    }
+    .multi-rank-trigger.open {
+      border-color: #3b82f6;
+      border-radius: 6px 6px 0 0;
+    }
+    .multi-rank-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 2px solid #3b82f6;
+      border-top: 1px solid #e5e7eb;
+      border-radius: 0 0 6px 6px;
+      z-index: 100;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    .multi-rank-dropdown.open { display: block; }
+    .multi-rank-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      cursor: pointer;
+      gap: 10px;
+      font-size: 14px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #333;
+    }
+    .multi-rank-item:last-child { border-bottom: none; }
+    .multi-rank-item:hover { background: #f0f7ff; }
+    .multi-rank-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #3b82f6;
+      cursor: pointer;
+    }
+    .multi-rank-item.all-item {
+      border-bottom: 2px solid #e5e7eb;
+      font-weight: 600;
+      color: #6b7280;
+    }
+    /* ダークモード: 複数選択ドロップダウン */
+    body.dark-mode .multi-rank-trigger {
+      background: #222238;
+      border-color: #3a3a55;
+      color: #60a5fa;
+    }
+    body.dark-mode .multi-rank-trigger.open {
+      border-color: #60a5fa;
+    }
+    body.dark-mode .multi-rank-dropdown {
+      background: #222238;
+      border-color: #60a5fa;
+      border-top-color: #3a3a55;
+    }
+    body.dark-mode .multi-rank-item {
+      color: #d1d5db;
+      border-bottom-color: #2e2e48;
+    }
+    body.dark-mode .multi-rank-item:hover {
+      background: #1e2a45;
+    }
+    body.dark-mode .multi-rank-item.all-item {
+      border-bottom-color: #3a3a55;
+      color: #9ca3af;
     }
     
     .delete-button {
@@ -873,6 +987,14 @@
       color: #f87171;
       border-color: #3a3a55;
     }
+    body.dark-mode .match-comment {
+      color: #8888aa;
+    }
+    body.dark-mode textarea {
+      background: #222238;
+      border-color: #3a3a55;
+      color: #d1d5db;
+    }
     body.dark-mode .empty-state {
       color: #6b7280;
     }
@@ -1170,6 +1292,11 @@
             </div>
           </div>
           
+          <div class="form-group">
+            <label class="form-label">コメント（任意）</label>
+            <textarea id="survivor-comment" placeholder="メモを残せます" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; resize: vertical; min-height: 50px; max-height: 120px; font-family: inherit;"></textarea>
+          </div>
+          
           <button type="button" class="submit-button" onclick="submitMatch('survivor')">試合を記録</button>
         </div>
         
@@ -1251,6 +1378,11 @@
             </div>
           </div>
           
+          <div class="form-group">
+            <label class="form-label">コメント（任意）</label>
+            <textarea id="hunter-comment" placeholder="メモを残せます" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; resize: vertical; min-height: 50px; max-height: 120px; font-family: inherit;"></textarea>
+          </div>
+          
           <button class="submit-button" onclick="submitMatch('hunter')">試合を記録</button>
         </div>
       </div>
@@ -1291,16 +1423,14 @@
             </select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">段位フィルター</label>
-            <select id="character-rank-filter" onchange="updateAllStats()">
-              <option value="all">全段位</option>
-            </select>
-          </div>
-          <div class="filter-group">
             <label class="filter-label">マップフィルター</label>
             <select id="character-map-filter" onchange="updateAllStats()">
               <option value="all">全マップ</option>
             </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">段位フィルター</label>
+            <div id="character-rank-filter" class="multi-rank-wrapper"></div>
           </div>
         </div>
         <div id="character-stats"></div>
@@ -1319,16 +1449,14 @@
             </select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">段位フィルター</label>
-            <select id="map-rank-filter" onchange="updateAllStats()">
-              <option value="all">全段位</option>
-            </select>
-          </div>
-          <div class="filter-group">
             <label class="filter-label">自キャラフィルター</label>
             <select id="map-char-filter" onchange="updateAllStats()">
               <option value="all">全キャラ</option>
             </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">段位フィルター</label>
+            <div id="map-rank-filter" class="multi-rank-wrapper"></div>
           </div>
         </div>
         <div id="map-stats"></div>
@@ -1344,12 +1472,6 @@
               <option value="today">今日</option>
               <option value="last7days">直近7日</option>
               <option value="last30days">直近30日</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">段位フィルター</label>
-            <select id="opponent-rank-filter" onchange="updateAllStats()">
-              <option value="all">全段位</option>
             </select>
           </div>
           <div class="filter-group">
@@ -1370,6 +1492,10 @@
               <option value="all">全マップ</option>
             </select>
           </div>
+          <div class="filter-group">
+            <label class="filter-label">段位フィルター</label>
+            <div id="opponent-rank-filter" class="multi-rank-wrapper"></div>
+          </div>
         </div>
         <div id="opponent-stats"></div>
       </div>
@@ -1387,16 +1513,14 @@
             </select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">段位フィルター</label>
-            <select id="history-rank-filter" onchange="updateAllStats()">
-              <option value="all">全段位</option>
-            </select>
-          </div>
-          <div class="filter-group">
             <label class="filter-label">相手キャラフィルター</label>
             <select id="history-opponent-filter" onchange="updateAllStats()">
               <option value="all">全キャラ</option>
             </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">段位フィルター</label>
+            <div id="history-rank-filter" class="multi-rank-wrapper"></div>
           </div>
         </div>
         <div id="match-history"></div>
@@ -2326,6 +2450,23 @@
       </div>`;
     }
     
+    // 勝率バーHTML生成（低勝率は外側に%表示）
+    function renderBarHTML(winrateStr) {
+      const winrateNum = parseFloat(winrateStr) || 0;
+      if (winrateNum === 0) {
+        return `<div class="bar-value-zero">${winrateStr}%</div>`;
+      } else if (winrateNum < 20) {
+        return `<div class="bar-value-outside">
+          <div class="bar-visual" style="width: ${winrateNum}%;"></div>
+          <span class="bar-pct">${winrateStr}%</span>
+        </div>`;
+      } else {
+        return `<div class="bar-visual" style="width: ${winrateNum}%;">
+          <div class="bar-value">${winrateStr}%</div>
+        </div>`;
+      }
+    }
+    
     // 汎用ソート関数
     function sortByState(keys, statsMap, perspective, state) {
       return keys.sort((a, b) => {
@@ -2766,21 +2907,16 @@
       
       const filterIds = ['character-rank-filter', 'map-rank-filter', 'opponent-rank-filter', 'history-rank-filter'];
       filterIds.forEach(id => {
-        const select = document.getElementById(id);
-        const currentValue = select.value;
-        select.innerHTML = '<option value="all">全段位</option>';
+        const wrapper = document.getElementById(id);
+        if (!wrapper) return;
         
-        sortedRanks.forEach(rank => {
-          const option = document.createElement('option');
-          option.value = rank;
-          option.textContent = rank;
-          select.appendChild(option);
-        });
+        // 既存の選択状態を保持
+        const prevSelected = wrapper.dataset.selected ? JSON.parse(wrapper.dataset.selected) : null;
         
-        // 前回選択していた値を復元
-        if (currentValue && (currentValue === 'all' || sortedRanks.includes(currentValue))) {
-          select.value = currentValue;
-        }
+        // 全段位がデフォルト
+        wrapper.dataset.selected = JSON.stringify(prevSelected || ['all']);
+        
+        buildMultiRankUI(wrapper, sortedRanks, id);
       });
       
       // マップフィルター（対戦相手別勝率用、自キャラフィルターに連動）
@@ -2976,6 +3112,7 @@
         match.map = map;
         match.escapeCount = escapeCount;
         match.result = getResultFromEscapeCount(escapeCount, perspective);
+        match.comment = document.getElementById('survivor-comment').value.trim();
       } else {
         const date = document.getElementById('hunter-date').value;
         const rank = document.getElementById('hunter-rank').value;
@@ -2999,6 +3136,7 @@
         match.map = map;
         match.escapeCount = escapeCount;
         match.result = getResultFromEscapeCount(escapeCount, perspective);
+        match.comment = document.getElementById('hunter-comment').value.trim();
       }
       
       if (editingMatchId) {
@@ -3094,6 +3232,7 @@
         });
         
         selectedEscapeCount.survivor = null;
+        document.getElementById('survivor-comment').value = '';
         document.querySelectorAll('#survivor-input .result-button').forEach(btn => {
           btn.classList.remove('selected');
         });
@@ -3129,6 +3268,7 @@
         });
         
         selectedEscapeCount.hunter = null;
+        document.getElementById('hunter-comment').value = '';
         document.querySelectorAll('#hunter-input .result-button').forEach(btn => {
           btn.classList.remove('selected');
         });
@@ -3413,10 +3553,137 @@
     function getFilteredMatches(rankFilter) {
       let filtered = matches.filter(m => m.perspective === currentPerspective);
       if (rankFilter && rankFilter !== 'all') {
-        filtered = filtered.filter(m => m.rank === rankFilter);
+        const selectedRanks = rankFilter.split(',');
+        filtered = filtered.filter(m => selectedRanks.includes(m.rank));
       }
       return filtered;
     }
+    
+    // ランクフィルターの値を取得するヘルパー
+    function getRankFilterValue(id) {
+      const wrapper = document.getElementById(id);
+      if (!wrapper) return 'all';
+      const selected = wrapper.dataset.selected ? JSON.parse(wrapper.dataset.selected) : ['all'];
+      if (selected.includes('all') || selected.length === 0) return 'all';
+      return selected.join(',');
+    }
+    
+    // マルチセレクト段位UIを構築
+    function buildMultiRankUI(wrapper, ranks, filterId) {
+      const selected = wrapper.dataset.selected ? JSON.parse(wrapper.dataset.selected) : ['all'];
+      const isAll = selected.includes('all') || selected.length === 0;
+      
+      // 表示テキスト
+      let displayText = '全段位';
+      if (!isAll) {
+        if (selected.length <= 3) {
+          displayText = selected.join(', ');
+        } else {
+          displayText = selected.length + '個の段位';
+        }
+      }
+      
+      // トリガーボタン
+      let triggerEl = wrapper.querySelector('.multi-rank-trigger');
+      if (!triggerEl) {
+        wrapper.innerHTML = '';
+        triggerEl = document.createElement('div');
+        triggerEl.className = 'multi-rank-trigger';
+        wrapper.appendChild(triggerEl);
+        
+        const dropdown = document.createElement('div');
+        dropdown.className = 'multi-rank-dropdown';
+        wrapper.appendChild(dropdown);
+        
+        triggerEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // 他のドロップダウンを閉じる
+          document.querySelectorAll('.multi-rank-dropdown.open').forEach(d => {
+            if (d !== dropdown) { d.classList.remove('open'); d.previousElementSibling.classList.remove('open'); }
+          });
+          dropdown.classList.toggle('open');
+          triggerEl.classList.toggle('open');
+        });
+      }
+      triggerEl.textContent = displayText;
+      
+      const dropdown = wrapper.querySelector('.multi-rank-dropdown');
+      dropdown.innerHTML = '';
+      
+      // 「全段位」項目
+      const allItem = document.createElement('label');
+      allItem.className = 'multi-rank-item all-item';
+      const allCb = document.createElement('input');
+      allCb.type = 'checkbox';
+      allCb.checked = isAll;
+      allCb.addEventListener('change', () => {
+        if (allCb.checked) {
+          wrapper.dataset.selected = JSON.stringify(['all']);
+        } else {
+          // 全解除時は全段位に戻す
+          allCb.checked = true;
+          return;
+        }
+        buildMultiRankUI(wrapper, ranks, filterId);
+        updateAllStats();
+      });
+      allItem.appendChild(allCb);
+      allItem.appendChild(document.createTextNode(' 全段位'));
+      dropdown.appendChild(allItem);
+      
+      // 各段位
+      ranks.forEach(rank => {
+        const item = document.createElement('label');
+        item.className = 'multi-rank-item';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = isAll || selected.includes(rank);
+        cb.addEventListener('change', () => {
+          let cur = wrapper.dataset.selected ? JSON.parse(wrapper.dataset.selected) : ['all'];
+          
+          if (cb.checked) {
+            // 「全段位」が選択中なら個別に切り替え
+            if (cur.includes('all')) {
+              cur = [rank];
+            } else {
+              cur.push(rank);
+            }
+            // 全部選択されたら「全段位」に戻す
+            if (cur.length >= ranks.length) {
+              cur = ['all'];
+            }
+          } else {
+            if (cur.includes('all')) {
+              // 全段位から1つ外す
+              cur = ranks.filter(r => r !== rank);
+            } else {
+              cur = cur.filter(r => r !== rank);
+            }
+            // 何も選択されてなければ全段位に戻す
+            if (cur.length === 0) {
+              cur = ['all'];
+            }
+          }
+          
+          wrapper.dataset.selected = JSON.stringify(cur);
+          buildMultiRankUI(wrapper, ranks, filterId);
+          updateAllStats();
+        });
+        item.appendChild(cb);
+        item.appendChild(document.createTextNode(' ' + rank));
+        dropdown.appendChild(item);
+      });
+    }
+    
+    // 段位ドロップダウンを外側クリックで閉じる
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.multi-rank-wrapper')) {
+        document.querySelectorAll('.multi-rank-dropdown.open').forEach(d => {
+          d.classList.remove('open');
+          d.previousElementSibling.classList.remove('open');
+        });
+      }
+    });
     
     // 自キャラフィルター変更時の処理
     function onMyCharFilterChange() {
@@ -4019,7 +4286,7 @@
     function updateCharacterStats() {
       const container = document.getElementById('character-stats');
       const periodFilter = document.getElementById('character-period-filter').value;
-      const rankFilter = document.getElementById('character-rank-filter').value;
+      const rankFilter = getRankFilterValue('character-rank-filter');
       const mapFilter = document.getElementById('character-map-filter').value;
       let perspectiveMatches = getFilteredMatches(rankFilter);
       
@@ -4073,19 +4340,14 @@
           ? `平均脱出${avgEscape}人` 
           : `平均脱落${(4 - parseFloat(avgEscape)).toFixed(1)}人`;
         
-        const isZero = winrateNum === 0;
-        
         html += `
           <div class="bar-row">
             <div class="bar-label-wrapper">
               <div class="bar-label">${char}</div>
-              <div class="bar-sublabel">${avgText}<br>${stats.totalWithDraws}試合</div>
+              <div class="bar-sublabel">${avgText}<br>${stats.wins}勝${stats.losses}敗${stats.draws}分 (${stats.totalWithDraws}試合)</div>
             </div>
             <div class="bar-wrapper">
-              ${isZero ? `<div class="bar-value-zero">${stats.winrate}%</div>` : `
-              <div class="bar-visual" style="width: ${barWidth}%;">
-                <div class="bar-value">${stats.winrate}%</div>
-              </div>`}
+              ${renderBarHTML(stats.winrate)}
             </div>
           </div>
         `;
@@ -4099,7 +4361,7 @@
     function updateMapStats() {
       const container = document.getElementById('map-stats');
       const periodFilter = document.getElementById('map-period-filter').value;
-      const rankFilter = document.getElementById('map-rank-filter').value;
+      const rankFilter = getRankFilterValue('map-rank-filter');
       const charFilter = document.getElementById('map-char-filter').value;
       let perspectiveMatches = getFilteredMatches(rankFilter);
       
@@ -4145,9 +4407,6 @@
       
       sortedMaps.forEach(map => {
         const stats = calculateWinrate(mapStats[map], currentPerspective);
-        const winrateNum = parseFloat(stats.winrate) || 0;
-        const barWidth = winrateNum;
-        const isZero = winrateNum === 0;
         
         html += `
           <div class="bar-row">
@@ -4156,10 +4415,7 @@
               <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
             </div>
             <div class="bar-wrapper">
-              ${isZero ? `<div class="bar-value-zero">${stats.winrate}%</div>` : `
-              <div class="bar-visual" style="width: ${barWidth}%;">
-                <div class="bar-value">${stats.winrate}%</div>
-              </div>`}
+              ${renderBarHTML(stats.winrate)}
             </div>
           </div>
         `;
@@ -4173,7 +4429,7 @@
     function updateOpponentStats() {
       const container = document.getElementById('opponent-stats');
       const periodFilter = document.getElementById('opponent-period-filter').value;
-      const rankFilter = document.getElementById('opponent-rank-filter').value;
+      const rankFilter = getRankFilterValue('opponent-rank-filter');
       const myCharFilter = document.getElementById('my-char-filter').value;
       const opponentHunterFilter = document.getElementById('opponent-hunter-filter') ? document.getElementById('opponent-hunter-filter').value : 'all';
       const mapFilter = document.getElementById('opponent-map-filter').value;
@@ -4250,9 +4506,6 @@
         
         sortedHunters.slice(hunterStartIndex, hunterEndIndex).forEach(hunter => {
           const stats = calculateWinrate(hunterStats[hunter], currentPerspective);
-          const winrateNum = parseFloat(stats.winrate) || 0;
-          const barWidth = winrateNum;
-          const isZero = winrateNum === 0;
           
           html += `
             <div class="bar-row">
@@ -4261,10 +4514,7 @@
                 <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
               </div>
               <div class="bar-wrapper">
-                ${isZero ? `<div class="bar-value-zero">${stats.winrate}%</div>` : `
-                <div class="bar-visual" style="width: ${barWidth}%;">
-                  <div class="bar-value">${stats.winrate}%</div>
-                </div>`}
+                ${renderBarHTML(stats.winrate)}
               </div>
             </div>
           `;
@@ -4289,9 +4539,6 @@
         
         sortedTeammates.slice(teammateStartIndex, teammateEndIndex).forEach(teammate => {
           const stats = calculateWinrate(teammateStats[teammate], currentPerspective);
-          const winrateNum = parseFloat(stats.winrate) || 0;
-          const barWidth = winrateNum;
-          const isZero = winrateNum === 0;
           
           html += `
             <div class="bar-row">
@@ -4300,10 +4547,7 @@
                 <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
               </div>
               <div class="bar-wrapper">
-                ${isZero ? `<div class="bar-value-zero">${stats.winrate}%</div>` : `
-                <div class="bar-visual" style="width: ${barWidth}%;">
-                  <div class="bar-value">${stats.winrate}%</div>
-                </div>`}
+                ${renderBarHTML(stats.winrate)}
               </div>
             </div>
           `;
@@ -4350,9 +4594,6 @@
         
         sortedSurvivors.slice(startIndex, endIndex).forEach(survivor => {
           const stats = calculateWinrate(survivorStats[survivor], currentPerspective);
-          const winrateNum = parseFloat(stats.winrate) || 0;
-          const barWidth = winrateNum;
-          const isZero = winrateNum === 0;
           
           html += `
             <div class="bar-row">
@@ -4361,10 +4602,7 @@
                 <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
               </div>
               <div class="bar-wrapper">
-                ${isZero ? `<div class="bar-value-zero">${stats.winrate}%</div>` : `
-                <div class="bar-visual" style="width: ${barWidth}%;">
-                  <div class="bar-value">${stats.winrate}%</div>
-                </div>`}
+                ${renderBarHTML(stats.winrate)}
               </div>
             </div>
           `;
@@ -4381,7 +4619,7 @@
     function updateMatchHistory() {
       const container = document.getElementById('match-history');
       const periodFilter = document.getElementById('history-period-filter').value;
-      const rankFilter = document.getElementById('history-rank-filter').value;
+      const rankFilter = getRankFilterValue('history-rank-filter');
       const opponentFilter = document.getElementById('history-opponent-filter').value;
       let perspectiveMatches = getFilteredMatches(rankFilter);
       
@@ -4429,11 +4667,14 @@
           details = `${rankInfo}${match.myCharacter} vs ${match.opponentSurvivors.join(', ')} @ ${match.map}${escapeInfo}`;
         }
         
+        const commentHTML = match.comment ? `<div class="match-comment">${match.comment}</div>` : '';
+        
         html += `
           <div class="match-item">
             <div class="match-info">
               <span class="match-result ${displayResultClass}">${resultText}</span>
               <span>${details}</span>
+              ${commentHTML}
             </div>
             <div class="match-actions">
               <button type="button" class="edit-button" onclick="event.stopPropagation(); editMatch(${match.id}); return false;">編集</button>
@@ -4471,6 +4712,7 @@
         document.getElementById('teammate-3').value = match.teammates[2];
         document.getElementById('opponent-hunter').value = match.opponentHunter;
         document.getElementById('survivor-map').value = match.map;
+        document.getElementById('survivor-comment').value = match.comment || '';
         selectedEscapeCount.survivor = match.escapeCount !== undefined ? match.escapeCount : null;
         
         document.querySelectorAll('.perspective-tab').forEach(tab => tab.classList.remove('active'));
@@ -4501,6 +4743,7 @@
         document.getElementById('opponent-survivor-3').value = match.opponentSurvivors[2];
         document.getElementById('opponent-survivor-4').value = match.opponentSurvivors[3];
         document.getElementById('hunter-map').value = match.map;
+        document.getElementById('hunter-comment').value = match.comment || '';
         selectedEscapeCount.hunter = match.escapeCount !== undefined ? match.escapeCount : null;
         
         document.querySelectorAll('.perspective-tab').forEach(tab => tab.classList.remove('active'));
@@ -4818,6 +5061,11 @@
     })();
     
     window.addEventListener('DOMContentLoaded', init);
+    
+    // Service Worker登録（PWA）
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
   </script>
 </body>
 </html>

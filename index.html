@@ -4,27 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>第五人格トラッカー | 戦績管理・勝率計算アプリ</title>
-  <meta name="description" content="第五人格（Identity V）のランク戦の戦績を簡単に記録・管理できる無料ツール。勝率、キャラ別統計、マップ別データを自動計算。サバイバー/ハンター両対応で完全無料。">
-  <meta name="keywords" content="第五人格,Identity V,戦績,勝率,トラッカー,ランク戦,統計,サバイバー,ハンター">
-
-  <!-- OGP（SNS共有用） -->
-  <meta property="og:title" content="第五人格トラッカー | 戦績管理・勝率計算">
-  <meta property="og:description" content="第五人格のランク戦戦績を簡単に記録・管理">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://idv-tracker.github.io/">
-  
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="第五人格トラッカー">
-  <meta name="twitter:description" content="戦績管理・勝率計算アプリ">
-  
-  <!-- アイコン設定 -->
-  <link rel="apple-touch-icon" href="icon.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
-  <link rel="shortcut icon" href="icon.png">
-  
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312"
-     crossorigin="anonymous"></script>
+  <meta name="description" content="第五人格のランク戦戦績を簡単に記録・管理。勝率、キャラ別・マップ別・相手別の統計を自動計算。サバイバー/ハンター両対応。完全無料で使えるツール。">
   
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
@@ -84,6 +64,38 @@
       opacity: 0.9;
       font-weight: 400;
     }
+    
+    /* ===== インストールバナー ===== */
+    .install-banner {
+      display: flex;
+      align-items: center;
+      background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+      padding: 0;
+    }
+    .install-banner a {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 10px 15px;
+      color: white;
+      text-decoration: none;
+      gap: 8px;
+      min-width: 0;
+    }
+    .install-banner-icon { font-size: 18px; flex-shrink: 0; }
+    .install-banner-text { font-size: 13px; font-weight: 600; flex: 1; }
+    .install-banner-arrow { font-size: 20px; opacity: 0.7; flex-shrink: 0; }
+    .install-banner-close {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      font-size: 16px;
+      padding: 10px 14px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .install-banner-close:hover { color: white; }
+    .install-banner.hidden { display: none; }
     
     .perspective-tabs {
       display: flex;
@@ -1093,6 +1105,10 @@
     body.dark-mode .dark-mode-toggle {
       background: #222238;
     }
+    body.dark-mode .install-guide-link {
+      background: #222238 !important;
+      color: #60a5fa !important;
+    }
     body.dark-mode .dark-mode-toggle-label {
       color: #d1d5db;
     }
@@ -1215,6 +1231,14 @@
     <div class="header">
       <h1>第五人格トラッカー</h1>
       <div class="subtitle">戦績管理・勝率計算</div>
+    </div>
+    
+    <div class="install-banner" id="install-banner">
+      <a href="install-guide.html">
+        <span class="install-banner-text">ホーム画面に追加してアプリとして使う</span>
+        <span class="install-banner-arrow">›</span>
+      </a>
+      <button class="install-banner-close" onclick="dismissInstallBanner()" aria-label="閉じる">✕</button>
     </div>
     
     <div class="perspective-tabs">
@@ -1560,6 +1584,10 @@
             <span class="toggle-slider"></span>
           </label>
         </div>
+        
+        <a href="install-guide.html" class="install-guide-link" style="display: block; padding: 14px 20px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px; text-decoration: none; color: #3b82f6; font-size: 14px; font-weight: 600;">
+          ホーム画面に追加する方法 ›
+        </a>
         
         <div class="stats-card" style="margin-bottom: 20px;">
           <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 15px; color: #1f2937;">データのバックアップと復元</h3>
@@ -2515,6 +2543,9 @@
     function init() {
       // ダークモード復元
       loadDarkMode();
+      
+      // インストールバナーチェック
+      checkInstallBanner();
       
       // データを先に読み込む
       loadData(); // データを読み込む
@@ -5053,6 +5084,23 @@
       };
       
       reader.readAsText(file);
+    }
+    
+    // ===== インストールバナー =====
+    function dismissInstallBanner() {
+      document.getElementById('install-banner').classList.add('hidden');
+      localStorage.setItem('identity5_install_banner_dismissed', 'true');
+    }
+    
+    function checkInstallBanner() {
+      const banner = document.getElementById('install-banner');
+      if (!banner) return;
+      // 既にPWAとして動作中、または閉じた場合は非表示
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      const dismissed = localStorage.getItem('identity5_install_banner_dismissed') === 'true';
+      if (isStandalone || dismissed) {
+        banner.classList.add('hidden');
+      }
     }
     
     // ===== ダークモード =====

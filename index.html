@@ -1962,8 +1962,13 @@
             if (this._touchHandled) { this._touchHandled = false; return; }
             this._selectOption(opt);
           });
+          div.addEventListener('touchstart', (e) => {
+            // キーボードが開いている間のblur（dismiss）を防ぐ
+            // ※ select()をスキップする_programmaticFocusフラグと組み合わせることで
+            //   「キーボード表示されるがカーソルなし」問題を回避
+            e.preventDefault();
+          }, { passive: false });
           div.addEventListener('touchend', () => {
-            // preventDefault()を呼ばないことでiOSのキーボード接続を維持する
             this._touchHandled = true;
             this._selectOption(opt);
             setTimeout(() => { this._touchHandled = false; }, 50);

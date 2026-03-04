@@ -2093,12 +2093,13 @@
       { id: 'hunter-map',            persistKey: 'persist-hunter-map' }
     ];
     // SearchableSelect同期対象ID
-    const SS_SURVIVOR_IDS = ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter'];
-    const SS_HUNTER_IDS  = ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'];
+    const SS_SURVIVOR_IDS = ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter', 'survivor-map'];
+    const SS_HUNTER_IDS  = ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4', 'hunter-map'];
     const SS_ALL_CHAR_IDS = [
       'my-survivor', 'teammate-1', 'teammate-2', 'teammate-3',
       'opponent-hunter', 'my-hunter',
-      'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'
+      'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4',
+      'survivor-map', 'hunter-map'
     ];
 
     const SEASONS = [
@@ -4815,19 +4816,17 @@
       const idx = order.indexOf(currentId);
       if (idx === -1 || idx >= order.length - 1) return;
       const nextId = order[idx + 1];
-      setTimeout(() => {
-        const ss = searchableSelects[nextId];
-        if (ss) {
-          ss._refreshOptions();
-          ss._filterAndRender('');
-          ss.input.focus();
-          ss._open();
-          ss.input.select();
-        } else {
-          const el = document.getElementById(nextId);
-          if (el) el.focus();
-        }
-      }, 0);
+      const ss = searchableSelects[nextId];
+      if (ss) {
+        ss._refreshOptions();
+        ss._filterAndRender('');
+        ss.input.focus();
+        ss._open();
+        ss.input.select();
+      } else {
+        const el = document.getElementById(nextId);
+        if (el) el.focus();
+      }
     }
 
     function initAutoFocus() {
@@ -4882,21 +4881,6 @@
         });
       });
 
-      // マップフィールドの自己除外
-      ['survivor-map', 'hunter-map'].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const restore = () => el.querySelectorAll('option[hidden]').forEach(o => { o.hidden = false; });
-        el.addEventListener('focus', () => {
-          restore();
-          if (el.value) {
-            const opt = el.querySelector(`option[value="${el.value}"]`);
-            if (opt) opt.hidden = true;
-          }
-        });
-        el.addEventListener('change', restore);
-        el.addEventListener('blur', restore);
-      });
     }
 
     window.addEventListener('DOMContentLoaded', init);

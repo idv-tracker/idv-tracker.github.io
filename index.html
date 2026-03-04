@@ -1801,7 +1801,8 @@
         this.highlightIndex = -1;
         this.isOpen = false;
         this.options = []; // {value, label, reading}
-        
+        this.getExcluded = null; // () => Set<value> — 除外する選択済み値
+
         this._build();
         this._bindEvents();
       }
@@ -1913,11 +1914,15 @@
         this.dropdown.innerHTML = '';
         this.highlightIndex = -1;
         
+        const excluded = new Set(this.getExcluded ? this.getExcluded() : []);
+        if (this.value) excluded.add(this.value); // 自己除外
+
         let filtered;
         if (!q) {
-          filtered = this.options;
+          filtered = this.options.filter(opt => !excluded.has(opt.value));
         } else {
           filtered = this.options.filter(opt => {
+            if (excluded.has(opt.value)) return false;
             const label = opt.label.toLowerCase();
             const reading = opt.reading;
             return label.includes(q) || reading.includes(q);
@@ -2607,7 +2612,9 @@
       
       // キャラ選択を検索付きドロップダウンに変換
       initAllSearchableSelects();
-      
+      initAutoFocus();
+      initGroupExclude();
+
       // プレースホルダースタイルを初期化（選択肢更新の前に実行）
       initializePlaceholderStyles();
       
@@ -4790,6 +4797,108 @@
       }
     })();
     
+    // ===== 自動フォーカス =====
+    const SURVIVOR_FOCUS_ORDER = [
+      'survivor-date', 'survivor-rank', 'my-survivor',
+      'teammate-1', 'teammate-2', 'teammate-3',
+      'opponent-hunter', 'survivor-map'
+    ];
+    const HUNTER_FOCUS_ORDER = [
+      'hunter-date', 'hunter-rank', 'my-hunter',
+      'opponent-survivor-1', 'opponent-survivor-2',
+      'opponent-survivor-3', 'opponent-survivor-4',
+      'hunter-map'
+    ];
+
+    function focusNextField(perspective, currentId) {
+      const order = perspective === 'survivor' ? SURVIVOR_FOCUS_ORDER : HUNTER_FOCUS_ORDER;
+      const idx = order.indexOf(currentId);
+      if (idx === -1 || idx >= order.length - 1) return;
+      const nextId = order[idx + 1];
+      setTimeout(() => {
+        const ss = searchableSelects[nextId];
+        if (ss) {
+          ss._refreshOptions();
+          ss._filterAndRender('');
+          ss.input.focus();
+          ss._open();
+          ss.input.select();
+        } else {
+          const el = document.getElementById(nextId);
+          if (el) el.focus();
+        }
+      }, 0);
+    }
+
+    function initAutoFocus() {
+      ['survivor-date', 'hunter-date'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const perspective = id.startsWith('survivor') ? 'survivor' : 'hunter';
+        el.addEventListener('change', () => focusNextField(perspective, id));
+      });
+      [
+        ['survivor-rank', 'survivor'], ['survivor-map', 'survivor'],
+        ['hunter-rank', 'hunter'],    ['hunter-map', 'hunter']
+      ].forEach(([id, perspective]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('change', () => focusNextField(perspective, id));
+      });
+      [
+        ['my-survivor', 'survivor'], ['teammate-1', 'survivor'],
+        ['teammate-2', 'survivor'],  ['teammate-3', 'survivor'],
+        ['opponent-hunter', 'survivor'],
+        ['my-hunter', 'hunter'],
+        ['opponent-survivor-1', 'hunter'], ['opponent-survivor-2', 'hunter'],
+        ['opponent-survivor-3', 'hunter'], ['opponent-survivor-4', 'hunter']
+      ].forEach(([id, perspective]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('change', () => focusNextField(perspective, id));
+      });
+    }
+
+    // ===== 同グループ内の選択済みキャラを除外 =====
+    function initGroupExclude() {
+      const CHAR_GROUPS = [
+        ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3'],
+        ['opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4']
+      ];
+      CHAR_GROUPS.forEach(group => {
+        group.forEach(id => {
+          const ss = searchableSelects[id];
+          if (!ss) return;
+          ss.getExcluded = () => {
+            const excluded = new Set();
+            group.forEach(sibId => {
+              if (sibId !== id) {
+                const val = searchableSelects[sibId]?.value;
+                if (val) excluded.add(val);
+              }
+            });
+            return excluded;
+          };
+        });
+      });
+
+      // マップフィールドの自己除外
+      ['survivor-map', 'hunter-map'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const restore = () => el.querySelectorAll('option[hidden]').forEach(o => { o.hidden = false; });
+        el.addEventListener('focus', () => {
+          restore();
+          if (el.value) {
+            const opt = el.querySelector(`option[value="${el.value}"]`);
+            if (opt) opt.hidden = true;
+          }
+        });
+        el.addEventListener('change', restore);
+        el.addEventListener('blur', restore);
+      });
+    }
+
     window.addEventListener('DOMContentLoaded', init);
     
     // Service Worker登録（PWA）

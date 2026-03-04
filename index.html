@@ -1955,9 +1955,6 @@
             e.stopPropagation();
             this._selectOption(opt);
           });
-          div.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // キーボードが開いている間のblurを防ぐ
-          }, { passive: false });
           div.addEventListener('touchend', (e) => {
             e.preventDefault(); // 合成clickイベントを防ぐ（二重選択防止）
             this._selectOption(opt);

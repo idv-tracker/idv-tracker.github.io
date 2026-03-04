@@ -4827,6 +4827,24 @@
       'hunter-map'
     ];
 
+    // iOS IMEリセット用ダミーinput（一度作成して使い回す）
+    let _imeResetDummy = null;
+    function getImeResetDummy() {
+      if (_imeResetDummy) return _imeResetDummy;
+      _imeResetDummy = document.createElement('input');
+      _imeResetDummy.setAttribute('type', 'text');
+      _imeResetDummy.setAttribute('autocomplete', 'off');
+      _imeResetDummy.setAttribute('autocorrect', 'off');
+      _imeResetDummy.setAttribute('autocapitalize', 'none');
+      _imeResetDummy.setAttribute('spellcheck', 'false');
+      _imeResetDummy.style.cssText =
+        'position:fixed;top:0;left:0;width:1px;height:1px;' +
+        'opacity:0.01;border:none;outline:none;padding:0;' +
+        'font-size:16px;pointer-events:none;';
+      document.body.appendChild(_imeResetDummy);
+      return _imeResetDummy;
+    }
+
     function focusNextField(perspective, currentId) {
       const order = perspective === 'survivor' ? SURVIVOR_FOCUS_ORDER : HUNTER_FOCUS_ORDER;
       const idx = order.indexOf(currentId);
@@ -4834,8 +4852,10 @@
       const nextId = order[idx + 1];
       const ss = searchableSelects[nextId];
       if (ss) {
-        ss.input.value = ''; // 前フィールドの検索テキストをクリア
-        ss.input.focus();    // focusイベントが _refreshOptions/_filterAndRender/_open を実行
+        // ダミーinputに一瞬フォーカスしてIME状態をリセット→次フィールドへ転送
+        getImeResetDummy().focus();
+        ss.input.value = '';
+        ss.input.focus();
       } else {
         const el = document.getElementById(nextId);
         if (el) el.focus();

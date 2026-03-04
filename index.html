@@ -2108,13 +2108,12 @@
       { id: 'hunter-map',            persistKey: 'persist-hunter-map' }
     ];
     // SearchableSelect同期対象ID
-    const SS_SURVIVOR_IDS = ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter', 'survivor-map'];
-    const SS_HUNTER_IDS  = ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4', 'hunter-map'];
+    const SS_SURVIVOR_IDS = ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter'];
+    const SS_HUNTER_IDS  = ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'];
     const SS_ALL_CHAR_IDS = [
       'my-survivor', 'teammate-1', 'teammate-2', 'teammate-3',
       'opponent-hunter', 'my-hunter',
-      'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4',
-      'survivor-map', 'hunter-map'
+      'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'
     ];
 
     const SEASONS = [
@@ -4876,8 +4875,7 @@
         ['opponent-hunter', 'survivor'],
         ['my-hunter', 'hunter'],
         ['opponent-survivor-1', 'hunter'], ['opponent-survivor-2', 'hunter'],
-        ['opponent-survivor-3', 'hunter'], ['opponent-survivor-4', 'hunter'],
-        ['survivor-map', 'survivor'], ['hunter-map', 'hunter']
+        ['opponent-survivor-3', 'hunter'], ['opponent-survivor-4', 'hunter']
       ].forEach(([id, perspective]) => {
         const ss = searchableSelects[id];
         if (!ss) return;

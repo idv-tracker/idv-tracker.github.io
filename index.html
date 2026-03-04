@@ -1804,6 +1804,7 @@
         this.getExcluded = null; // () => Set<value> — 除外する選択済み値
         this.onSelected = null;  // () => void — 選択確定時にtouchend直下で呼ばれる
         this._touchHandled = false;
+        this._userTyped = false;
 
         this._build();
         this._bindEvents();
@@ -1848,14 +1849,15 @@
       _bindEvents() {
         // フォーカス時にドロップダウンを開く
         this.input.addEventListener('focus', () => {
+          this._userTyped = false;
           this._refreshOptions();
           this._filterAndRender('');
           this._open();
-          // select()は呼ばない — iOSでプログラム的フォーカス時にカーソルが消える原因
         });
-        
+
         // 入力時にフィルター
         this.input.addEventListener('input', () => {
+          this._userTyped = true;
           this._filterAndRender(this.input.value);
           if (!this.isOpen) this._open();
         });
@@ -2013,9 +2015,6 @@
         this.setValue(opt.value);
         this._close();
 
-        // blur()を先に呼びSS1のキーボードを解放 → IMEを確定させてから
-        // onSelected()でSS2をfocus() → iOSが「新規キーボード取得」として処理
-        // （転送ではなく解放→再取得にすることでIME使用後も正常動作）
         this.input.blur();
         if (this.onSelected) this.onSelected();
 
@@ -4827,23 +4826,7 @@
       'hunter-map'
     ];
 
-    // iOS IMEリセット用ダミーinput（一度作成して使い回す）
-    let _imeResetDummy = null;
-    function getImeResetDummy() {
-      if (_imeResetDummy) return _imeResetDummy;
-      _imeResetDummy = document.createElement('input');
-      _imeResetDummy.setAttribute('type', 'text');
-      _imeResetDummy.setAttribute('autocomplete', 'off');
-      _imeResetDummy.setAttribute('autocorrect', 'off');
-      _imeResetDummy.setAttribute('autocapitalize', 'none');
-      _imeResetDummy.setAttribute('spellcheck', 'false');
-      _imeResetDummy.style.cssText =
-        'position:fixed;top:0;left:0;width:1px;height:1px;' +
-        'opacity:0.01;border:none;outline:none;padding:0;' +
-        'font-size:16px;pointer-events:none;';
-      document.body.appendChild(_imeResetDummy);
-      return _imeResetDummy;
-    }
+    const _isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
     function focusNextField(perspective, currentId) {
       const order = perspective === 'survivor' ? SURVIVOR_FOCUS_ORDER : HUNTER_FOCUS_ORDER;
@@ -4852,10 +4835,18 @@
       const nextId = order[idx + 1];
       const ss = searchableSelects[nextId];
       if (ss) {
-        // ダミーinputに一瞬フォーカスしてIME状態をリセット→次フィールドへ転送
-        getImeResetDummy().focus();
+        const prevSS = searchableSelects[currentId];
+        const userTyped = prevSS && prevSS._userTyped;
         ss.input.value = '';
-        ss.input.focus();
+        if (_isTouchDevice && userTyped) {
+          // 前フィールドで検索した場合: キーボードを開かずドロップダウンだけ表示
+          ss._refreshOptions();
+          ss._filterAndRender('');
+          ss._open();
+          ss.dropdown.scrollIntoView({ block: 'nearest' });
+        } else {
+          ss.input.focus();
+        }
       } else {
         const el = document.getElementById(nextId);
         if (el) el.focus();

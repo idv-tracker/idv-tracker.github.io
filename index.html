@@ -1804,7 +1804,6 @@
         this.getExcluded = null; // () => Set<value> — 除外する選択済み値
         this.onSelected = null;  // () => void — 選択確定時にtouchend直下で呼ばれる
         this._touchHandled = false;
-        this._programmaticFocus = false; // focusNextFieldからのfocusか否かを示すフラグ
 
         this._build();
         this._bindEvents();
@@ -1849,12 +1848,10 @@
       _bindEvents() {
         // フォーカス時にドロップダウンを開く
         this.input.addEventListener('focus', () => {
-          // プログラム的フォーカス時はfocusNextFieldが処理するためスキップ
-          if (this._programmaticFocus) return;
           this._refreshOptions();
           this._filterAndRender('');
           this._open();
-          this.input.select();
+          // select()は呼ばない — iOSでプログラム的フォーカス時にカーソルが消える原因
         });
         
         // 入力時にフィルター
@@ -1963,9 +1960,7 @@
             this._selectOption(opt);
           });
           div.addEventListener('touchstart', (e) => {
-            // キーボードが開いている間のblur（dismiss）を防ぐ
-            // ※ select()をスキップする_programmaticFocusフラグと組み合わせることで
-            //   「キーボード表示されるがカーソルなし」問題を回避
+            // タップ時のblur（キーボードdismiss）を防ぐ
             e.preventDefault();
           }, { passive: false });
           div.addEventListener('touchend', () => {
@@ -4841,13 +4836,7 @@
       const ss = searchableSelects[nextId];
       if (ss) {
         ss.input.value = ''; // 前フィールドの検索テキストをクリア
-        ss._refreshOptions();
-        ss._filterAndRender('');
-        ss._programmaticFocus = true;
-        ss.input.focus(); // focusイベントはフラグでスキップされる
-        ss._programmaticFocus = false;
-        ss._open();
-        // select()を呼ばない → iOSで選択モードに入らずカーソルが正常表示される
+        ss.input.focus();    // focusイベントが _refreshOptions/_filterAndRender/_open を実行
       } else {
         const el = document.getElementById(nextId);
         if (el) el.focus();

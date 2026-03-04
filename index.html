@@ -2007,10 +2007,13 @@
       _selectOption(opt) {
         this.setValue(opt.value);
         this._close();
-        this.input.blur();
-        
-        // 既存のchangeイベントを発火
+
+        // changeイベントを先に発火（focusNextFieldが次フィールドにフォーカスを移す）
+        // → 次フィールドへのfocusが先に走ることでキーボードが途切れずに転送される
         this.select.dispatchEvent(new Event('change', { bubbles: true }));
+
+        // 次フィールドへfocusが移っていない場合（最終フィールド等）のためblur
+        this.input.blur();
       }
       
       // 外部から値を設定

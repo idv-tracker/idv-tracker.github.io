@@ -12,28 +12,24 @@
   <meta property="og:description" content="第五人格のランク戦戦績を簡単に記録・管理">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://idv-tracker.github.io/">
-  
+
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="第五人格トラッカー">
   <meta name="twitter:description" content="戦績管理・勝率計算アプリ">
-  
-  <!-- アイコン設定 -->
-  <link rel="apple-touch-icon" href="icon.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
-  <link rel="shortcut icon" href="icon.png">
-  
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312"
-     crossorigin="anonymous"></script>
-  
+
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f3460">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="第五トラッカー">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%230f3460' width='180' height='180' rx='32'/><text x='90' y='125' font-size='110' text-anchor='middle' fill='white'>V</text></svg>">
-  
+
+  <!-- アイコン設定 -->
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
+  <link rel="shortcut icon" href="icon.png">
+
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-EL23B3L2TD"></script>
   <script>
@@ -42,7 +38,11 @@
     gtag('js', new Date());
     gtag('config', 'G-EL23B3L2TD');
   </script>
-  
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312"
+     crossorigin="anonymous"></script>
+
   <style>
     * {
       margin: 0;
@@ -1296,7 +1296,7 @@
           
           <div class="form-group">
             <label class="form-label">自分のサバイバー <input type="checkbox" id="persist-my-survivor" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
-            <select id="my-survivor" onchange="updateSurvivorSelects()">
+            <select id="my-survivor" onchange="updateSurvivorSelectOptions()">
               <option value="">選択してください</option>
             </select>
           </div>
@@ -1305,7 +1305,7 @@
             <label class="form-label">味方サバイバー</label>
             <div class="teammate-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
               <div>
-                <select id="teammate-1" onchange="updateSurvivorSelects()">
+                <select id="teammate-1" onchange="updateSurvivorSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
                 <label style="display: block; margin-top: 5px; font-size: 12px;">
@@ -1313,7 +1313,7 @@
                 </label>
               </div>
               <div>
-                <select id="teammate-2" onchange="updateSurvivorSelects()">
+                <select id="teammate-2" onchange="updateSurvivorSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
                 <label style="display: block; margin-top: 5px; font-size: 12px;">
@@ -1321,7 +1321,7 @@
                 </label>
               </div>
               <div>
-                <select id="teammate-3" onchange="updateSurvivorSelects()">
+                <select id="teammate-3" onchange="updateSurvivorSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
                 <label style="display: block; margin-top: 5px; font-size: 12px;">
@@ -1390,7 +1390,7 @@
             <label class="form-label">相手サバイバー</label>
             <div class="opponent-survivor-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
               <div>
-                <select id="opponent-survivor-1" onchange="updateOpponentSurvivorSelects()">
+                <select id="opponent-survivor-1" onchange="updateHunterOpponentSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
                 <label style="display: block; margin-top: 5px; font-size: 12px;">
@@ -1398,7 +1398,7 @@
                 </label>
               </div>
               <div>
-                <select id="opponent-survivor-2" onchange="updateOpponentSurvivorSelects()">
+                <select id="opponent-survivor-2" onchange="updateHunterOpponentSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
                 <label style="display: block; margin-top: 5px; font-size: 12px;">
@@ -1406,7 +1406,7 @@
                 </label>
               </div>
               <div>
-                <select id="opponent-survivor-3" onchange="updateOpponentSurvivorSelects()">
+                <select id="opponent-survivor-3" onchange="updateHunterOpponentSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
                 <label style="display: block; margin-top: 5px; font-size: 12px;">
@@ -1414,7 +1414,7 @@
                 </label>
               </div>
               <div>
-                <select id="opponent-survivor-4" onchange="updateOpponentSurvivorSelects()">
+                <select id="opponent-survivor-4" onchange="updateHunterOpponentSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
                 <label style="display: block; margin-top: 5px; font-size: 12px;">
@@ -2034,13 +2034,7 @@
     
     // 全キャラ選択selectをSearchableSelectに変換
     function initAllSearchableSelects() {
-      const charSelectIds = [
-        'my-survivor', 'teammate-1', 'teammate-2', 'teammate-3',
-        'opponent-hunter',
-        'my-hunter',
-        'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'
-      ];
-      charSelectIds.forEach(id => initSearchableSelect(id));
+      SS_ALL_CHAR_IDS.forEach(id => initSearchableSelect(id));
     }
     
     // SearchableSelectの値同期用ヘルパー
@@ -2060,6 +2054,36 @@
       }
     }
     
+    // ===== フォームフィールド定数 =====
+    const SURVIVOR_FIELDS = [
+      { id: 'survivor-date',     persistKey: 'persist-survivor-date',     isDate: true },
+      { id: 'survivor-rank',     persistKey: 'persist-survivor-rank' },
+      { id: 'my-survivor',       persistKey: 'persist-my-survivor' },
+      { id: 'teammate-1',        persistKey: 'persist-teammate-1' },
+      { id: 'teammate-2',        persistKey: 'persist-teammate-2' },
+      { id: 'teammate-3',        persistKey: 'persist-teammate-3' },
+      { id: 'opponent-hunter',   persistKey: 'persist-opponent-hunter' },
+      { id: 'survivor-map',      persistKey: 'persist-survivor-map' }
+    ];
+    const HUNTER_FIELDS = [
+      { id: 'hunter-date',           persistKey: 'persist-hunter-date',           isDate: true },
+      { id: 'hunter-rank',           persistKey: 'persist-hunter-rank' },
+      { id: 'my-hunter',             persistKey: 'persist-my-hunter' },
+      { id: 'opponent-survivor-1',   persistKey: 'persist-opponent-survivor-1' },
+      { id: 'opponent-survivor-2',   persistKey: 'persist-opponent-survivor-2' },
+      { id: 'opponent-survivor-3',   persistKey: 'persist-opponent-survivor-3' },
+      { id: 'opponent-survivor-4',   persistKey: 'persist-opponent-survivor-4' },
+      { id: 'hunter-map',            persistKey: 'persist-hunter-map' }
+    ];
+    // SearchableSelect同期対象ID
+    const SS_SURVIVOR_IDS = ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter'];
+    const SS_HUNTER_IDS  = ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'];
+    const SS_ALL_CHAR_IDS = [
+      'my-survivor', 'teammate-1', 'teammate-2', 'teammate-3',
+      'opponent-hunter', 'my-hunter',
+      'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'
+    ];
+
     const SEASONS = [
       { id: 'S41', label: 'S41', start: '2026-02-05', end: '2026-04-22' }
       // 新しいシーズンはここに追加
@@ -2068,10 +2092,11 @@
     
     // 期間フィルターにシーズンを追加
     function populatePeriodFilters() {
+      const sortedSeasons = [...SEASONS].reverse();
+
       // 総合勝率タブの期間フィルター（全期間、百戦勝率、シーズン）
       const overallFilter = document.getElementById('overall-period-filter');
       if (overallFilter) {
-        const sortedSeasons = [...SEASONS].reverse();
         sortedSeasons.forEach(season => {
           const option = document.createElement('option');
           option.value = season.id;
@@ -2079,16 +2104,12 @@
           overallFilter.appendChild(option);
         });
       }
-      
+
       // 他のタブの期間フィルター（全期間、今日、直近7日、直近30日、シーズン）
       const filterIds = ['character-period-filter', 'map-period-filter', 'opponent-period-filter', 'history-period-filter'];
-      
       filterIds.forEach(filterId => {
         const filter = document.getElementById(filterId);
         if (!filter) return;
-        
-        // シーズンを新しい順に追加
-        const sortedSeasons = [...SEASONS].reverse();
         sortedSeasons.forEach(season => {
           const option = document.createElement('option');
           option.value = season.id;
@@ -2315,7 +2336,6 @@
             characterUsageCount = loadedData;
           } else {
             // 古い構造の場合、全試合データから再計算
-            console.log('Migrating character usage count structure...');
             characterUsageCount = {
               survivorUsed: {},
               survivorFaced: {},
@@ -2466,9 +2486,7 @@
       updatePlaceholderStyle(opponentHunterSelect);
       
       // SearchableSelectを同期
-      ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3',
-       'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4',
-       'my-hunter', 'opponent-hunter'].forEach(syncSearchableSelect);
+      SS_ALL_CHAR_IDS.forEach(syncSearchableSelect);
     }
     
     // ページネーション用の変数
@@ -2581,8 +2599,8 @@
       // プレースホルダースタイルを初期化（選択肢更新の前に実行）
       initializePlaceholderStyles();
       
-      updateSurvivorSelects(); // サバイバー選択肢の初期化
-      updateOpponentSurvivorSelects(); // 相手サバイバー選択肢の初期化
+      updateSurvivorSelectOptions(); // サバイバー選択肢の初期化
+      updateHunterOpponentSelectOptions(); // 相手サバイバー選択肢の初期化
       
       // 保持された値を復元（DOM要素が完全に準備された後）
       loadPersistedValues('survivor');
@@ -2608,88 +2626,6 @@
       initializeTabScrollIndicator();
       
       updateAllWithFilters(); // フィルターと統計を更新
-    }
-    
-    // サバイバー選択肢を更新（重複を除外）
-    function updateSurvivorSelects() {
-      const mySurvivor = document.getElementById('my-survivor').value;
-      const teammate1 = document.getElementById('teammate-1').value;
-      const teammate2 = document.getElementById('teammate-2').value;
-      const teammate3 = document.getElementById('teammate-3').value;
-      
-      const selected = [mySurvivor, teammate1, teammate2, teammate3].filter(v => v);
-      
-      const selectIds = ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3'];
-      
-      // サバイバー使用回数順にソート
-      const sortedSurvivors = sortCharactersByUsage(SURVIVORS, 'survivorUsed');
-      
-      selectIds.forEach(id => {
-        const select = document.getElementById(id);
-        const currentValue = select.value;
-        
-        // 選択肢を再構築
-        select.innerHTML = '<option value="">選択してください</option>';
-        sortedSurvivors.forEach(survivor => {
-          // 自分が選択中か、他で選択されていない場合のみ表示
-          if (survivor === currentValue || !selected.includes(survivor)) {
-            const option = document.createElement('option');
-            option.value = survivor;
-            option.textContent = survivor;
-            select.appendChild(option);
-          }
-        });
-        
-        // 値を復元
-        select.value = currentValue;
-        
-        // プレースホルダースタイルを更新
-        updatePlaceholderStyle(select);
-        
-        // SearchableSelect同期
-        syncSearchableSelect(id);
-      });
-    }
-    
-    // ハンター視点の相手サバイバー選択肢を更新（重複を除外）
-    function updateOpponentSurvivorSelects() {
-      const survivor1 = document.getElementById('opponent-survivor-1').value;
-      const survivor2 = document.getElementById('opponent-survivor-2').value;
-      const survivor3 = document.getElementById('opponent-survivor-3').value;
-      const survivor4 = document.getElementById('opponent-survivor-4').value;
-      
-      const selected = [survivor1, survivor2, survivor3, survivor4].filter(v => v);
-      
-      const selectIds = ['opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'];
-      
-      // サバイバー対戦回数順にソート
-      const sortedSurvivors = sortCharactersByUsage(SURVIVORS, 'survivorFaced');
-      
-      selectIds.forEach(id => {
-        const select = document.getElementById(id);
-        const currentValue = select.value;
-        
-        // 選択肢を再構築
-        select.innerHTML = '<option value="">選択してください</option>';
-        sortedSurvivors.forEach(survivor => {
-          // 自分が選択中か、他で選択されていない場合のみ表示
-          if (survivor === currentValue || !selected.includes(survivor)) {
-            const option = document.createElement('option');
-            option.value = survivor;
-            option.textContent = survivor;
-            select.appendChild(option);
-          }
-        });
-        
-        // 値を復元
-        select.value = currentValue;
-        
-        // プレースホルダースタイルを更新
-        updatePlaceholderStyle(select);
-        
-        // SearchableSelect同期
-        syncSearchableSelect(id);
-      });
     }
     
     // セレクトボックスにオプションを追加
@@ -3274,78 +3210,30 @@
     
     // フォームをリセット（保持設定に応じて）
     function resetForm(perspective) {
-      if (perspective === 'survivor') {
-        const fields = [
-          { id: 'survivor-date', persistKey: 'persist-survivor-date', isDate: true },
-          { id: 'survivor-rank', persistKey: 'persist-survivor-rank' },
-          { id: 'my-survivor', persistKey: 'persist-my-survivor' },
-          { id: 'teammate-1', persistKey: 'persist-teammate-1' },
-          { id: 'teammate-2', persistKey: 'persist-teammate-2' },
-          { id: 'teammate-3', persistKey: 'persist-teammate-3' },
-          { id: 'opponent-hunter', persistKey: 'persist-opponent-hunter' },
-          { id: 'survivor-map', persistKey: 'persist-survivor-map' }
-        ];
-        
-        fields.forEach(field => {
-          const persistCheckbox = document.getElementById(field.persistKey);
-          const element = document.getElementById(field.id);
-          
-          // 保持チェックボックスがオフの場合のみクリア
-          if (!persistCheckbox || !persistCheckbox.checked) {
-            if (element) {
-              if (field.isDate) {
-                element.value = getToday(); // 日付は今日に戻す
-              } else {
-                element.value = '';
-              }
-            }
+      const fields = perspective === 'survivor' ? SURVIVOR_FIELDS : HUNTER_FIELDS;
+      fields.forEach(field => {
+        const persistCheckbox = document.getElementById(field.persistKey);
+        const element = document.getElementById(field.id);
+        // 保持チェックボックスがオフの場合のみクリア
+        if (!persistCheckbox || !persistCheckbox.checked) {
+          if (element) {
+            element.value = field.isDate ? getToday() : '';
           }
-        });
-        
+        }
+      });
+
+      if (perspective === 'survivor') {
         selectedEscapeCount.survivor = null;
         document.getElementById('survivor-comment').value = '';
-        document.querySelectorAll('#survivor-input .result-button').forEach(btn => {
-          btn.classList.remove('selected');
-        });
-        updateSurvivorSelectOptions(); // 選択肢を更新
-        // SearchableSelect同期
-        ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter'].forEach(syncSearchableSelect);
+        document.querySelectorAll('#survivor-input .result-button').forEach(btn => btn.classList.remove('selected'));
+        updateSurvivorSelectOptions();
+        SS_SURVIVOR_IDS.forEach(syncSearchableSelect);
       } else {
-        const fields = [
-          { id: 'hunter-date', persistKey: 'persist-hunter-date', isDate: true },
-          { id: 'hunter-rank', persistKey: 'persist-hunter-rank' },
-          { id: 'my-hunter', persistKey: 'persist-my-hunter' },
-          { id: 'opponent-survivor-1', persistKey: 'persist-opponent-survivor-1' },
-          { id: 'opponent-survivor-2', persistKey: 'persist-opponent-survivor-2' },
-          { id: 'opponent-survivor-3', persistKey: 'persist-opponent-survivor-3' },
-          { id: 'opponent-survivor-4', persistKey: 'persist-opponent-survivor-4' },
-          { id: 'hunter-map', persistKey: 'persist-hunter-map' }
-        ];
-        
-        fields.forEach(field => {
-          const persistCheckbox = document.getElementById(field.persistKey);
-          const element = document.getElementById(field.id);
-          
-          // 保持チェックボックスがオフの場合のみクリア
-          if (!persistCheckbox || !persistCheckbox.checked) {
-            if (element) {
-              if (field.isDate) {
-                element.value = getToday(); // 日付は今日に戻す
-              } else {
-                element.value = '';
-              }
-            }
-          }
-        });
-        
         selectedEscapeCount.hunter = null;
         document.getElementById('hunter-comment').value = '';
-        document.querySelectorAll('#hunter-input .result-button').forEach(btn => {
-          btn.classList.remove('selected');
-        });
-        updateHunterOpponentSelectOptions(); // 選択肢を更新
-        // SearchableSelect同期
-        ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'].forEach(syncSearchableSelect);
+        document.querySelectorAll('#hunter-input .result-button').forEach(btn => btn.classList.remove('selected'));
+        updateHunterOpponentSelectOptions();
+        SS_HUNTER_IDS.forEach(syncSearchableSelect);
       }
     }
     
@@ -3386,133 +3274,46 @@
     // 保持された値を復元
     function loadPersistedValues(perspective) {
       try {
-        if (perspective === 'survivor') {
-          const fields = [
-            { id: 'survivor-date', persistKey: 'persist-survivor-date', isDate: true },
-            { id: 'survivor-rank', persistKey: 'persist-survivor-rank' },
-            { id: 'my-survivor', persistKey: 'persist-my-survivor' },
-            { id: 'teammate-1', persistKey: 'persist-teammate-1' },
-            { id: 'teammate-2', persistKey: 'persist-teammate-2' },
-            { id: 'teammate-3', persistKey: 'persist-teammate-3' },
-            { id: 'opponent-hunter', persistKey: 'persist-opponent-hunter' },
-            { id: 'survivor-map', persistKey: 'persist-survivor-map' }
-          ];
-          
-          fields.forEach(field => {
-            const persistCheckbox = document.getElementById(field.persistKey);
-            const element = document.getElementById(field.id);
-            const savedValue = localStorage.getItem(`persist_value_${field.id}`);
-            const isChecked = localStorage.getItem(`persist_checkbox_${field.persistKey}`) === 'true';
-            
-            if (isChecked && persistCheckbox) {
-              persistCheckbox.checked = true;
-            }
-            
-            if (savedValue && element) {
-              element.value = savedValue;
-            } else if (field.isDate && element && !element.value) {
-              // 日付フィールドで保持していない場合は今日の日付
-              element.value = getToday();
-            }
-          });
-        } else {
-          const fields = [
-            { id: 'hunter-date', persistKey: 'persist-hunter-date', isDate: true },
-            { id: 'hunter-rank', persistKey: 'persist-hunter-rank' },
-            { id: 'my-hunter', persistKey: 'persist-my-hunter' },
-            { id: 'opponent-survivor-1', persistKey: 'persist-opponent-survivor-1' },
-            { id: 'opponent-survivor-2', persistKey: 'persist-opponent-survivor-2' },
-            { id: 'opponent-survivor-3', persistKey: 'persist-opponent-survivor-3' },
-            { id: 'opponent-survivor-4', persistKey: 'persist-opponent-survivor-4' },
-            { id: 'hunter-map', persistKey: 'persist-hunter-map' }
-          ];
-          
-          fields.forEach(field => {
-            const persistCheckbox = document.getElementById(field.persistKey);
-            const element = document.getElementById(field.id);
-            const savedValue = localStorage.getItem(`persist_value_${field.id}`);
-            const isChecked = localStorage.getItem(`persist_checkbox_${field.persistKey}`) === 'true';
-            
-            if (isChecked && persistCheckbox) {
-              persistCheckbox.checked = true;
-            }
-            
-            if (savedValue && element) {
-              element.value = savedValue;
-            } else if (field.isDate && element && !element.value) {
-              // 日付フィールドで保持していない場合は今日の日付
-              element.value = getToday();
-            }
-          });
-        }
+        const fields = perspective === 'survivor' ? SURVIVOR_FIELDS : HUNTER_FIELDS;
+        fields.forEach(field => {
+          const persistCheckbox = document.getElementById(field.persistKey);
+          const element = document.getElementById(field.id);
+          const savedValue = localStorage.getItem(`persist_value_${field.id}`);
+          const isChecked = localStorage.getItem(`persist_checkbox_${field.persistKey}`) === 'true';
+
+          if (isChecked && persistCheckbox) {
+            persistCheckbox.checked = true;
+          }
+          if (savedValue && element) {
+            element.value = savedValue;
+          } else if (field.isDate && element && !element.value) {
+            // 日付フィールドで保持していない場合は今日の日付
+            element.value = getToday();
+          }
+        });
       } catch (error) {
         console.error('Error loading persisted values:', error);
       }
-      
+
       // SearchableSelect同期
-      if (perspective === 'survivor') {
-        ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter'].forEach(syncSearchableSelect);
-      } else {
-        ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'].forEach(syncSearchableSelect);
-      }
+      (perspective === 'survivor' ? SS_SURVIVOR_IDS : SS_HUNTER_IDS).forEach(syncSearchableSelect);
     }
     
     // 保持設定を保存
     function savePersistedValues(perspective) {
       try {
-        if (perspective === 'survivor') {
-          const fields = [
-            { id: 'survivor-date', persistKey: 'persist-survivor-date' },
-            { id: 'survivor-rank', persistKey: 'persist-survivor-rank' },
-            { id: 'my-survivor', persistKey: 'persist-my-survivor' },
-            { id: 'teammate-1', persistKey: 'persist-teammate-1' },
-            { id: 'teammate-2', persistKey: 'persist-teammate-2' },
-            { id: 'teammate-3', persistKey: 'persist-teammate-3' },
-            { id: 'opponent-hunter', persistKey: 'persist-opponent-hunter' },
-            { id: 'survivor-map', persistKey: 'persist-survivor-map' }
-          ];
-          
-          fields.forEach(field => {
-            const persistCheckbox = document.getElementById(field.persistKey);
-            const element = document.getElementById(field.id);
-            
-            if (persistCheckbox && persistCheckbox.checked) {
-              localStorage.setItem(`persist_checkbox_${field.persistKey}`, 'true');
-              if (element) {
-                localStorage.setItem(`persist_value_${field.id}`, element.value);
-              }
-            } else {
-              localStorage.removeItem(`persist_checkbox_${field.persistKey}`);
-              localStorage.removeItem(`persist_value_${field.id}`);
-            }
-          });
-        } else {
-          const fields = [
-            { id: 'hunter-date', persistKey: 'persist-hunter-date' },
-            { id: 'hunter-rank', persistKey: 'persist-hunter-rank' },
-            { id: 'my-hunter', persistKey: 'persist-my-hunter' },
-            { id: 'opponent-survivor-1', persistKey: 'persist-opponent-survivor-1' },
-            { id: 'opponent-survivor-2', persistKey: 'persist-opponent-survivor-2' },
-            { id: 'opponent-survivor-3', persistKey: 'persist-opponent-survivor-3' },
-            { id: 'opponent-survivor-4', persistKey: 'persist-opponent-survivor-4' },
-            { id: 'hunter-map', persistKey: 'persist-hunter-map' }
-          ];
-          
-          fields.forEach(field => {
-            const persistCheckbox = document.getElementById(field.persistKey);
-            const element = document.getElementById(field.id);
-            
-            if (persistCheckbox && persistCheckbox.checked) {
-              localStorage.setItem(`persist_checkbox_${field.persistKey}`, 'true');
-              if (element) {
-                localStorage.setItem(`persist_value_${field.id}`, element.value);
-              }
-            } else {
-              localStorage.removeItem(`persist_checkbox_${field.persistKey}`);
-              localStorage.removeItem(`persist_value_${field.id}`);
-            }
-          });
-        }
+        const fields = perspective === 'survivor' ? SURVIVOR_FIELDS : HUNTER_FIELDS;
+        fields.forEach(field => {
+          const persistCheckbox = document.getElementById(field.persistKey);
+          const element = document.getElementById(field.id);
+          if (persistCheckbox && persistCheckbox.checked) {
+            localStorage.setItem(`persist_checkbox_${field.persistKey}`, 'true');
+            if (element) localStorage.setItem(`persist_value_${field.id}`, element.value);
+          } else {
+            localStorage.removeItem(`persist_checkbox_${field.persistKey}`);
+            localStorage.removeItem(`persist_value_${field.id}`);
+          }
+        });
       } catch (error) {
         console.error('Error saving persisted values:', error);
       }
@@ -3520,99 +3321,30 @@
     
     // 全ての保持設定をクリア（確認なし）
     function clearAllPersistence(perspective) {
-      console.log('clearAllPersistence called with perspective:', perspective);
-      
       try {
-        console.log('Clearing persistence immediately...');
-        
+        const fields = perspective === 'survivor' ? SURVIVOR_FIELDS : HUNTER_FIELDS;
+        fields.forEach(field => {
+          const persistCheckbox = document.getElementById(field.persistKey);
+          const element = document.getElementById(field.id);
+          if (persistCheckbox) persistCheckbox.checked = false;
+          if (element) {
+            if (field.isDate) {
+              element.value = getToday();
+            } else {
+              element.value = '';
+              if (element.tagName === 'SELECT') updatePlaceholderStyle(element);
+            }
+          }
+          localStorage.removeItem(`persist_checkbox_${field.persistKey}`);
+          localStorage.removeItem(`persist_value_${field.id}`);
+        });
+
         if (perspective === 'survivor') {
-          const fields = [
-            { id: 'survivor-date', persistKey: 'persist-survivor-date', isDate: true },
-            { id: 'survivor-rank', persistKey: 'persist-survivor-rank' },
-            { id: 'my-survivor', persistKey: 'persist-my-survivor' },
-            { id: 'teammate-1', persistKey: 'persist-teammate-1' },
-            { id: 'teammate-2', persistKey: 'persist-teammate-2' },
-            { id: 'teammate-3', persistKey: 'persist-teammate-3' },
-            { id: 'opponent-hunter', persistKey: 'persist-opponent-hunter' },
-            { id: 'survivor-map', persistKey: 'persist-survivor-map' }
-          ];
-          
-          fields.forEach(field => {
-            const persistCheckbox = document.getElementById(field.persistKey);
-            const element = document.getElementById(field.id);
-            
-            console.log(`Processing field: ${field.id}, checkbox found: ${!!persistCheckbox}, element found: ${!!element}`);
-            
-            if (persistCheckbox) {
-              persistCheckbox.checked = false;
-            }
-            
-            if (element) {
-              if (field.isDate) {
-                element.value = getToday(); // 日付は今日に戻す
-              } else {
-                element.value = '';
-                // selectの場合、プレースホルダースタイルを更新
-                if (element.tagName === 'SELECT') {
-                  updatePlaceholderStyle(element);
-                }
-              }
-            }
-            
-            localStorage.removeItem(`persist_checkbox_${field.persistKey}`);
-            localStorage.removeItem(`persist_value_${field.id}`);
-          });
-          
-          // 選択肢を更新
           updateSurvivorSelectOptions();
-          // SearchableSelect同期
-          ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter'].forEach(syncSearchableSelect);
-          
-          console.log('Survivor persistence cleared successfully');
+          SS_SURVIVOR_IDS.forEach(syncSearchableSelect);
         } else {
-          const fields = [
-            { id: 'hunter-date', persistKey: 'persist-hunter-date', isDate: true },
-            { id: 'hunter-rank', persistKey: 'persist-hunter-rank' },
-            { id: 'my-hunter', persistKey: 'persist-my-hunter' },
-            { id: 'opponent-survivor-1', persistKey: 'persist-opponent-survivor-1' },
-            { id: 'opponent-survivor-2', persistKey: 'persist-opponent-survivor-2' },
-            { id: 'opponent-survivor-3', persistKey: 'persist-opponent-survivor-3' },
-            { id: 'opponent-survivor-4', persistKey: 'persist-opponent-survivor-4' },
-            { id: 'hunter-map', persistKey: 'persist-hunter-map' }
-          ];
-          
-          fields.forEach(field => {
-            const persistCheckbox = document.getElementById(field.persistKey);
-            const element = document.getElementById(field.id);
-            
-            console.log(`Processing field: ${field.id}, checkbox found: ${!!persistCheckbox}, element found: ${!!element}`);
-            
-            if (persistCheckbox) {
-              persistCheckbox.checked = false;
-            }
-            
-            if (element) {
-              if (field.isDate) {
-                element.value = getToday(); // 日付は今日に戻す
-              } else {
-                element.value = '';
-                // selectの場合、プレースホルダースタイルを更新
-                if (element.tagName === 'SELECT') {
-                  updatePlaceholderStyle(element);
-                }
-              }
-            }
-            
-            localStorage.removeItem(`persist_checkbox_${field.persistKey}`);
-            localStorage.removeItem(`persist_value_${field.id}`);
-          });
-          
-          // 選択肢を更新
           updateHunterOpponentSelectOptions();
-          // SearchableSelect同期
-          ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'].forEach(syncSearchableSelect);
-          
-          console.log('Hunter persistence cleared successfully');
+          SS_HUNTER_IDS.forEach(syncSearchableSelect);
         }
       } catch (error) {
         console.error('Error clearing persistence:', error);
@@ -3836,69 +3568,6 @@
       
       const total = matches.reduce((sum, m) => sum + (m.escapeCount || 0), 0);
       return (total / matches.length).toFixed(1);
-    }
-    
-    // 総合勝率を更新（試合入力タブ内）
-    function updateOverallStats() {
-      const container = document.getElementById('overall-stats-inline');
-      let perspectiveMatches = matches.filter(m => m.perspective === currentPerspective);
-      
-      if (perspectiveMatches.length === 0) {
-        container.innerHTML = '';
-        return;
-      }
-      
-      // 期間フィルターを取得
-      const periodFilter = document.getElementById('input-period-filter');
-      const periodValue = periodFilter ? periodFilter.value : 'all';
-      
-      // 期間でフィルタリング
-      let displayMatches = perspectiveMatches;
-      if (periodValue === 'recent100') {
-        // 百戦勝率
-        displayMatches = perspectiveMatches.slice(-100);
-      } else if (periodValue !== 'all') {
-        // シーズンフィルター
-        displayMatches = filterByPeriod(perspectiveMatches, periodValue);
-      }
-      
-      const stats = calculateWinrate(displayMatches, currentPerspective);
-      const streak = calculateWinStreak(perspectiveMatches, currentPerspective); // 連勝は全期間で計算
-      
-      // 小数点第二位まで計算
-      const filtered = displayMatches.filter(m => m.result !== 'draw');
-      const winrateDecimal = filtered.length > 0 ? 
-        (stats.wins / filtered.length * 100).toFixed(2) : '0.00';
-      
-      // タイトルを決定
-      let statsTitle = '総合勝率';
-      if (periodValue === 'recent100') {
-        statsTitle = '百戦勝率';
-      } else if (periodValue !== 'all') {
-        // シーズンの場合
-        const season = SEASONS.find(s => s.id === periodValue);
-        if (season) {
-          statsTitle = `総合勝率（${season.label}）`;
-        }
-      }
-      
-      // 百戦勝率モードでは試合数を表示しない
-      const matchCountText = periodValue === 'recent100' ? '' : ` (${stats.totalWithDraws}試合)`;
-      
-      let html = `<div class="stats-card" style="margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <div style="font-size: 14px; font-weight: 600; color: #666;">${statsTitle}</div>
-        </div>
-        <div class="overall-stats-display">
-          <div class="winrate-big">${winrateDecimal}%</div>
-          <div class="record-text">${stats.wins}勝 ${stats.losses}敗 ${stats.draws}分${matchCountText}</div>`;
-      
-      if (streak >= 2) {
-        html += `<div class="streak-badge"><span class="streak-icon">🔥</span>${streak}連勝中！</div>`;
-      }
-      
-      html += `</div></div>`;
-      container.innerHTML = html;
     }
     
     // 総合勝率タブの更新
@@ -4183,94 +3852,6 @@
     function changeHistoryPage(page) {
       currentPages.matchHistory = page;
       updateMatchHistory();
-    }
-    
-    // 苦手要素を検出する汎用関数
-    function detectWeaknesses(statsData, minMatches = 5) {
-      const threshold = currentPerspective === 'hunter' ? 50 : 38;
-      const results = [];
-      
-      Object.keys(statsData).forEach(key => {
-        const matches = statsData[key];
-        if (matches.length < minMatches) return; // 最小試合数未満は除外
-        
-        const stats = calculateWinrate(matches, currentPerspective);
-        const winrate = parseFloat(stats.winrate);
-        
-        results.push({
-          name: key,
-          winrate: winrate,
-          stats: stats
-        });
-      });
-      
-      // 勝率が低い順にソート
-      results.sort((a, b) => a.winrate - b.winrate);
-      
-      // 基準以下のものを抽出
-      const belowThreshold = results.filter(r => r.winrate <= threshold);
-      
-      if (belowThreshold.length > 0) {
-        // 基準以下のものがあれば上位5つまで
-        return belowThreshold.slice(0, 5);
-      } else if (results.length > 0) {
-        // 基準以下がなければ最も低いもの1つ
-        return [results[0]];
-      } else {
-        // データなし
-        return [];
-      }
-    }
-    
-    // 苦手要素のHTMLを生成
-    function generateWeaknessHTML(weaknesses, title) {
-      if (weaknesses.length === 0) return '';
-      
-      let html = `<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 15px; margin: 15px 0; border-radius: 6px;">
-        <div style="font-size: 13px; font-weight: 600; color: #92400e; margin-bottom: 8px;">${title}</div>
-        <div style="font-size: 12px; color: #78350f;">`;
-      
-      weaknesses.forEach((item, index) => {
-        html += `${index + 1}. ${item.name} <span style="font-weight: 600;">${item.stats.winrate}%</span> <span style="color: #a16207;">(${item.stats.wins}勝${item.stats.losses}敗${item.stats.draws}分)</span>`;
-        if (index < weaknesses.length - 1) html += '<br>';
-      });
-      
-      html += `</div></div>`;
-      return html;
-    }
-    
-    // 苦手要素を検出
-    function detectWeaknesses(data, minMatches = 5) {
-      const threshold = currentPerspective === 'hunter' ? 50 : 38;
-      const weaknesses = [];
-      
-      Object.keys(data).forEach(key => {
-        const matches = data[key];
-        if (matches.length >= minMatches) {
-          const stats = calculateWinrate(matches, currentPerspective);
-          const winrate = parseFloat(stats.winrate) || 0;
-          
-          weaknesses.push({
-            name: key,
-            winrate: winrate,
-            stats: stats
-          });
-        }
-      });
-      
-      // 閾値以下のものをフィルター
-      let filtered = weaknesses.filter(w => w.winrate <= threshold);
-      
-      // 該当なしの場合は最も低いものを返す
-      if (filtered.length === 0 && weaknesses.length > 0) {
-        weaknesses.sort((a, b) => a.winrate - b.winrate);
-        filtered = [weaknesses[0]];
-      } else {
-        // 勝率が低い順にソート
-        filtered.sort((a, b) => a.winrate - b.winrate);
-      }
-      
-      return filtered.slice(0, 5); // 上位5つ
     }
     
     // 苦手要素を検出
@@ -4762,15 +4343,8 @@
     
     // 試合を編集
     function editMatch(id) {
-      console.log('editMatch called with id:', id);
-      
       const match = matches.find(m => m.id === id);
-      if (!match) {
-        console.error('Match not found:', id);
-        return;
-      }
-      
-      console.log('Match found:', match);
+      if (!match) return;
       editingMatchId = id;
       
       if (match.perspective === 'survivor') {
@@ -4791,7 +4365,7 @@
         document.getElementById('survivor-input').style.display = 'block';
         document.getElementById('hunter-input').style.display = 'none';
         
-        updateSurvivorSelects(); // 選択肢を更新
+        updateSurvivorSelectOptions(); // 選択肢を更新
         
         document.querySelectorAll('#survivor-input .result-button').forEach((btn, index) => {
           btn.classList.remove('selected');
@@ -4803,7 +4377,7 @@
         // 選択肢を更新
         updateSurvivorSelectOptions();
         // SearchableSelect同期
-        ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter'].forEach(syncSearchableSelect);
+        SS_SURVIVOR_IDS.forEach(syncSearchableSelect);
       } else {
         currentPerspective = 'hunter';
         document.getElementById('hunter-date').value = match.date || getToday();
@@ -4831,9 +4405,9 @@
           }
         });
         // SearchableSelect同期
-        ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'].forEach(syncSearchableSelect);
+        SS_HUNTER_IDS.forEach(syncSearchableSelect);
       }
-      
+
       document.querySelectorAll('.main-tab').forEach(tab => tab.classList.remove('active'));
       document.querySelectorAll('.main-tab')[0].classList.add('active');
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -4844,21 +4418,19 @@
     
     // 試合を削除（確認なし）
     function deleteMatch(id) {
-      console.log('deleteMatch called with id:', id);
-      
       // 削除前に使用回数を減らす
       const match = matches.find(m => m.id === id);
       if (match) {
         if (match.perspective === 'survivor') {
           // サバイバー視点：自分、味方3人の使用回数を減らす
-          decrementCharacterUsage('survivor', [match.myCharacter, ...match.teammates]);
-          // 対戦相手ハンターの使用回数を減らす
-          decrementCharacterUsage('hunter', match.opponentHunter);
+          decrementCharacterUsage('survivorUsed', [match.myCharacter, ...match.teammates]);
+          // 対戦相手ハンターの対戦回数を減らす
+          decrementCharacterUsage('hunterFaced', match.opponentHunter);
         } else {
           // ハンター視点：自分の使用回数を減らす
-          decrementCharacterUsage('hunter', match.myCharacter);
-          // 対戦相手サバイバー4人の使用回数を減らす
-          decrementCharacterUsage('survivor', match.opponentSurvivors);
+          decrementCharacterUsage('hunterUsed', match.myCharacter);
+          // 対戦相手サバイバー4人の対戦回数を減らす
+          decrementCharacterUsage('survivorFaced', match.opponentSurvivors);
         }
       }
       
@@ -4874,35 +4446,21 @@
       
       // セレクトボックスを再構築（使用回数順に更新）
       repopulateCharacterSelects();
-      
       updateAllWithFilters();
-      
-      console.log('Match deleted successfully');
     }
     
     // 全データをリセット（確認ダイアログあり）
     function resetAllData() {
-      console.log('resetAllData called');
-      
       // 第一確認
-      const firstConfirm = confirm('本当に全てのデータをリセットしますか？\nこの操作は取り消せません。');
-      if (!firstConfirm) {
-        console.log('User cancelled at first confirmation');
-        return;
-      }
-      
+      if (!confirm('本当に全てのデータをリセットしますか？\nこの操作は取り消せません。')) return;
       // 第二確認（念押し）
-      const secondConfirm = confirm('最終確認：全データを削除します。\n本当によろしいですか？');
-      if (!secondConfirm) {
-        console.log('User cancelled at second confirmation');
-        return;
-      }
+      if (!confirm('最終確認：全データを削除します。\n本当によろしいですか？')) return;
       
       matches = [];
       saveData();
       
       // キャラクター使用回数もリセット
-      characterUsageCount = { survivor: {}, hunter: {} };
+      characterUsageCount = { survivorUsed: {}, survivorFaced: {}, hunterUsed: {}, hunterFaced: {} };
       saveCharacterUsageCount();
       
       // 対戦相手ハンターフィルターを更新
@@ -4914,10 +4472,7 @@
       
       // セレクトボックスを再構築（使用回数順に更新）
       repopulateCharacterSelects();
-      
       updateAllWithFilters();
-      
-      console.log('All data reset successfully');
     }
     
     // データのエクスポート/インポート機能
@@ -5035,7 +4590,7 @@
       try {
         // データを復元
         matches = data.matches;
-        characterUsageCount = data.characterUsageCount || { survivor: {}, hunter: {} };
+        characterUsageCount = data.characterUsageCount || { survivorUsed: {}, survivorFaced: {}, hunterUsed: {}, hunterFaced: {} };
         
         // localStorageに保存
         saveData();

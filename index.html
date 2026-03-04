@@ -1583,6 +1583,18 @@
             </select>
           </div>
           <div class="filter-group">
+            <label class="filter-label">自キャラフィルター</label>
+            <select id="history-char-filter" onchange="onHistoryCharFilterChange()">
+              <option value="all">全キャラ</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">マップフィルター</label>
+            <select id="history-map-filter" onchange="updateAllStats()">
+              <option value="all">全マップ</option>
+            </select>
+          </div>
+          <div class="filter-group">
             <label class="filter-label">段位フィルター</label>
             <div id="history-rank-filter" class="multi-rank-wrapper"></div>
           </div>
@@ -2617,7 +2629,7 @@
       
       // 対戦相手ハンターフィルターを更新
       updateOpponentHunterFilter();
-      updateHistoryOpponentFilter();
+      updateAllHistoryFilters();
       
       // 自キャラ別勝率のマップフィルターを更新
       updateCharacterMapFilter();
@@ -2789,6 +2801,14 @@
       }
     }
     
+    // 試合履歴の全フィルター選択肢を更新（相手キャラ・自キャラ・マップ）
+    function updateAllHistoryFilters() {
+      updateHistoryOpponentFilter();
+      updateHistoryCharFilter();
+      const charVal = document.getElementById('history-char-filter')?.value || 'all';
+      updateHistoryMapFilter(charVal);
+    }
+
     // 試合履歴の相手キャラフィルターを更新
     function updateHistoryOpponentFilter() {
       const filter = document.getElementById('history-opponent-filter');
@@ -2826,6 +2846,61 @@
       }
     }
     
+    // 試合履歴の自キャラフィルターを更新（記録済みキャラのみ）
+    function updateHistoryCharFilter() {
+      const filter = document.getElementById('history-char-filter');
+      if (!filter) return;
+
+      const currentValue = filter.value;
+      const perspectiveMatches = matches.filter(m => m.perspective === currentPerspective);
+      const usedCharsSet = new Set(perspectiveMatches.map(m => m.myCharacter));
+
+      const charArray = currentPerspective === 'survivor' ? SURVIVORS : HUNTERS;
+      const usedChars = charArray.filter(c => usedCharsSet.has(c));
+
+      filter.innerHTML = '<option value="all">全キャラ</option>';
+      usedChars.forEach(c => {
+        const option = document.createElement('option');
+        option.value = c;
+        option.textContent = c;
+        filter.appendChild(option);
+      });
+
+      filter.value = (currentValue === 'all' || usedCharsSet.has(currentValue)) ? currentValue : 'all';
+    }
+
+    // 試合履歴のマップフィルターを更新（自キャラ連動・記録済みのみ）
+    function updateHistoryMapFilter(selectedChar = 'all') {
+      const filter = document.getElementById('history-map-filter');
+      if (!filter) return;
+
+      const currentValue = filter.value;
+      let perspectiveMatches = matches.filter(m => m.perspective === currentPerspective);
+      if (selectedChar !== 'all') {
+        perspectiveMatches = perspectiveMatches.filter(m => m.myCharacter === selectedChar);
+      }
+
+      const usedMapsSet = new Set(perspectiveMatches.map(m => m.map));
+      const usedMaps = MAPS.filter(map => usedMapsSet.has(map));
+
+      filter.innerHTML = '<option value="all">全マップ</option>';
+      usedMaps.forEach(map => {
+        const option = document.createElement('option');
+        option.value = map;
+        option.textContent = map;
+        filter.appendChild(option);
+      });
+
+      filter.value = (currentValue === 'all' || usedMapsSet.has(currentValue)) ? currentValue : 'all';
+    }
+
+    // 試合履歴の自キャラフィルター変更時（マップ連動）
+    function onHistoryCharFilterChange() {
+      const selectedChar = document.getElementById('history-char-filter').value;
+      updateHistoryMapFilter(selectedChar);
+      updateAllStats();
+    }
+
     // サバイバー視点：選択済みキャラを他の選択肢から除外
     function updateSurvivorSelectOptions() {
       const mySurvivor = document.getElementById('my-survivor').value;
@@ -3026,8 +3101,8 @@
       // 自キャラ別勝率のマップフィルターを更新（視点が変わったので）
       updateCharacterMapFilter();
       
-      // 試合履歴の相手キャラフィルターを更新（視点が変わったので）
-      updateHistoryOpponentFilter();
+      // 試合履歴フィルター選択肢を更新（視点が変わったので）
+      updateAllHistoryFilters();
       
       // 総合勝率タブが表示されている場合は更新
       const overallTab = document.getElementById('overall-tab');
@@ -3190,7 +3265,7 @@
       
       // 対戦相手ハンターフィルターを更新
       updateOpponentHunterFilter();
-      updateHistoryOpponentFilter();
+      updateAllHistoryFilters();
       
       // 自キャラ別勝率のマップフィルターを更新
       updateCharacterMapFilter();
@@ -4273,11 +4348,13 @@
       const periodFilter = document.getElementById('history-period-filter').value;
       const rankFilter = getRankFilterValue('history-rank-filter');
       const opponentFilter = document.getElementById('history-opponent-filter').value;
+      const charFilter = document.getElementById('history-char-filter').value;
+      const mapFilter = document.getElementById('history-map-filter').value;
       let perspectiveMatches = getFilteredMatches(rankFilter);
-      
+
       // 期間でフィルター
       perspectiveMatches = filterByPeriod(perspectiveMatches, periodFilter);
-      
+
       // 相手キャラでフィルター
       if (opponentFilter !== 'all') {
         perspectiveMatches = perspectiveMatches.filter(m => {
@@ -4287,6 +4364,16 @@
             return m.opponentSurvivors && m.opponentSurvivors.includes(opponentFilter);
           }
         });
+      }
+
+      // 自キャラでフィルター
+      if (charFilter !== 'all') {
+        perspectiveMatches = perspectiveMatches.filter(m => m.myCharacter === charFilter);
+      }
+
+      // マップでフィルター
+      if (mapFilter !== 'all') {
+        perspectiveMatches = perspectiveMatches.filter(m => m.map === mapFilter);
       }
       
       perspectiveMatches = perspectiveMatches.reverse();
@@ -4439,7 +4526,7 @@
       
       // 対戦相手ハンターフィルターを更新
       updateOpponentHunterFilter();
-      updateHistoryOpponentFilter();
+      updateAllHistoryFilters();
       
       // 自キャラ別勝率のマップフィルターを更新
       updateCharacterMapFilter();
@@ -4465,7 +4552,7 @@
       
       // 対戦相手ハンターフィルターを更新
       updateOpponentHunterFilter();
-      updateHistoryOpponentFilter();
+      updateAllHistoryFilters();
       
       // 自キャラ別勝率のマップフィルターを更新
       updateCharacterMapFilter();
@@ -4600,7 +4687,7 @@
         updateDataInfo();
         repopulateCharacterSelects();
         updateOpponentHunterFilter();
-      updateHistoryOpponentFilter();
+      updateAllHistoryFilters();
         updateCharacterMapFilter();
         updateAllWithFilters();
         

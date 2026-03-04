@@ -1959,11 +1959,10 @@
             if (this._touchHandled) { this._touchHandled = false; return; }
             this._selectOption(opt);
           });
-          div.addEventListener('touchstart', (e) => {
-            // タップ時のblur（キーボードdismiss）を防ぐ
-            e.preventDefault();
-          }, { passive: false });
           div.addEventListener('touchend', () => {
+            // touchstart.preventDefault()を使わない
+            // → iOSがtouchstart時点でIMEを自然に確定させる
+            // → SS2にfocus()したとき IMEが初期状態でカーソルが正常表示される
             this._touchHandled = true;
             this._selectOption(opt);
             setTimeout(() => { this._touchHandled = false; }, 50);

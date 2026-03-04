@@ -2013,13 +2013,13 @@
         this.setValue(opt.value);
         this._close();
 
-        // onSelectedをdispatchEventより先に呼ぶ
-        // → touchend直下の同期コールスタックで focus() が実行され
-        //   iOSがユーザー操作として認識しキーボードが正常に転送される
+        // blur()を先に呼びSS1のキーボードを解放 → IMEを確定させてから
+        // onSelected()でSS2をfocus() → iOSが「新規キーボード取得」として処理
+        // （転送ではなく解放→再取得にすることでIME使用後も正常動作）
+        this.input.blur();
         if (this.onSelected) this.onSelected();
 
         this.select.dispatchEvent(new Event('change', { bubbles: true }));
-        this.input.blur();
       }
       
       // 外部から値を設定

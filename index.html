@@ -1802,6 +1802,8 @@
         this.isOpen = false;
         this.options = []; // {value, label, reading}
         this.getExcluded = null; // () => Set<value> — 除外する選択済み値
+        this.onSelected = null;  // () => void — 選択確定時にtouchend直下で呼ばれる
+        this._touchHandled = false;
 
         this._build();
         this._bindEvents();
@@ -1953,12 +1955,16 @@
           });
           div.addEventListener('click', (e) => {
             e.stopPropagation();
+            // touchendで処理済みの場合はスキップ（二重選択防止）
+            if (this._touchHandled) { this._touchHandled = false; return; }
             this._selectOption(opt);
           });
-          div.addEventListener('touchend', (e) => {
-            e.preventDefault(); // 合成clickイベントを防ぐ（二重選択防止）
+          div.addEventListener('touchend', () => {
+            // preventDefault()を呼ばないことでiOSのキーボード接続を維持する
+            this._touchHandled = true;
             this._selectOption(opt);
-          }, { passive: false });
+            setTimeout(() => { this._touchHandled = false; }, 50);
+          }, { passive: true });
           
           this.dropdown.appendChild(div);
         });
@@ -2005,11 +2011,12 @@
         this.setValue(opt.value);
         this._close();
 
-        // changeイベントを先に発火（focusNextFieldが次フィールドにフォーカスを移す）
-        // → 次フィールドへのfocusが先に走ることでキーボードが途切れずに転送される
-        this.select.dispatchEvent(new Event('change', { bubbles: true }));
+        // onSelectedをdispatchEventより先に呼ぶ
+        // → touchend直下の同期コールスタックで focus() が実行され
+        //   iOSがユーザー操作として認識しキーボードが正常に転送される
+        if (this.onSelected) this.onSelected();
 
-        // 次フィールドへfocusが移っていない場合（最終フィールド等）のためblur
+        this.select.dispatchEvent(new Event('change', { bubbles: true }));
         this.input.blur();
       }
       
@@ -4844,24 +4851,27 @@
         el.addEventListener('change', () => focusNextField(perspective, id));
       });
       [
-        ['survivor-rank', 'survivor'], ['survivor-map', 'survivor'],
-        ['hunter-rank', 'hunter'],    ['hunter-map', 'hunter']
+        ['survivor-rank', 'survivor'],
+        ['hunter-rank', 'hunter']
       ].forEach(([id, perspective]) => {
         const el = document.getElementById(id);
         if (!el) return;
         el.addEventListener('change', () => focusNextField(perspective, id));
       });
+      // SSキャラ・マップフィールドはonSelectedで直接呼ぶ
+      // （dispatchEvent経由を避けiOSでのキーボード転送を保証するため）
       [
         ['my-survivor', 'survivor'], ['teammate-1', 'survivor'],
         ['teammate-2', 'survivor'],  ['teammate-3', 'survivor'],
         ['opponent-hunter', 'survivor'],
         ['my-hunter', 'hunter'],
         ['opponent-survivor-1', 'hunter'], ['opponent-survivor-2', 'hunter'],
-        ['opponent-survivor-3', 'hunter'], ['opponent-survivor-4', 'hunter']
+        ['opponent-survivor-3', 'hunter'], ['opponent-survivor-4', 'hunter'],
+        ['survivor-map', 'survivor'], ['hunter-map', 'hunter']
       ].forEach(([id, perspective]) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener('change', () => focusNextField(perspective, id));
+        const ss = searchableSelects[id];
+        if (!ss) return;
+        ss.onSelected = () => focusNextField(perspective, id);
       });
     }
 

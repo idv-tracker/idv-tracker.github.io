@@ -410,6 +410,25 @@
       display: flex;
       align-items: center;
     }
+    .bar-center-label {
+      position: absolute;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #1f2937;
+      text-shadow:
+        0 0 3px #fff,
+        0 0 3px #fff,
+        0 0 3px #fff,
+        1px 0 2px #fff,
+       -1px 0 2px #fff,
+        0 1px 2px #fff,
+        0 -1px 2px #fff;
+      pointer-events: none;
+      white-space: nowrap;
+    }
     
     .bar-visual {
       height: 100%;
@@ -2581,7 +2600,10 @@
     // 勝率バーHTML生成
     function renderBarHTML(winrateStr) {
       const winrateNum = parseFloat(winrateStr) || 0;
-      return `<div class="bar-visual" style="width: ${winrateNum}%;"></div>`;
+      return `
+        <div class="bar-visual" style="width: ${winrateNum}%;"></div>
+        <span class="bar-center-label">${winrateStr}%</span>
+      `;
     }
     
     // 汎用ソート関数
@@ -4092,7 +4114,7 @@
           <div class="bar-row">
             <div class="bar-label-wrapper">
               <div class="bar-label">${char}</div>
-              <div class="bar-sublabel">${avgText}<br>${stats.wins}勝${stats.losses}敗${stats.draws}分 (${stats.totalWithDraws}試合) ${stats.winrate}%</div>
+              <div class="bar-sublabel">${avgText}<br>${stats.wins}勝${stats.losses}敗${stats.draws}分 (${stats.totalWithDraws}試合)</div>
             </div>
             <div class="bar-wrapper">
               ${renderBarHTML(stats.winrate)}
@@ -4160,7 +4182,7 @@
           <div class="bar-row">
             <div class="bar-label-wrapper">
               <div class="bar-label">${map}</div>
-              <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分 ${stats.winrate}%<br>${stats.totalWithDraws}試合</div>
+              <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
             </div>
             <div class="bar-wrapper">
               ${renderBarHTML(stats.winrate)}
@@ -4259,7 +4281,7 @@
             <div class="bar-row">
               <div class="bar-label-wrapper">
                 <div class="bar-label">${hunter}</div>
-                <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分 ${stats.winrate}%<br>${stats.totalWithDraws}試合</div>
+                <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
               </div>
               <div class="bar-wrapper">
                 ${renderBarHTML(stats.winrate)}
@@ -4292,7 +4314,7 @@
             <div class="bar-row">
               <div class="bar-label-wrapper">
                 <div class="bar-label">${teammate}</div>
-                <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分 ${stats.winrate}%<br>${stats.totalWithDraws}試合</div>
+                <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
               </div>
               <div class="bar-wrapper">
                 ${renderBarHTML(stats.winrate)}
@@ -4347,7 +4369,7 @@
             <div class="bar-row">
               <div class="bar-label-wrapper">
                 <div class="bar-label">${survivor}</div>
-                <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分 ${stats.winrate}%<br>${stats.totalWithDraws}試合</div>
+                <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
               </div>
               <div class="bar-wrapper">
                 ${renderBarHTML(stats.winrate)}

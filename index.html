@@ -4525,8 +4525,9 @@
       window.scrollTo(0, 0);
     }
     
-    // 試合を削除（確認なし）
+    // 試合を削除
     function deleteMatch(id) {
+      if (!confirm('この試合データを削除しますか？')) return;
       // 削除前に使用回数を減らす
       const match = matches.find(m => m.id === id);
       if (match) {

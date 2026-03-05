@@ -444,6 +444,7 @@
       display: flex;
       align-items: center;
       gap: 4px;
+      width: 100%;
     }
     .bar-value-outside .bar-visual {
       padding-right: 4px;
@@ -1961,10 +1962,17 @@
             if (this._touchHandled) { this._touchHandled = false; return; }
             this._selectOption(opt);
           });
-          div.addEventListener('touchend', () => {
+          div.addEventListener('touchstart', (e) => {
+            this._touchStartX = e.touches[0].clientX;
+            this._touchStartY = e.touches[0].clientY;
+          }, { passive: true });
+          div.addEventListener('touchend', (e) => {
             // touchstart.preventDefault()を使わない
             // → iOSがtouchstart時点でIMEを自然に確定させる
             // → SS2にfocus()したとき IMEが初期状態でカーソルが正常表示される
+            const dx = e.changedTouches[0].clientX - (this._touchStartX || 0);
+            const dy = e.changedTouches[0].clientY - (this._touchStartY || 0);
+            if (Math.sqrt(dx * dx + dy * dy) > 10) return; // スクロール中は選択しない
             this._touchHandled = true;
             this._selectOption(opt);
             setTimeout(() => { this._touchHandled = false; }, 50);

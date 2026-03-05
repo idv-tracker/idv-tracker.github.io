@@ -1508,6 +1508,12 @@
             </select>
           </div>
           <div class="filter-group">
+            <label class="filter-label">対戦相手フィルター</label>
+            <select id="character-opponent-filter" onchange="updateAllStats()">
+              <option value="all">全て</option>
+            </select>
+          </div>
+          <div class="filter-group">
             <label class="filter-label">マップフィルター</label>
             <select id="character-map-filter" onchange="updateAllStats()">
               <option value="all">全マップ</option>
@@ -2672,6 +2678,7 @@
       
       // 対戦相手ハンターフィルターを更新
       updateOpponentHunterFilter();
+      updateCharacterOpponentFilter();
       updateAllHistoryFilters();
       
       // 自キャラ別勝率のマップフィルターを更新
@@ -3086,13 +3093,14 @@
     function updateMyCharFilter() {
       const perspectiveMatches = matches.filter(m => m.perspective === currentPerspective);
       const usedCharsSet = new Set(perspectiveMatches.map(m => m.myCharacter));
-      
+
       // 配列定義順にソート（視点に応じて配列を選択）
       const characterArray = currentPerspective === 'survivor' ? SURVIVORS : HUNTERS;
       const usedChars = characterArray.filter(char => usedCharsSet.has(char));
-      
+
       // 対戦相手別勝率のフィルター
       const opponentSelect = document.getElementById('my-char-filter');
+      const prevOpponent = opponentSelect.value;
       opponentSelect.innerHTML = '<option value="all">全キャラ</option>';
       usedChars.forEach(char => {
         const option = document.createElement('option');
@@ -3100,9 +3108,13 @@
         option.textContent = char;
         opponentSelect.appendChild(option);
       });
-      
+      if (prevOpponent && (prevOpponent === 'all' || usedCharsSet.has(prevOpponent))) {
+        opponentSelect.value = prevOpponent;
+      }
+
       // マップ別勝率のフィルター
       const mapSelect = document.getElementById('map-char-filter');
+      const prevMap = mapSelect.value;
       mapSelect.innerHTML = '<option value="all">全キャラ</option>';
       usedChars.forEach(char => {
         const option = document.createElement('option');
@@ -3110,6 +3122,9 @@
         option.textContent = char;
         mapSelect.appendChild(option);
       });
+      if (prevMap && (prevMap === 'all' || usedCharsSet.has(prevMap))) {
+        mapSelect.value = prevMap;
+      }
     }
     
     // 視点を切り替え
@@ -3141,8 +3156,9 @@
         }
       }
       
-      // 自キャラ別勝率のマップフィルターを更新（視点が変わったので）
+      // 自キャラ別勝率のマップ・対戦相手フィルターを更新（視点が変わったので）
       updateCharacterMapFilter();
+      updateCharacterOpponentFilter();
       
       // 試合履歴フィルター選択肢を更新（視点が変わったので）
       updateAllHistoryFilters();
@@ -3308,6 +3324,7 @@
       
       // 対戦相手ハンターフィルターを更新
       updateOpponentHunterFilter();
+      updateCharacterOpponentFilter();
       updateAllHistoryFilters();
       
       // 自キャラ別勝率のマップフィルターを更新
@@ -4052,17 +4069,51 @@
       return html;
     }
     
-    // 自キャラ別勝率を更新
+    // 自キャラ別勝率タブの対戦相手フィルター選択肢を更新
+    function updateCharacterOpponentFilter() {
+      const select = document.getElementById('character-opponent-filter');
+      if (!select) return;
+      const currentValue = select.value;
+      select.innerHTML = '<option value="all">全て</option>';
+      const usedChars = new Set();
+      if (currentPerspective === 'hunter') {
+        matches.filter(m => m.perspective === 'hunter').forEach(m => m.opponentSurvivors && m.opponentSurvivors.forEach(s => usedChars.add(s)));
+        SURVIVORS.filter(s => usedChars.has(s)).forEach(char => {
+          const opt = document.createElement('option');
+          opt.value = char; opt.textContent = char;
+          select.appendChild(opt);
+        });
+      } else {
+        matches.filter(m => m.perspective === 'survivor').forEach(m => { if (m.opponentHunter) usedChars.add(m.opponentHunter); });
+        HUNTERS.filter(h => usedChars.has(h)).forEach(char => {
+          const opt = document.createElement('option');
+          opt.value = char; opt.textContent = char;
+          select.appendChild(opt);
+        });
+      }
+      if ([...select.options].some(o => o.value === currentValue)) select.value = currentValue;
+    }
+
     function updateCharacterStats() {
       const container = document.getElementById('character-stats');
       const periodFilter = document.getElementById('character-period-filter').value;
       const rankFilter = getRankFilterValue('character-rank-filter');
       const mapFilter = document.getElementById('character-map-filter').value;
+      const opponentFilter = document.getElementById('character-opponent-filter').value;
       let perspectiveMatches = getFilteredMatches(rankFilter);
-      
+
       // 期間でフィルター
       perspectiveMatches = filterByPeriod(perspectiveMatches, periodFilter);
-      
+
+      // 対戦相手でフィルター
+      if (opponentFilter !== 'all') {
+        if (currentPerspective === 'hunter') {
+          perspectiveMatches = perspectiveMatches.filter(m => m.opponentSurvivors && m.opponentSurvivors.includes(opponentFilter));
+        } else {
+          perspectiveMatches = perspectiveMatches.filter(m => m.opponentHunter === opponentFilter);
+        }
+      }
+
       // マップでフィルター
       if (mapFilter !== 'all') {
         perspectiveMatches = perspectiveMatches.filter(m => m.map === mapFilter);
@@ -4207,27 +4258,27 @@
       
       // 期間でフィルター
       perspectiveMatches = filterByPeriod(perspectiveMatches, periodFilter);
-      
+
       // 自キャラでフィルター
       if (myCharFilter !== 'all') {
         perspectiveMatches = perspectiveMatches.filter(m => m.myCharacter === myCharFilter);
       }
-      
+
       // 対戦相手ハンターでフィルター（サバイバー視点のみ）
       if (currentPerspective === 'survivor' && opponentHunterFilter !== 'all') {
         perspectiveMatches = perspectiveMatches.filter(m => m.opponentHunter === opponentHunterFilter);
       }
-      
+
       // マップでフィルター
       if (mapFilter !== 'all') {
         perspectiveMatches = perspectiveMatches.filter(m => m.map === mapFilter);
       }
-      
+
       if (perspectiveMatches.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
         return;
       }
-      
+
       if (currentPerspective === 'survivor') {
         const hunterStats = {};
         const teammateStats = {};
@@ -4570,6 +4621,7 @@
       
       // 対戦相手ハンターフィルターを更新
       updateOpponentHunterFilter();
+      updateCharacterOpponentFilter();
       updateAllHistoryFilters();
       
       // 自キャラ別勝率のマップフィルターを更新
@@ -4578,8 +4630,12 @@
       // セレクトボックスを再構築（使用回数順に更新）
       repopulateCharacterSelects();
       updateAllWithFilters();
+      const overallTab = document.getElementById('overall-tab');
+      if (overallTab && overallTab.classList.contains('active')) {
+        updateOverallStatsTab();
+      }
     }
-    
+
     // 全データをリセット（確認ダイアログあり）
     function resetAllData() {
       // 第一確認
@@ -4596,6 +4652,7 @@
       
       // 対戦相手ハンターフィルターを更新
       updateOpponentHunterFilter();
+      updateCharacterOpponentFilter();
       updateAllHistoryFilters();
       
       // 自キャラ別勝率のマップフィルターを更新
@@ -4604,8 +4661,12 @@
       // セレクトボックスを再構築（使用回数順に更新）
       repopulateCharacterSelects();
       updateAllWithFilters();
+      const overallTab = document.getElementById('overall-tab');
+      if (overallTab && overallTab.classList.contains('active')) {
+        updateOverallStatsTab();
+      }
     }
-    
+
     // データのエクスポート/インポート機能
     
     // 現在のデータ情報を更新
@@ -4731,10 +4792,15 @@
         updateDataInfo();
         repopulateCharacterSelects();
         updateOpponentHunterFilter();
+      updateCharacterOpponentFilter();
       updateAllHistoryFilters();
         updateCharacterMapFilter();
         updateAllWithFilters();
-        
+        const overallTab = document.getElementById('overall-tab');
+        if (overallTab && overallTab.classList.contains('active')) {
+          updateOverallStatsTab();
+        }
+
         alert(`データを復元しました！\n\n${newMatchCount}試合のデータを読み込みました。`);
         return true;
       } catch (error) {

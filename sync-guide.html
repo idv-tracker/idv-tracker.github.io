@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>クラウド同期の使い方 | 第五人格トラッカー</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+      color: white;
+      padding: 25px;
+      text-align: center;
+    }
+    .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 5px; }
+    .header .subtitle { font-size: 13px; opacity: 0.8; }
+    .content { padding: 25px; }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #6b7280;
+      text-decoration: none;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .back-link:hover { color: #374151; }
+
+    /* セクション */
+    .section { margin-bottom: 30px; }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f3460;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .section-desc {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.7;
+      margin-bottom: 15px;
+    }
+
+    /* ステップ */
+    .step {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 16px;
+      align-items: flex-start;
+    }
+    .step-num {
+      width: 32px;
+      height: 32px;
+      background: #0f3460;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-body { flex: 1; }
+    .step-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+    .step-desc {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+
+    /* スクリーンUI模擬 */
+    .ui-mock {
+      background: #f8f9fa;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px 15px;
+      margin-top: 8px;
+      font-size: 13px;
+      color: #374151;
+    }
+    .ui-mock .ui-btn {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    .ui-btn-blue { background: #3b82f6; color: white; }
+    .ui-btn-purple { background: #8b5cf6; color: white; }
+    .ui-mock .ui-label {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 3px;
+    }
+    .ui-mock .ui-code {
+      font-family: monospace;
+      font-size: 11px;
+      background: #f9fafb;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      padding: 5px 8px;
+      color: #6b7280;
+      word-break: break-all;
+    }
+
+    /* ポイントボックス */
+    .info-box {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding: 12px 15px;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+      color: #1e40af;
+      line-height: 1.6;
+      margin: 12px 0;
+    }
+    .warn-box {
+      background: #fff7ed;
+      border-left: 3px solid #f59e0b;
+      padding: 12px 15px;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+      color: #92400e;
+      line-height: 1.6;
+      margin: 12px 0;
+    }
+
+    /* FAQ */
+    .faq-item { margin-bottom: 16px; }
+    .faq-q {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 5px;
+    }
+    .faq-q::before { content: 'Q. '; color: #3b82f6; }
+    .faq-a {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.6;
+      padding-left: 20px;
+    }
+
+    /* 区切り */
+    .divider {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 25px 0;
+    }
+
+    /* フッター */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .footer a {
+      display: inline-block;
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #0f3460 0%, #533483 100%);
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>クラウド同期の使い方</h1>
+      <div class="subtitle">第五人格トラッカー</div>
+    </div>
+
+    <div class="content">
+      <a href="index.html" class="back-link">← トラッカーに戻る</a>
+
+      <!-- クラウド同期とは -->
+      <div class="section">
+        <div class="section-title">クラウド同期とは？</div>
+        <div class="section-desc">
+          スマホとタブレット、または複数のデバイス間でデータを共有できる機能です。<br>
+          同期コードを使うだけで、アカウント登録不要・無料で利用できます。
+        </div>
+        <div class="info-box">
+          アカウント登録不要<br>
+          同期コードをメモするだけ<br>
+          データは安全にクラウド保存<br>
+          同期していない通常利用は今まで通り
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- はじめて設定する -->
+      <div class="section">
+        <div class="section-title">1台目の設定（新しく同期を始める）</div>
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">設定タブを開く</div>
+            <div class="step-desc">画面上部のタブから「設定」をタップします。</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">「新しく同期を始める」をタップ</div>
+            <div class="step-desc">「クラウド同期」セクションのボタンをタップします。</div>
+            <div class="ui-mock">
+              <span class="ui-btn ui-btn-blue">新しく同期を始める</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">同期コードを保存する</div>
+            <div class="step-desc">画面に表示される同期コードをコピーして、メモ帳やLINEのノートに保存しておきます。このコードを2台目で入力します。</div>
+            <div class="ui-mock">
+              <div class="ui-label">同期コード</div>
+              <div class="ui-code">a3f7c9d2-8b1e-4f6a-9c3d-7e2f1a8b5c6d</div>
+              <span class="ui-btn ui-btn-blue" style="margin-left:0;">コピー</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="warn-box">
+          注意：同期コードを紛失するとクラウドデータにアクセスできなくなります。<br>
+          必ずメモ帳やLINEのノートに保存してください。
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- 2台目の設定 -->
+      <div class="section">
+        <div class="section-title">2台目の設定（既存コードで接続する）</div>
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">設定タブを開く</div>
+            <div class="step-desc">2台目のデバイスで第五人格トラッカーを開き、「設定」タブをタップします。</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">同期コードを入力する</div>
+            <div class="step-desc">「他のデバイスの同期コードで接続する」の入力欄に、1台目で保存した同期コードを貼り付けます。</div>
+            <div class="ui-mock">
+              <input type="text" value="a3f7c9d2-8b1e-4f6a-9c3d-7e2f1a8b5c6d"
+                readonly style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:4px;font-family:monospace;font-size:11px;color:#374151;background:white;margin-bottom:6px;">
+              <span class="ui-btn ui-btn-purple">接続する</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">確認ダイアログで「OK」をタップ</div>
+            <div class="step-desc">クラウドのデータでこのデバイスのデータを上書きするか確認されます。問題なければ「OK」をタップして接続完了です。</div>
+          </div>
+        </div>
+
+        <div class="info-box">
+          接続後は1台目と2台目が同じクラウドのデータを共有します。
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- 日常の使い方 -->
+      <div class="section">
+        <div class="section-title">日常的な使い方</div>
+        <div class="section-desc">
+          試合を記録すると<strong>自動でクラウドに同期</strong>されます。通常は何も操作する必要はありません。
+        </div>
+
+        <div class="step">
+          <div class="step-num" style="font-size:16px;">-</div>
+          <div class="step-body">
+            <div class="step-title">試合記録 → 自動同期</div>
+            <div class="step-desc">試合を記録するたびにバックグラウンドで自動アップロードされます。オフライン時は次回オンライン記録時にまとめて同期されます。</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num" style="font-size:16px;">-</div>
+          <div class="step-body">
+            <div class="step-title">別デバイスで最新データを見たいとき</div>
+            <div class="step-desc">設定タブの「今すぐ同期」をタップすると、クラウドの最新データを取り込めます。</div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- 同期を解除する -->
+      <div class="section">
+        <div class="section-title">同期を解除する</div>
+
+        <div class="section-desc">
+          設定タブの「クラウド同期」セクションから操作できます。
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" style="font-size:13px;color:#374151;">このデバイスだけ同期をやめたい</div>
+          <div class="faq-a">「同期を解除」をタップ。このデバイスの同期コードが削除されます。クラウドのデータは残るため、再度コードを入力すれば再接続できます。</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" style="font-size:13px;color:#374151;">クラウドのデータを完全に削除したい</div>
+          <div class="faq-a">「クラウドを削除」をタップ。クラウド上のデータが完全に削除されます。このデバイスのデータは削除されません。</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- よくある質問 -->
+      <div class="section">
+        <div class="section-title">よくある質問</div>
+
+        <div class="faq-item">
+          <div class="faq-q">同期コードを忘れてしまいました</div>
+          <div class="faq-a">同期設定済みのデバイスの設定タブを開くと、同期コードが表示されています。そちらからコピーして保存し直してください。</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">2台同時に試合を記録したらどうなりますか？</div>
+          <div class="faq-a">「今すぐ同期」を押したときにタイムスタンプを比較し、新しい方のデータで上書きするか確認されます。上書き前に試合数が表示されるので内容を確認できます。</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">オフラインで記録した試合は消えますか？</div>
+          <div class="faq-a">消えません。データはまずこのデバイスに保存され、次回オンライン時に自動でクラウドに同期されます。</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">機種変更時はどうすればよいですか？</div>
+          <div class="faq-a">新しいデバイスで「他のデバイスの同期コードで接続する」から同期コードを入力するだけで、全データを引き継げます。</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">同期を使わない場合、何か変わりますか？</div>
+          <div class="faq-a">何も変わりません。クラウド同期は完全にオプションです。設定しない場合は今まで通りご利用いただけます。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <a href="index.html">← トラッカーに戻る</a>
+    </div>
+  </div>
+</body>
+</html>

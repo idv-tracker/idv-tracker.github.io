@@ -1400,10 +1400,41 @@
     body.dark-mode button[style*="background: #6c757d"] {
       background: #3a3a55 !important;
     }
+    /* ===== クラウド同期UI ===== */
+    body.dark-mode .sync-code-input {
+      background: #1e1e3a !important;
+      border-color: #3a3a58 !important;
+      color: #9ca3af !important;
+    }
+    body.dark-mode .sync-input {
+      background: #222238 !important;
+      border-color: #3a3a55 !important;
+      color: #d1d5db !important;
+    }
+    body.dark-mode .sync-btn-secondary {
+      background: #2a2a42 !important;
+      color: #d1d5db !important;
+      border-color: #3a3a55 !important;
+    }
+    body.dark-mode .sync-btn-danger {
+      background: #3a1e1e !important;
+      color: #f87171 !important;
+      border-color: #7f1d1d !important;
+    }
+    body.dark-mode .sync-divider {
+      border-top-color: #2e2e48 !important;
+    }
+    body.dark-mode .sync-sublabel {
+      color: #6b7280 !important;
+    }
   </style>
   
   <!-- Chart.js CDN (安定版v3) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+  <!-- Firebase SDK (クラウド同期用) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <div class="container">
@@ -1785,12 +1816,20 @@
         <a href="install-guide.html" class="install-guide-link" style="display: block; padding: 14px 20px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px; text-decoration: none; color: #3b82f6; font-size: 14px; font-weight: 600;">
           ホーム画面に追加する方法 ›
         </a>
-        
+
+        <!-- クラウド同期 -->
         <div class="stats-card" style="margin-bottom: 20px;">
-          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 15px; color: #1f2937;">データのバックアップと復元</h3>
+          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 10px; color: #1f2937;">クラウド同期</h3>
+          <p style="font-size: 13px; color: #6b7280; margin-bottom: 15px; line-height: 1.6;">
+            複数のデバイスでデータを同期できます。同期コードを発行し、別のデバイスで入力するだけで完了です。
+          </p>
+          <div id="sync-ui"></div>
+        </div>
+
+        <div class="stats-card" style="margin-bottom: 20px;">
+          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 15px; color: #1f2937;">ファイルで書き出し・読み込み</h3>
           <p style="font-size: 13px; color: #6b7280; margin-bottom: 20px; line-height: 1.6;">
-            試合データをバックアップして、機種変更時やブラウザのデータ削除に備えることができます。<br>
-            スマホで入力したデータをPCで分析したり、複数のデバイス間でデータを共有することも可能です。
+            データをJSONファイルとして書き出し・読み込みできます。他のユーザーへのデータ共有や、クラウド同期を使わない手動バックアップとして活用できます。
           </p>
           
           <!-- エクスポート -->
@@ -2809,6 +2848,9 @@
     
     // 初期化
     function init() {
+      // Firebase初期化
+      initFirebase();
+
       // ダークモード復元
       loadDarkMode();
       
@@ -2859,8 +2901,11 @@
       initializeTabScrollIndicator();
       
       updateAllWithFilters(); // フィルターと統計を更新
+
+      // 同期UI初期化
+      updateSyncUI();
     }
-    
+
     // セレクトボックスにオプションを追加
     function populateSelects() {
       // サバイバー選択（自分・味方）：サバイバー使用回数順にソート
@@ -3409,6 +3454,7 @@
       // 設定タブに切り替えた時はデータ情報を更新
       if (tabName === 'settings') {
         updateDataInfo();
+        updateSyncUI();
       }
       
       // 総合勝率タブに切り替えた時は総合勝率とグラフを更新
@@ -3597,6 +3643,8 @@
     // データを保存
     function saveData() {
       localStorage.setItem('identity5_matches', JSON.stringify(matches));
+      localStorage.setItem('identity5_data_modified', new Date().toISOString());
+      autoSync();
     }
     
     // データを読み込み
@@ -5293,6 +5341,19 @@
         if (!ss) return;
         ss.onSelected = () => focusNextField(perspective, id);
       });
+
+      // マップは最終フィールドのため選択後にフォーカスを解除
+      ['survivor-map', 'hunter-map'].forEach(id => {
+        const ss = searchableSelects[id];
+        if (!ss) return;
+        ss.onSelected = () => {
+          setTimeout(() => {
+            if (document.activeElement && document.activeElement.tagName !== 'BODY') {
+              document.activeElement.blur();
+            }
+          }, 0);
+        };
+      });
     }
 
     // ===== 同グループ内の選択済みキャラを除外 =====
@@ -5318,6 +5379,285 @@
         });
       });
 
+    }
+
+    // ===== ☁️ クラウド同期 =====
+
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyD11HYRuGLn0N4_eFhXfTK5R-3QyJ4RsSo",
+      authDomain: "idvtracker.firebaseapp.com",
+      projectId: "idvtracker",
+      storageBucket: "idvtracker.firebasestorage.app",
+      messagingSenderId: "1027492627968",
+      appId: "1:1027492627968:web:ad567e2e79b3a1574bbae5"
+    };
+
+    let db = null;
+
+    function initFirebase() {
+      try {
+        if (typeof firebase === 'undefined') return;
+        firebase.initializeApp(FIREBASE_CONFIG);
+        db = firebase.firestore();
+      } catch (e) {
+        console.warn('Firebase init failed:', e);
+      }
+    }
+
+    function generateUUID() {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    }
+
+    function getSyncCode() {
+      return localStorage.getItem('identity5_sync_code');
+    }
+
+    // 同期UIを描画
+    function updateSyncUI() {
+      const container = document.getElementById('sync-ui');
+      if (!container) return;
+
+      const syncCode = getSyncCode();
+      const lastSynced = localStorage.getItem('identity5_last_synced');
+      const lastSyncedText = lastSynced
+        ? new Date(lastSynced).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : '未同期';
+
+      if (!syncCode) {
+        container.innerHTML = `
+          <button type="button" onclick="startNewSync()"
+            style="width:100%;padding:12px;background:#3b82f6;color:white;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;">
+            新しく同期を始める
+          </button>
+          <a href="sync-guide.html"
+            style="display:block;text-align:center;font-size:13px;color:#6b7280;text-decoration:none;margin-bottom:15px;">
+            同期の設定方法を見る ›
+          </a>
+          <div class="sync-divider" style="border-top:1px solid #e5e7eb;padding-top:15px;">
+            <p style="font-size:13px;color:#374151;margin-bottom:8px;font-weight:600;">他のデバイスの同期コードで接続する</p>
+            <input type="text" id="sync-code-input" class="sync-input"
+              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;font-family:monospace;margin-bottom:8px;box-sizing:border-box;background:white;color:#374151;">
+            <button type="button" onclick="linkWithInputCode()"
+              style="width:100%;padding:10px;background:#8b5cf6;color:white;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;">
+              接続する
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div style="margin-bottom:15px;">
+            <p class="sync-sublabel" style="font-size:12px;color:#6b7280;margin-bottom:5px;font-weight:600;">同期コード</p>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" value="${syncCode}" readonly class="sync-code-input"
+                style="flex:1;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:11px;font-family:monospace;background:#f9fafb;color:#6b7280;">
+              <button type="button" onclick="copySyncCode()" class="sync-btn-secondary"
+                style="padding:8px 12px;background:#e5e7eb;color:#374151;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:600;">
+                コピー
+              </button>
+            </div>
+            <p class="sync-sublabel" style="font-size:12px;color:#9ca3af;margin-top:5px;">最終同期: ${lastSyncedText}</p>
+          </div>
+          <button type="button" onclick="syncData()" id="sync-now-btn"
+            style="width:100%;padding:12px;background:#3b82f6;color:white;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;">
+            今すぐ同期
+          </button>
+          <div style="display:flex;gap:8px;">
+            <button type="button" onclick="unlinkSync()" class="sync-btn-secondary"
+              style="flex:1;padding:10px;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600;">
+              同期を解除
+            </button>
+            <button type="button" onclick="deleteCloudData()" class="sync-btn-danger"
+              style="flex:1;padding:10px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600;">
+              クラウドを削除
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // 新しく同期を開始（新規コード生成）
+    async function startNewSync() {
+      if (!db) { alert('同期機能を現在利用できません。'); return; }
+      const syncCode = generateUUID();
+      localStorage.setItem('identity5_sync_code', syncCode);
+      if (!localStorage.getItem('identity5_data_modified')) {
+        localStorage.setItem('identity5_data_modified', new Date().toISOString());
+      }
+      updateSyncUI();
+      try {
+        await uploadToCloud();
+        updateSyncUI();
+      } catch (e) {
+        console.warn('Initial upload failed:', e);
+      }
+    }
+
+    // 既存コードで別デバイスと接続
+    async function linkWithInputCode() {
+      if (!db) { alert('同期機能を現在利用できません。'); return; }
+      const input = document.getElementById('sync-code-input');
+      if (!input) return;
+      const code = input.value.trim().toLowerCase();
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+      if (!uuidRegex.test(code)) {
+        alert('同期コードの形式が正しくありません。\nコードを確認してください。');
+        return;
+      }
+      try {
+        const docSnap = await db.collection('idv_tracker').doc(code).get();
+        if (!docSnap.exists) {
+          alert('このコードのデータが見つかりません。\nコードを確認してください。');
+          return;
+        }
+        const cloudData = docSnap.data();
+        const confirmed = confirm(
+          `クラウドのデータが見つかりました。\n\nクラウド: ${cloudData.matches ? cloudData.matches.length : 0}試合\nこのデバイス: ${matches.length}試合\n\nクラウドのデータで上書きして接続しますか？`
+        );
+        if (!confirmed) return;
+        localStorage.setItem('identity5_sync_code', code);
+        await downloadFromCloud(cloudData);
+        updateSyncUI();
+        alert('接続しました！');
+      } catch (e) {
+        alert('接続に失敗しました。通信環境を確認してください。');
+        console.error('Link error:', e);
+      }
+    }
+
+    // クラウドにアップロード
+    async function uploadToCloud() {
+      if (!db) return;
+      const syncCode = getSyncCode();
+      if (!syncCode) return;
+      const now = new Date().toISOString();
+      await db.collection('idv_tracker').doc(syncCode).set({
+        matches: matches,
+        characterUsageCount: characterUsageCount,
+        lastModified: now,
+        appVersion: '1.0.0'
+      });
+      localStorage.setItem('identity5_last_synced', now);
+    }
+
+    // クラウドからダウンロードしてローカルに反映
+    async function downloadFromCloud(cloudData) {
+      matches = cloudData.matches || [];
+      characterUsageCount = cloudData.characterUsageCount || { survivorUsed: {}, survivorFaced: {}, hunterUsed: {}, hunterFaced: {} };
+      localStorage.setItem('identity5_matches', JSON.stringify(matches));
+      localStorage.setItem('identity5_data_modified', cloudData.lastModified || new Date().toISOString());
+      saveCharacterUsageCount();
+      repopulateCharacterSelects();
+      updateOpponentHunterFilter();
+      updateCharacterOpponentFilter();
+      updateAllHistoryFilters();
+      updateCharacterMapFilter();
+      updateAllWithFilters();
+      const overallTab = document.getElementById('overall-tab');
+      if (overallTab && overallTab.classList.contains('active')) updateOverallStatsTab();
+      localStorage.setItem('identity5_last_synced', new Date().toISOString());
+    }
+
+    // 手動同期（タイムスタンプ比較して適切な方向に同期）
+    async function syncData() {
+      if (!db) { alert('同期機能を現在利用できません。'); return; }
+      const syncCode = getSyncCode();
+      if (!syncCode) return;
+      const btn = document.getElementById('sync-now-btn');
+      if (btn) { btn.textContent = '同期中...'; btn.disabled = true; }
+      try {
+        const docSnap = await db.collection('idv_tracker').doc(syncCode).get();
+        if (!docSnap.exists) {
+          await uploadToCloud();
+          updateSyncUI();
+          alert('クラウドに保存しました');
+          return;
+        }
+        const cloudData = docSnap.data();
+        const cloudTime = new Date(cloudData.lastModified || 0).getTime();
+        const localTime = new Date(localStorage.getItem('identity5_data_modified') || 0).getTime();
+        if (cloudTime > localTime) {
+          const confirmed = confirm(
+            `クラウドに新しいデータがあります。\n\nクラウド: ${cloudData.matches ? cloudData.matches.length : 0}試合\nこのデバイス: ${matches.length}試合\n\nクラウドのデータで上書きしますか？`
+          );
+          if (confirmed) {
+            await downloadFromCloud(cloudData);
+            alert('クラウドのデータを読み込みました');
+          }
+        } else if (localTime > cloudTime) {
+          await uploadToCloud();
+          alert('クラウドに同期しました');
+        } else {
+          alert('既に最新の状態です');
+        }
+      } catch (e) {
+        alert('同期に失敗しました。通信環境を確認してください。');
+        console.error('Sync error:', e);
+      } finally {
+        updateSyncUI();
+      }
+    }
+
+    // 自動同期（saveData呼び出し時、サイレント実行）
+    function autoSync() {
+      if (!db || !getSyncCode()) return;
+      uploadToCloud()
+        .then(() => updateSyncUI())
+        .catch(() => {});
+    }
+
+    // 同期コードをクリップボードにコピー
+    function copySyncCode() {
+      const syncCode = getSyncCode();
+      if (!syncCode) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(syncCode)
+          .then(() => alert('同期コードをコピーしました'))
+          .catch(() => _fallbackCopy(syncCode));
+      } else {
+        _fallbackCopy(syncCode);
+      }
+    }
+
+    function _fallbackCopy(syncCode) {
+      const input = document.querySelector('#sync-ui input[readonly]');
+      if (input) {
+        input.select();
+        try { document.execCommand('copy'); alert('同期コードをコピーしました'); }
+        catch (e) { alert('コピーできませんでした。\n手動で選択してコピーしてください。'); }
+      }
+    }
+
+    // 同期を解除（ローカルのコードのみ削除。クラウドは残る）
+    function unlinkSync() {
+      if (!confirm('このデバイスの同期を解除しますか？\n\nクラウドのデータは削除されません。\n同じコードを再入力すれば再接続できます。')) return;
+      localStorage.removeItem('identity5_sync_code');
+      localStorage.removeItem('identity5_last_synced');
+      updateSyncUI();
+    }
+
+    // クラウドのデータを完全削除
+    async function deleteCloudData() {
+      if (!confirm('クラウドのデータを削除しますか？\n\nこの操作は取り消せません。\nこのデバイスのデータは削除されません。')) return;
+      if (!confirm('最終確認：クラウドのデータを完全に削除します。\n本当によろしいですか？')) return;
+      const syncCode = getSyncCode();
+      if (!syncCode || !db) return;
+      try {
+        await db.collection('idv_tracker').doc(syncCode).delete();
+        localStorage.removeItem('identity5_sync_code');
+        localStorage.removeItem('identity5_last_synced');
+        updateSyncUI();
+        alert('クラウドのデータを削除しました');
+      } catch (e) {
+        alert('削除に失敗しました。');
+        console.error('Delete error:', e);
+      }
     }
 
     window.addEventListener('DOMContentLoaded', init);

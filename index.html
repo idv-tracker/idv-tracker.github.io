@@ -4082,7 +4082,7 @@
         
         // 直近10試合を取得
         const recentMatches = perspectiveMatches.slice(-10);
-        
+
         if (recentMatches.length === 0) {
           // データがない場合
           if (winrateChart) {
@@ -4093,22 +4093,23 @@
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           return;
         }
-        
-        // 累積勝率を計算
+
+        // 累積勝率を計算（全フィルター済み試合を基準に、直近10試合の各時点での勝率を算出）
         const labels = [];
         const data = [];
-        
+        const offset = perspectiveMatches.length - recentMatches.length;
+
         recentMatches.forEach((match, index) => {
-          // 引き分けを除いた勝率を計算
-          const matchesExcludingDraws = recentMatches.slice(0, index + 1).filter(m => m.result !== 'draw');
-          const winsCount = matchesExcludingDraws.filter(m => 
-            (currentPerspective === 'survivor' && m.result === 'survivor_win') || 
+          // 引き分けを除いた勝率を計算（全フィルター済み試合の該当位置まで）
+          const matchesExcludingDraws = perspectiveMatches.slice(0, offset + index + 1).filter(m => m.result !== 'draw');
+          const winsCount = matchesExcludingDraws.filter(m =>
+            (currentPerspective === 'survivor' && m.result === 'survivor_win') ||
             (currentPerspective === 'hunter' && m.result === 'hunter_win')
           ).length;
-          
-          const winrate = matchesExcludingDraws.length > 0 ? 
+
+          const winrate = matchesExcludingDraws.length > 0 ?
             (winsCount / matchesExcludingDraws.length * 100) : 0;
-          
+
           labels.push(`${index + 1}試合目`);
           data.push(winrate.toFixed(2));
         });

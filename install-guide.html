@@ -7,6 +7,13 @@
   <meta name="description" content="第五人格トラッカーをスマートフォンのホーム画面に追加して、アプリのように使う方法を解説します。">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f3460">
+  <script>
+    (function() {
+      if (localStorage.getItem('identity5_dark_mode') === 'on') {
+        document.documentElement.classList.add('dark-mode');
+      }
+    })();
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -265,6 +272,54 @@
       height: 4px;
       background: #64748b;
       border-radius: 50%;
+    }
+
+    /* ===== ダークモード ===== */
+    html.dark-mode .container {
+      background: #1e1e2e;
+    }
+    html.dark-mode .guide-intro {
+      background: #1e2433;
+      border-bottom-color: #2e2e48;
+    }
+    html.dark-mode .guide-intro p {
+      color: #9ca3af;
+    }
+    html.dark-mode .guide-intro .highlight {
+      background: #1e3a5f;
+      color: #93c5fd;
+    }
+    html.dark-mode .os-header {
+      background: #252538;
+    }
+    html.dark-mode .os-header:hover {
+      background: #2a2a40;
+    }
+    html.dark-mode .os-title {
+      color: #d1d5db;
+    }
+    html.dark-mode .os-toggle {
+      color: #6b7280;
+    }
+    html.dark-mode .os-note {
+      background: #2a2010;
+      color: #9ca3af;
+    }
+    html.dark-mode .step {
+      border-bottom-color: #2e2e48;
+    }
+    html.dark-mode .step-text {
+      color: #9ca3af;
+    }
+    html.dark-mode .step-text strong {
+      color: #d1d5db;
+    }
+    html.dark-mode .step-illustration {
+      background: #1e1e35;
+      border-color: #3a3a55;
+    }
+    html.dark-mode .guide-footer {
+      border-top-color: #2e2e48;
     }
   </style>
 </head>

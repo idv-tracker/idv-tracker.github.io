@@ -2148,26 +2148,79 @@
         const excluded = new Set(this.getExcluded ? this.getExcluded() : []);
         if (this.value) excluded.add(this.value); // 自己除外
 
+        // 長音符（ー）を除去するヘルパー
+        const removeChoon = s => s.replace(/ー/g, '');
+        // スキップマッチ: patternの各文字がtextに順番に含まれるか
+        const skipMatch = (text, pattern) => {
+          let pi = 0;
+          for (let i = 0; i < text.length && pi < pattern.length; i++) {
+            if (text[i] === pattern[pi]) pi++;
+          }
+          return pi === pattern.length;
+        };
+
         let filtered;
         if (!q) {
           filtered = this.options.filter(opt => !excluded.has(opt.value));
         } else {
-          filtered = this.options.filter(opt => {
-            if (excluded.has(opt.value)) return false;
-            const label = opt.label.toLowerCase();
-            const reading = opt.reading;
-            return label.includes(q) || reading.includes(q);
-          });
-          // 手動入力時: 先頭一致を上位に（グループ内の使用回数順は維持）
-          filtered.sort((a, b) => {
-            const aPrefix = a.label.toLowerCase().startsWith(q) || a.reading.startsWith(q);
-            const bPrefix = b.label.toLowerCase().startsWith(q) || b.reading.startsWith(q);
+          const qNoChoon = removeChoon(q);
+          const scored = this.options
+            .filter(opt => {
+              if (excluded.has(opt.value)) return false;
+              const label = opt.label.toLowerCase();
+              const reading = opt.reading;
+              return label.includes(q) || reading.includes(q) ||
+                     removeChoon(label).includes(qNoChoon) || removeChoon(reading).includes(qNoChoon) ||
+                     skipMatch(label, q) || skipMatch(reading, q);
+            })
+            .map(opt => {
+              const label = opt.label.toLowerCase();
+              const reading = opt.reading;
+              // スコア: 0=連続一致 / 1=長音符無視一致 / 2=スキップマッチ
+              let score;
+              if (label.includes(q) || reading.includes(q)) {
+                score = 0;
+              } else if (removeChoon(label).includes(qNoChoon) || removeChoon(reading).includes(qNoChoon)) {
+                score = 1;
+              } else {
+                score = 2;
+              }
+              return { opt, score };
+            });
+
+          // スコア優先、同スコート内では先頭一致を上位に
+          scored.sort((a, b) => {
+            if (a.score !== b.score) return a.score - b.score;
+            const aPrefix = a.opt.label.toLowerCase().startsWith(q) || a.opt.reading.startsWith(q);
+            const bPrefix = b.opt.label.toLowerCase().startsWith(q) || b.opt.reading.startsWith(q);
             if (aPrefix && !bPrefix) return -1;
             if (!aPrefix && bPrefix) return 1;
             return 0;
           });
+
+          filtered = scored.map(({ opt }) => opt);
+
+          // 該当なし & 3文字以上 → あいまい検索フォールバック（50%以上一致）
+          if (filtered.length === 0 && q.length >= 3) {
+            const fuzzyScore = (text, pattern) => {
+              let pi = 0;
+              for (let i = 0; i < text.length && pi < pattern.length; i++) {
+                if (text[i] === pattern[pi]) pi++;
+              }
+              return pi / pattern.length;
+            };
+            const bestScore = opt => Math.max(
+              fuzzyScore(opt.label.toLowerCase(), q),
+              fuzzyScore(opt.reading, q),
+              fuzzyScore(removeChoon(opt.label.toLowerCase()), qNoChoon),
+              fuzzyScore(removeChoon(opt.reading), qNoChoon)
+            );
+            filtered = this.options
+              .filter(opt => !excluded.has(opt.value) && bestScore(opt) >= 0.5)
+              .sort((a, b) => bestScore(b) - bestScore(a));
+          }
         }
-        
+
         if (filtered.length === 0) {
           const noResult = document.createElement('div');
           noResult.className = 'ss-no-result';

@@ -1493,6 +1493,39 @@
     body.dark-mode .ss-badge-done    { background: #064e3b; color: #6ee7b7; }
     body.dark-mode .ss-badge-error   { background: #450a0a; color: #fca5a5; }
     body.dark-mode .ss-section-head  { color: #6b7280; border-bottom-color: #2e2e48; }
+    /* ===== キャリブレーションモーダル ===== */
+    .ss-calib-modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.97); z-index: 9999;
+      display: flex; flex-direction: column;
+    }
+    .ss-calib-header {
+      padding: 14px 16px; background: rgba(0,0,0,0.85); flex-shrink: 0;
+    }
+    .ss-calib-img-wrap {
+      flex: 1; overflow: auto; position: relative; background: #111;
+      display: flex; align-items: flex-start; justify-content: center;
+    }
+    .ss-calib-img-wrap img { max-width: 100%; display: block; touch-action: none; }
+    .ss-calib-dot {
+      position: absolute; width: 22px; height: 22px;
+      border-radius: 50%; background: #ef4444; border: 3px solid white;
+      transform: translate(-50%, -50%); pointer-events: none;
+      box-shadow: 0 0 12px rgba(239,68,68,0.8);
+    }
+    .ss-calib-footer {
+      padding: 12px 16px; background: rgba(0,0,0,0.85);
+      display: flex; gap: 10px; flex-shrink: 0;
+    }
+    .ss-calib-btn-primary {
+      flex: 1; padding: 14px; background: #3b82f6; color: white;
+      border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer;
+    }
+    .ss-calib-btn-primary:disabled { background: #4b5563; cursor: not-allowed; }
+    .ss-calib-btn-cancel {
+      padding: 14px 20px; background: #374151; color: white;
+      border: none; border-radius: 8px; font-size: 15px; cursor: pointer;
+    }
   </style>
   
   <!-- Chart.js CDN (安定版v3) -->
@@ -1958,8 +1991,17 @@
         <!-- スクショ読み込み設定 -->
         <div class="stats-card" id="ss-setup-card" style="margin-bottom: 20px;">
           <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #1f2937;">スクショ読み込み設定</h3>
-          <div id="ss-setup-status" style="font-size: 13px; color: #374151; line-height: 2;"></div>
-          <button type="button" onclick="ssResetAndReload()" style="margin-top: 14px; padding: 10px 18px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
+          <div id="ss-setup-status" style="font-size: 13px; color: #374151; line-height: 2; margin-bottom: 14px;"></div>
+          <p style="font-size: 12px; color: #9ca3af; margin-bottom: 8px;">キャラが正しく認識されない場合は座標キャリブレーションを行ってください</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+            <button type="button" onclick="ssStartCalibGrid()" style="flex:1; min-width:140px; padding: 10px; background: #7c3aed; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
+              グリッド座標調整
+            </button>
+            <button type="button" onclick="ssStartCalibResult()" style="flex:1; min-width:140px; padding: 10px; background: #7c3aed; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
+              戦績画面座標調整
+            </button>
+          </div>
+          <button type="button" onclick="ssResetAndReload()" style="width:100%; padding: 10px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
             テンプレートをリセットして再読み込み
           </button>
         </div>
@@ -1975,6 +2017,23 @@
     <!-- プライバシーポリシーリンク -->
     <div style="text-align: center; padding: 30px 20px 20px 20px;">
       <a href="privacy.html" style="color: #94a3b8; text-decoration: none; font-size: 13px; transition: color 0.2s;" onmouseover="this.style.color='#cbd5e1'" onmouseout="this.style.color='#94a3b8'">プライバシーポリシー</a>
+    </div>
+  </div>
+
+  <!-- キャリブレーションモーダル -->
+  <div id="ss-calib-modal" class="ss-calib-modal" style="display:none;">
+    <div class="ss-calib-header">
+      <p id="ss-calib-progress" style="font-size:12px;color:#9ca3af;margin-bottom:4px;"></p>
+      <p id="ss-calib-desc" style="font-size:14px;color:white;font-weight:600;line-height:1.5;"></p>
+      <p id="ss-calib-pos" style="font-size:12px;color:#60a5fa;margin-top:6px;">画像をタップしてください</p>
+    </div>
+    <div class="ss-calib-img-wrap" id="ss-calib-img-wrap">
+      <img id="ss-calib-img" src="" alt="" style="user-select:none;-webkit-user-select:none;">
+      <div id="ss-calib-dot" class="ss-calib-dot" style="display:none;"></div>
+    </div>
+    <div class="ss-calib-footer">
+      <button class="ss-calib-btn-primary" id="ss-calib-confirm-btn" onclick="ssCalibConfirm()" disabled>この位置で確定</button>
+      <button class="ss-calib-btn-cancel" onclick="ssCalibCancel()">キャンセル</button>
     </div>
   </div>
 
@@ -6357,19 +6416,10 @@
       { slotId: 'hunt_sp_rv2',       url: './ハンターアイコン画像/IMG_2426.PNG'   },
       { slotId: 'hunt_sp_rv3',       url: './ハンターアイコン画像/IMG_2759.PNG'   },
       { slotId: 'rank_icons',        url: './段位アイコン画像/IMG_2767.PNG'        },
-      { slotId: 'map_レオの思い出',  url: './マップ名戦績画像/IMG_2756.PNG'        },
-      { slotId: 'map_赤の教会',      url: './マップ名戦績画像/IMG_2757.PNG'        },
-      { slotId: 'map_中華街',        url: './マップ名戦績画像/IMG_2758.PNG'        },
-      { slotId: 'map_聖心病院',      url: './マップ名戦績画像/IMG_2760.PNG'        },
-      { slotId: 'map_湖景村',        url: './マップ名戦績画像/IMG_2762.PNG'        },
-      { slotId: 'map_軍需工場',      url: './マップ名戦績画像/IMG_2763.PNG'        },
-      { slotId: 'map_永眠町',        url: './マップ名戦績画像/IMG_2764.PNG'        },
-      { slotId: 'map_月の河公園',    url: './マップ名戦績画像/IMG_2765.PNG'        },
-      { slotId: 'map_罪の森',        url: './マップ名戦績画像/IMG_2766.PNG'        },
     ];
-    // バッジ用: 全員行方不明スクショ / 脱出バッジが含まれるスクショ
-    const SS_AUTO_BADGE_MISS_URL   = './マップ名戦績画像/IMG_2757.PNG';  // ハンター勝ち = 全員行方不明
-    const SS_AUTO_BADGE_ESCAPE_URL = './マップ名戦績画像/IMG_2756.PNG';  // 引き分け（脱出バッジあり）
+    // バッジ用: バッジ単体をトリミングした画像
+    const SS_AUTO_BADGE_MISS_URL   = './バッジ画像/badge_missing.PNG';  // 行方不明バッジ単体
+    const SS_AUTO_BADGE_ESCAPE_URL = './バッジ画像/badge_escape.PNG';   // 脱出バッジ単体
 
     // URL から Image を読み込む
     function ssLoadImgFromUrl(url) {
@@ -6407,8 +6457,308 @@
       ssSaveTpls();
     }
 
+    // バッジ単体画像（トリミング済み）から直接テンプレートを生成
+    async function ssAutoExtractBadgeDirect(missImg, escapeImg) {
+      const db = ssLoadTpls();
+
+      const ctxM = ssDrawToCanvas(missImg);
+      db.badges.missing = ssEncodeImgData(
+        ssExtractRect(ctxM, missImg.width, missImg.height, 0, 0, 1, 1, SS_BADGE_W, SS_BADGE_H)
+      );
+
+      const ctxE = ssDrawToCanvas(escapeImg);
+      db.badges.escape = ssEncodeImgData(
+        ssExtractRect(ctxE, escapeImg.width, escapeImg.height, 0, 0, 1, 1, SS_BADGE_W, SS_BADGE_H)
+      );
+
+      ssSaveTpls();
+    }
+
+    // =============================================
+    // キャリブレーション機能
+    // =============================================
+    const SS_CALIB_LS_KEY = 'identity5_ss_calib';
+
+    const SS_GRID_CALIB_STEPS = [
+      '幸運児（左上・1番目のキャラ）の中心をタップ',
+      '弁護士（左上・3番目のキャラ）の中心をタップ',
+      '泥棒（4番目・右セクション最初のキャラ）の中心をタップ',
+      '冒険家（7番目・2行目の最初のキャラ）の中心をタップ',
+    ];
+    const SS_RESULT_CALIB_STEPS = [
+      '1行目（最上段）のキャラアイコン中心をタップ',
+      '2行目のキャラアイコン中心をタップ',
+      '1行目の脱出/行方不明バッジの中心をタップ',
+      'マップ名テキストの左端をタップ',
+      'マップ名テキストの右端をタップ',
+    ];
+
+    let _ssCalibMode   = null;  // 'grid' | 'result' | 'badge_escape' | 'badge_missing'
+    let _ssCalibPoints = [];
+    let _ssCalibStep   = 0;
+    let _ssCalibTapPos = null;
+    let _ssCalibImgEl  = null;
+    let _ssCalibWrapEl = null;
+    let _ssBadgeStage  = null;  // 'escape' | 'missing'
+
+    function ssApplyCalibration() {
+      try {
+        const calib = JSON.parse(localStorage.getItem(SS_CALIB_LS_KEY) || '{}');
+        if (calib.grid) Object.assign(SS_GRID, calib.grid);
+        if (calib.result) Object.assign(SS_RESULT, calib.result);
+      } catch (e) {}
+    }
+
+    // ----- グリッドキャリブレーション開始 -----
+    function ssStartCalibGrid() {
+      const fi = document.createElement('input');
+      fi.type = 'file'; fi.accept = 'image/*';
+      fi.onchange = e => {
+        const f = e.target.files[0]; if (!f) return;
+        ssOpenCalibModal('grid', f);
+      };
+      fi.click();
+    }
+
+    // ----- 戦績画面キャリブレーション開始 -----
+    function ssStartCalibResult() {
+      const fi = document.createElement('input');
+      fi.type = 'file'; fi.accept = 'image/*';
+      fi.onchange = e => {
+        const f = e.target.files[0]; if (!f) return;
+        ssOpenCalibModal('result', f);
+      };
+      fi.click();
+    }
+
+    // ----- バッジ登録（2枚順番にアップロード） -----
+    function ssStartCalibBadge() {
+      _ssBadgeStage = 'escape';
+      const fi = document.createElement('input');
+      fi.type = 'file'; fi.accept = 'image/*';
+      fi.onchange = e => {
+        const f = e.target.files[0]; if (!f) return;
+        ssOpenCalibModal('badge_escape', f);
+      };
+      alert('①全員脱出（ハンター負け）の戦績スクショを選んでください');
+      fi.click();
+    }
+
+    // ----- モーダルを開く -----
+    function ssOpenCalibModal(mode, imgFile) {
+      _ssCalibMode   = mode;
+      _ssCalibPoints = [];
+      _ssCalibStep   = 0;
+      _ssCalibTapPos = null;
+
+      _ssCalibImgEl  = document.getElementById('ss-calib-img');
+      _ssCalibWrapEl = document.getElementById('ss-calib-img-wrap');
+
+      document.getElementById('ss-calib-modal').style.display = 'flex';
+
+      const url = URL.createObjectURL(imgFile);
+      _ssCalibImgEl.onload = () => { URL.revokeObjectURL(url); ssCalibUpdateStep(); };
+      _ssCalibImgEl.src = url;
+
+      // イベント登録
+      _ssCalibWrapEl.ontouchend = ssCalibHandleTap;
+      _ssCalibWrapEl.onclick    = ssCalibHandleTap;
+    }
+
+    function ssCalibHandleTap(e) {
+      const touch = e.changedTouches ? e.changedTouches[0] : e;
+      const rect  = _ssCalibImgEl.getBoundingClientRect();
+      const x = (touch.clientX - rect.left)  / rect.width;
+      const y = (touch.clientY - rect.top)   / rect.height;
+      if (x < 0 || x > 1 || y < 0 || y > 1) return;
+
+      _ssCalibTapPos = { x, y };
+
+      const dot = document.getElementById('ss-calib-dot');
+      dot.style.display = 'block';
+      dot.style.left = (x * 100) + '%';
+      dot.style.top  = (y * 100) + '%';
+
+      document.getElementById('ss-calib-pos').textContent =
+        `タップ位置: x=${x.toFixed(3)}, y=${y.toFixed(3)}`;
+      document.getElementById('ss-calib-confirm-btn').disabled = false;
+    }
+
+    function ssCalibUpdateStep() {
+      let steps;
+      if (_ssCalibMode === 'grid')         steps = SS_GRID_CALIB_STEPS;
+      else if (_ssCalibMode === 'result')   steps = SS_RESULT_CALIB_STEPS;
+      else                                  steps = ['1行目のバッジ中心をタップ'];
+
+      document.getElementById('ss-calib-progress').textContent =
+        `ステップ ${_ssCalibStep + 1} / ${steps.length}`;
+      document.getElementById('ss-calib-desc').textContent = steps[_ssCalibStep];
+      document.getElementById('ss-calib-pos').textContent  = '画像をタップしてください';
+      document.getElementById('ss-calib-confirm-btn').disabled = true;
+      document.getElementById('ss-calib-dot').style.display = 'none';
+      _ssCalibTapPos = null;
+    }
+
+    function ssCalibConfirm() {
+      if (!_ssCalibTapPos) return;
+      _ssCalibPoints.push({ ..._ssCalibTapPos });
+      _ssCalibStep++;
+
+      let totalSteps;
+      if (_ssCalibMode === 'grid')        totalSteps = SS_GRID_CALIB_STEPS.length;
+      else if (_ssCalibMode === 'result') totalSteps = SS_RESULT_CALIB_STEPS.length;
+      else                                totalSteps = 1;
+
+      if (_ssCalibStep >= totalSteps) {
+        ssCalibFinish();
+      } else {
+        ssCalibUpdateStep();
+      }
+    }
+
+    function ssCalibCancel() {
+      document.getElementById('ss-calib-modal').style.display = 'none';
+      _ssCalibWrapEl.ontouchend = null;
+      _ssCalibWrapEl.onclick    = null;
+      _ssCalibMode = null;
+    }
+
+    async function ssCalibFinish() {
+      const mode = _ssCalibMode;
+      const pts  = _ssCalibPoints;
+      document.getElementById('ss-calib-modal').style.display = 'none';
+      _ssCalibWrapEl.ontouchend = null;
+      _ssCalibWrapEl.onclick    = null;
+
+      if (mode === 'grid') {
+        ssCalibSaveGrid(pts);
+      } else if (mode === 'result') {
+        ssCalibSaveResult(pts);
+      } else if (mode === 'badge_escape') {
+        await ssCalibSaveBadge(pts[0], 'escape');
+        // 次に行方不明スクショを要求
+        alert('②全員脱落（ハンター勝ち）の戦績スクショを選んでください');
+        const fi = document.createElement('input');
+        fi.type = 'file'; fi.accept = 'image/*';
+        fi.onchange = e => {
+          const f = e.target.files[0]; if (!f) return;
+          ssOpenCalibModal('badge_missing', f);
+        };
+        fi.click();
+        return;
+      } else if (mode === 'badge_missing') {
+        await ssCalibSaveBadge(pts[0], 'missing');
+        _ssTplCache = null;
+        renderSsSetupUI();
+        alert('バッジ登録完了！');
+        return;
+      }
+    }
+
+    // グリッド座標を4点から計算
+    // pts[0]=幸運児(left0,row0), pts[1]=弁護士(left2,row0),
+    // pts[2]=泥棒(right0,row0), pts[3]=冒険家(left0,row1)
+    function ssCalibSaveGrid(pts) {
+      if (pts.length < 4) return;
+      const [p0, p1, p2, p3] = pts;
+      const leftSpacing  = (p1.x - p0.x) / 2;
+      const rightSpacing = leftSpacing;  // 左右で同じ間隔を仮定
+      const leftCols  = [p0.x, p0.x + leftSpacing, p1.x];
+      const rightCols = [p2.x, p2.x + rightSpacing, p2.x + 2 * rightSpacing];
+      const rowSpacing = p3.y - p0.y;
+      const rows = [p0.y, p3.y, p3.y + rowSpacing];
+      const r    = leftSpacing * 0.42;
+
+      const calib = JSON.parse(localStorage.getItem(SS_CALIB_LS_KEY) || '{}');
+      calib.grid = { leftCols, rightCols, rows, r };
+      localStorage.setItem(SS_CALIB_LS_KEY, JSON.stringify(calib));
+      Object.assign(SS_GRID, calib.grid);
+
+      // グリッド調整後はキャラを再登録
+      ssReExtractChars();
+    }
+
+    // 戦績画面座標を5点から計算
+    // pts[0]=row1icon, pts[1]=row2icon, pts[2]=row1badge,
+    // pts[3]=mapLeft, pts[4]=mapRight
+    function ssCalibSaveResult(pts) {
+      if (pts.length < 5) return;
+      const [p0, p1, p2, p3, p4] = pts;
+      const rowSpacing = p1.y - p0.y;
+      const rowY   = [p0.y, p1.y, p1.y + rowSpacing, p1.y + 2 * rowSpacing, p1.y + 3 * rowSpacing];
+      const iconX  = (p0.x + p1.x) / 2;
+      const iconR  = rowSpacing * 0.30;
+      const badgeX = p2.x - 0.04;
+      const badgeW = 0.10;
+      const badgeH = rowSpacing * 0.50;
+      const mapX   = p3.x;
+      const mapW   = p4.x - p3.x;
+      const mapY   = p3.y - rowSpacing * 0.25;
+      const mapH   = rowSpacing * 0.35;
+
+      const calib = JSON.parse(localStorage.getItem(SS_CALIB_LS_KEY) || '{}');
+      calib.result = { rowY, iconX, iconR, badgeX, badgeW, badgeH, mapX, mapY, mapW, mapH };
+      localStorage.setItem(SS_CALIB_LS_KEY, JSON.stringify(calib));
+      Object.assign(SS_RESULT, calib.result);
+
+      _ssTplCache = null;
+      renderSsSetupUI();
+      alert('戦績画面座標を保存しました。\n次にマップを再登録するか、スクショ読み込みを試してみてください。');
+    }
+
+    // バッジ1点タップから抽出
+    async function ssCalibSaveBadge(pt, badgeType) {
+      // 現在のSS_RESULTのバッジサイズ設定を使って、タップ位置周辺を抽出
+      const db = ssLoadTpls();
+      // バッジの参照画像をリロードして抽出
+      // pt は画面上のタップ位置（比率）なので、その位置にバッジがあると仮定
+      // ここではタップ座標をbadgeX/badgeYとして一時的に使う
+      const tmpBadgeX = pt.x - SS_RESULT.badgeW / 2;
+      const tmpBadgeY = pt.y - SS_RESULT.badgeH / 2;
+
+      // 直近のキャリブレーション画像を使う（_ssCalibImgElに残っている）
+      const ctx = ssDrawToCanvas(_ssCalibImgEl);
+      const W = _ssCalibImgEl.naturalWidth, H = _ssCalibImgEl.naturalHeight;
+      const d = ssExtractRect(ctx, W, H, tmpBadgeX, tmpBadgeY, SS_RESULT.badgeW, SS_RESULT.badgeH, SS_BADGE_W, SS_BADGE_H);
+      db.badges[badgeType] = ssEncodeImgData(d);
+      if (!db.done) db.done = {};
+      db.done['badge_' + badgeType] = true;
+      ssSaveTpls();
+    }
+
+    // グリッド座標変更後にキャラテンプレートを再登録
+    async function ssReExtractChars() {
+      renderSsSetupUI(); // 設定中…を表示
+      const db = ssLoadTpls();
+      // キャラデータをクリアして再抽出
+      db.survivors = {}; db.hunters = {};
+      ssSaveTpls();
+
+      const charSlots = SS_AUTO_FILES.filter(f => {
+        const slot = SS_SLOTS.find(s => s.id === f.slotId);
+        return slot && (slot.type === 'char_grid' || slot.type === 'char_special');
+      });
+
+      for (const { slotId, url } of charSlots) {
+        const slot = SS_SLOTS.find(s => s.id === slotId);
+        try {
+          const img = await ssLoadImgFromUrl(url);
+          if (slot.type === 'char_grid')    await ssExtractCharGrid(img, slot.role, slot.charStart, slot.charCount);
+          if (slot.type === 'char_special') await ssExtractCharSpecial(img, slot.role, slot.charIndex, slot.charName, slot.skinIdx);
+          const d = ssLoadTpls(); if (!d.done) d.done = {};
+          d.done[slotId] = true; ssSaveTpls();
+        } catch (e) {
+          console.warn('ReExtract failed:', slotId, e.message);
+        }
+      }
+      _ssTplCache = null;
+      renderSsSetupUI();
+      alert('グリッド座標を保存し、キャラテンプレートを再登録しました。');
+    }
+
     // 起動時の自動セットアップ（キャラ未登録の場合のみ実行）
     async function ssAutoInit() {
+      ssApplyCalibration(); // 保存済みキャリブレーションをSS_GRID/SS_RESULTに適用
       const db = ssLoadTpls();
       const charCount = Object.keys(db.survivors).length + Object.keys(db.hunters).length;
 
@@ -6434,19 +6784,24 @@
             console.warn('ssAutoInit: failed for', slotId, e.message);
           }
         }
-        // バッジ
+        _ssTplCache = null;
+      }
+
+      // バッジが未登録の場合は自動ロード（キャラ登録済みでも実行）
+      const dbBadge = ssLoadTpls();
+      if (!dbBadge.badges?.escape || !dbBadge.badges?.missing) {
         try {
           const missImg   = await ssLoadImgFromUrl(SS_AUTO_BADGE_MISS_URL);
           const escapeImg = await ssLoadImgFromUrl(SS_AUTO_BADGE_ESCAPE_URL);
-          await ssAutoExtractBadges(missImg, escapeImg);
+          await ssAutoExtractBadgeDirect(missImg, escapeImg);
           const d = ssLoadTpls();
           if (!d.done) d.done = {};
           d.done['badge_miss'] = d.done['badge_escape'] = true;
           ssSaveTpls();
+          _ssTplCache = null;
         } catch (e) {
           console.warn('ssAutoInit: badge failed', e.message);
         }
-        _ssTplCache = null;
       }
 
       // マップは ss_templates.json から補完（既登録は上書きしない）

@@ -4113,7 +4113,13 @@
           labels.push(`${index + 1}試合目`);
           data.push(winrate.toFixed(2));
         });
-        
+
+        // Y軸範囲をデータに合わせて自動調整（±3%余白、0〜100にクランプ）
+        const dataNumbers = data.map(Number);
+        const padding = 3;
+        const yMin = Math.max(0, Math.floor(Math.min(...dataNumbers) - padding));
+        const yMax = Math.min(100, Math.ceil(Math.max(...dataNumbers) + padding));
+
         // 既存のグラフを破棄
         if (winrateChart) {
           winrateChart.destroy();
@@ -4162,8 +4168,8 @@
             },
             scales: {
               y: {
-                beginAtZero: true,
-                max: 100,
+                min: yMin,
+                max: yMax,
                 ticks: {
                   color: tickColor,
                   callback: function(value) {

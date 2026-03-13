@@ -1427,6 +1427,72 @@
     body.dark-mode .sync-sublabel {
       color: #6b7280 !important;
     }
+    /* ===== スクショ読み込み機能 ===== */
+    .ss-btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: transform 0.2s;
+      text-align: center;
+    }
+    .ss-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(8,145,178,0.3); }
+    .ss-btn:disabled { background: #9ca3af; cursor: not-allowed; transform: none; box-shadow: none; }
+    .ss-setup-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .ss-setup-item:last-child { border-bottom: none; }
+    .ss-setup-label { flex: 1; font-size: 13px; color: #374151; }
+    .ss-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .ss-badge-pending { background: #f3f4f6; color: #9ca3af; }
+    .ss-badge-done    { background: #d1fae5; color: #065f46; }
+    .ss-badge-error   { background: #fee2e2; color: #991b1b; }
+    .ss-setup-upload-btn {
+      padding: 5px 12px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .ss-setup-upload-btn:hover { background: #2563eb; }
+    .ss-section-head {
+      font-size: 12px;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 14px 0 4px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    body.dark-mode .ss-btn { background: linear-gradient(135deg, #0369a1 0%, #075985 100%); }
+    body.dark-mode .ss-setup-item { border-bottom-color: #2a2a42; }
+    body.dark-mode .ss-setup-label { color: #d1d5db; }
+    body.dark-mode .ss-badge-pending { background: #2a2a42; color: #6b7280; }
+    body.dark-mode .ss-badge-done    { background: #064e3b; color: #6ee7b7; }
+    body.dark-mode .ss-badge-error   { background: #450a0a; color: #fca5a5; }
+    body.dark-mode .ss-section-head  { color: #6b7280; border-bottom-color: #2e2e48; }
   </style>
   
   <!-- Chart.js CDN (安定版v3) -->
@@ -1478,6 +1544,7 @@
       <!-- 試合入力タブ -->
       <div id="input-tab" class="tab-content active">
         <div id="survivor-input">
+          <button type="button" class="ss-btn" id="ss-btn-survivor" onclick="ssOpenReader('survivor')">スクショから読み込む</button>
           <button type="button" onclick="event.preventDefault(); event.stopPropagation(); clearAllPersistence('survivor'); return false;" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; margin-bottom: 15px;">保持を全て解除</button>
           
           <div class="form-group">
@@ -1563,6 +1630,7 @@
         </div>
         
         <div id="hunter-input" style="display: none;">
+          <button type="button" class="ss-btn" id="ss-btn-hunter" onclick="ssOpenReader('hunter')">スクショから読み込む</button>
           <button type="button" onclick="event.preventDefault(); event.stopPropagation(); clearAllPersistence('hunter'); return false;" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; margin-bottom: 15px;">保持を全て解除</button>
           
           <div class="form-group">
@@ -1887,6 +1955,15 @@
           </div>
         </div>
         
+        <!-- スクショ読み込み設定 -->
+        <div class="stats-card" id="ss-setup-card" style="margin-bottom: 20px;">
+          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #1f2937;">スクショ読み込み設定</h3>
+          <div id="ss-setup-status" style="font-size: 13px; color: #374151; line-height: 2;"></div>
+          <button type="button" onclick="ssResetAndReload()" style="margin-top: 14px; padding: 10px 18px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
+            テンプレートをリセットして再読み込み
+          </button>
+        </div>
+
         <!-- 現在のデータ情報 -->
         <div class="stats-card">
           <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 15px; color: #1f2937;">現在のデータ情報</h3>
@@ -2970,6 +3047,9 @@
 
       // 同期UI初期化
       updateSyncUI();
+
+      // スクショテンプレート自動セットアップ（未登録の場合のみ）
+      ssAutoInit();
     }
 
     // セレクトボックスにオプションを追加
@@ -5759,6 +5839,642 @@
         alert('削除に失敗しました。');
         console.error('Delete error:', e);
       }
+    }
+
+    // =============================================
+    // スクショ読み込み機能
+    // =============================================
+
+    // ----- レイアウト定数 -----
+    // キャラ一覧画面グリッド（左3列＋右3列、3行）
+    const SS_GRID = {
+      leftCols:  [0.142, 0.285, 0.420],
+      rightCols: [0.580, 0.722, 0.858],
+      rows:      [0.315, 0.530, 0.755],
+      r:         0.068,  // アイコン半径（min(W,H)に対する比率）
+    };
+    // 戦績画面レイアウト（相対座標）
+    const SS_RESULT = {
+      rowY:    [0.265, 0.390, 0.515, 0.640, 0.765],  // 5行の中心Y
+      iconX:   0.230, iconR:  0.042,                  // キャラアイコン
+      badgeX:  0.415, badgeW: 0.115, badgeH: 0.055,   // 脱出/行方不明バッジ
+      rankX:   0.288, rankR:  0.025,                  // 段位アイコン
+      mapX:    0.300, mapY:   0.108, mapW:   0.385, mapH: 0.048,  // マップ名領域
+    };
+    // 段位一覧画像レイアウト（サバイバー上段、ハンター下段）
+    const SS_RANK = {
+      survY: 0.30, huntY: 0.70,
+      cols: [0.10, 0.214, 0.329, 0.443, 0.557, 0.671, 0.786, 0.900],
+      r:    0.05,
+    };
+    const SS_ICON_SZ  = 40;             // テンプレートアイコンサイズ（px）
+    const SS_MAP_W    = 200;
+    const SS_MAP_H    = 30;             // マップ名領域テンプレートサイズ
+    const SS_BADGE_W  = 80;
+    const SS_BADGE_H  = 30;             // バッジテンプレートサイズ
+    const SS_LS_KEY   = 'identity5_screenshot_templates';
+
+    // ----- セットアップスロット定義 -----
+    const SS_SLOTS = [
+      // サバイバーキャラ
+      { id: 'surv_p1',      label: 'サバイバー P1（キャラ一覧スクショ）',         section: 'survivor', type: 'char_grid',    role: 'survivor', charStart: 0,  charCount: 18 },
+      { id: 'surv_p2',      label: 'サバイバー P2（キャラ一覧スクショ）',         section: 'survivor', type: 'char_grid',    role: 'survivor', charStart: 18, charCount: 18 },
+      { id: 'surv_p3',      label: 'サバイバー P3（キャラ一覧スクショ）',         section: 'survivor', type: 'char_grid',    role: 'survivor', charStart: 36, charCount: 15 },
+      { id: 'surv_sp_off',  label: 'サバイバー 特殊：オフェンス（一覧スクショ）', section: 'survivor', type: 'char_special', role: 'survivor', charIndex: 11, charName: 'オフェンス', skinIdx: 1 },
+      // ハンターキャラ
+      { id: 'hunt_p1',      label: 'ハンター P1（キャラ一覧スクショ）',           section: 'hunter',   type: 'char_grid',    role: 'hunter',   charStart: 0,  charCount: 18 },
+      { id: 'hunt_p2',      label: 'ハンター P2（キャラ一覧スクショ）',           section: 'hunter',   type: 'char_grid',    role: 'hunter',   charStart: 18, charCount: 16 },
+      { id: 'hunt_sp_rv1',  label: 'ハンター 特殊：復讐者①（一覧スクショ）',     section: 'hunter',   type: 'char_special', role: 'hunter',   charIndex: 0,  charName: '復讐者', skinIdx: 1 },
+      { id: 'hunt_sp_rv2',  label: 'ハンター 特殊：復讐者②（一覧スクショ）',     section: 'hunter',   type: 'char_special', role: 'hunter',   charIndex: 0,  charName: '復讐者', skinIdx: 2 },
+      { id: 'hunt_sp_rv3',  label: 'ハンター 特殊：復讐者③（一覧スクショ）',     section: 'hunter',   type: 'char_special', role: 'hunter',   charIndex: 0,  charName: '復讐者', skinIdx: 3 },
+      // 段位（オプション）
+      { id: 'rank_icons',   label: '段位アイコン一覧（サバ8種・ハン8種）',        section: 'rank',     type: 'rank_grid' },
+      // バッジ（オプション）
+      { id: 'badge_escape', label: '脱出バッジ参照（全員脱出の戦績スクショ）',    section: 'badge',    type: 'badge', badgeType: 'escape'  },
+      { id: 'badge_miss',   label: '行方不明バッジ参照（全員脱落の戦績スクショ）',section: 'badge',    type: 'badge', badgeType: 'missing' },
+      // マップ（オプション）
+      ...MAPS.map(m => ({ id: 'map_' + m, label: 'マップ：' + m + '（戦績スクショ）', section: 'map', type: 'map_region', mapName: m })),
+    ];
+    const SS_SECTION_LABELS = {
+      survivor: 'サバイバーキャラアイコン',
+      hunter:   'ハンターキャラアイコン',
+      rank:     '段位アイコン（オプション）',
+      badge:    '脱出バッジ（オプション）',
+      map:      'マップ識別（オプション）',
+    };
+
+    // ----- 状態 -----
+    let _ssTpls = null;
+    let _ssCurrentSlotId = null;
+    let _ssTplCache = null;
+
+    // ----- テンプレートDB -----
+    function ssLoadTpls() {
+      if (_ssTpls) return _ssTpls;
+      const raw = localStorage.getItem(SS_LS_KEY);
+      _ssTpls = raw ? JSON.parse(raw) : {
+        v: 1,
+        survivors: {},  // { name: [b64_skin0, b64_skin1, ...] }
+        hunters:   {},
+        ranks:     { survivor: {}, hunter: {} },
+        maps:      {},
+        badges:    { escape: null, missing: null },
+        done:      {},  // { slotId: true }
+      };
+      return _ssTpls;
+    }
+
+    function ssSaveTpls() {
+      try {
+        localStorage.setItem(SS_LS_KEY, JSON.stringify(_ssTpls));
+      } catch (e) {
+        alert('テンプレートの保存に失敗しました（ストレージ容量不足の可能性があります）。');
+      }
+    }
+
+    // ----- 画像処理ユーティリティ -----
+    function ssLoadImgFromFile(file) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('画像の読み込みに失敗しました')); };
+        img.src = url;
+      });
+    }
+
+    function ssDrawToCanvas(img) {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      return ctx;
+    }
+
+    // 円形領域を outSize×outSize にリサイズして取得
+    function ssExtractCircle(ctx, W, H, cxR, cyR, rR, outSize) {
+      const cx = W * cxR, cy = H * cyR;
+      const r  = Math.min(W, H) * rR;
+      const c2 = document.createElement('canvas');
+      c2.width = outSize; c2.height = outSize;
+      const ctx2 = c2.getContext('2d');
+      ctx2.drawImage(ctx.canvas, cx - r, cy - r, r * 2, r * 2, 0, 0, outSize, outSize);
+      return ctx2.getImageData(0, 0, outSize, outSize);
+    }
+
+    // 矩形領域を outW×outH にリサイズして取得
+    function ssExtractRect(ctx, W, H, xR, yR, wR, hR, outW, outH) {
+      const c2 = document.createElement('canvas');
+      c2.width = outW; c2.height = outH;
+      const ctx2 = c2.getContext('2d');
+      ctx2.drawImage(ctx.canvas, W * xR, H * yR, W * wR, H * hR, 0, 0, outW, outH);
+      return ctx2.getImageData(0, 0, outW, outH);
+    }
+
+    // ImageData → base64 JPEG（コンパクト保存）
+    function ssEncodeImgData(imgData) {
+      const c = document.createElement('canvas');
+      c.width = imgData.width; c.height = imgData.height;
+      c.getContext('2d').putImageData(imgData, 0, 0);
+      return c.toDataURL('image/jpeg', 0.85);
+    }
+
+    // base64 → ImageData（非同期）
+    function ssDecodeB64(b64, w, h) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          const ctx = c.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(ctx.getImageData(0, 0, w, h));
+        };
+        img.src = b64;
+      });
+    }
+
+    // グリッドページ内インデックス（0始まり）→ 座標比率
+    function ssGridPos(idx) {
+      const col = idx % 6;
+      const row = Math.floor(idx / 6);
+      const cx = col < 3 ? SS_GRID.leftCols[col] : SS_GRID.rightCols[col - 3];
+      const cy = SS_GRID.rows[row];
+      return { cx, cy };
+    }
+
+    // ----- MAD 比較 -----
+    // 円形マスクを適用した平均絶対差（0〜255）
+    function ssCircularMAD(d1, d2, sz) {
+      const cx = sz / 2, r2 = (sz / 2) * (sz / 2);
+      let sum = 0, cnt = 0;
+      for (let y = 0; y < sz; y++) {
+        for (let x = 0; x < sz; x++) {
+          if ((x - cx) * (x - cx) + (y - cx) * (y - cx) <= r2) {
+            const i = (y * sz + x) * 4;
+            sum += Math.abs(d1[i] - d2[i]) + Math.abs(d1[i+1] - d2[i+1]) + Math.abs(d1[i+2] - d2[i+2]);
+            cnt++;
+          }
+        }
+      }
+      return cnt > 0 ? sum / (cnt * 3) : 255;
+    }
+
+    // 矩形の平均絶対差（0〜255）
+    function ssRectMAD(d1, d2, w, h) {
+      let sum = 0;
+      const n = w * h;
+      for (let i = 0; i < n; i++) {
+        const j = i * 4;
+        sum += Math.abs(d1[j] - d2[j]) + Math.abs(d1[j+1] - d2[j+1]) + Math.abs(d1[j+2] - d2[j+2]);
+      }
+      return sum / (n * 3);
+    }
+
+    // ----- テンプレート抽出（セットアップ時） -----
+    async function ssExtractCharGrid(img, role, charStart, charCount) {
+      const db   = ssLoadTpls();
+      const chars = role === 'survivor' ? SURVIVORS : HUNTERS;
+      const sec   = role === 'survivor' ? db.survivors : db.hunters;
+      const ctx   = ssDrawToCanvas(img);
+      for (let i = 0; i < charCount; i++) {
+        const name = chars[charStart + i];
+        if (!name) continue;
+        const { cx, cy } = ssGridPos(i);
+        const imgData = ssExtractCircle(ctx, img.width, img.height, cx, cy, SS_GRID.r, SS_ICON_SZ);
+        if (!sec[name]) sec[name] = [];
+        sec[name][0] = ssEncodeImgData(imgData);  // skin 0 = デフォルト
+      }
+      ssSaveTpls();
+    }
+
+    async function ssExtractCharSpecial(img, role, charIndex, charName, skinIdx) {
+      const db  = ssLoadTpls();
+      const sec = role === 'survivor' ? db.survivors : db.hunters;
+      const ctx = ssDrawToCanvas(img);
+      const { cx, cy } = ssGridPos(charIndex);
+      const imgData = ssExtractCircle(ctx, img.width, img.height, cx, cy, SS_GRID.r, SS_ICON_SZ);
+      if (!sec[charName]) sec[charName] = [];
+      sec[charName][skinIdx] = ssEncodeImgData(imgData);
+      ssSaveTpls();
+    }
+
+    async function ssExtractRankGrid(img) {
+      const db  = ssLoadTpls();
+      const ctx = ssDrawToCanvas(img);
+      const W = img.width, H = img.height;
+      db.ranks = { survivor: {}, hunter: {} };
+      for (let i = 0; i < 8; i++) {
+        const name = RANKS[i];
+        const ds = ssExtractCircle(ctx, W, H, SS_RANK.cols[i], SS_RANK.survY, SS_RANK.r, SS_ICON_SZ);
+        db.ranks.survivor[name] = ssEncodeImgData(ds);
+        const dh = ssExtractCircle(ctx, W, H, SS_RANK.cols[i], SS_RANK.huntY, SS_RANK.r, SS_ICON_SZ);
+        db.ranks.hunter[name]   = ssEncodeImgData(dh);
+      }
+      ssSaveTpls();
+    }
+
+    async function ssExtractMapRegion(img, mapName) {
+      const db  = ssLoadTpls();
+      const ctx = ssDrawToCanvas(img);
+      const W = img.width, H = img.height;
+      const d = ssExtractRect(ctx, W, H, SS_RESULT.mapX, SS_RESULT.mapY, SS_RESULT.mapW, SS_RESULT.mapH, SS_MAP_W, SS_MAP_H);
+      db.maps[mapName] = ssEncodeImgData(d);
+      ssSaveTpls();
+    }
+
+    async function ssExtractBadge(img, badgeType) {
+      const db  = ssLoadTpls();
+      const ctx = ssDrawToCanvas(img);
+      const W = img.width, H = img.height;
+      // row 0（最上段サバイバー行）からバッジを抽出
+      const bY = SS_RESULT.rowY[0] - SS_RESULT.badgeH / 2;
+      const d  = ssExtractRect(ctx, W, H, SS_RESULT.badgeX, bY, SS_RESULT.badgeW, SS_RESULT.badgeH, SS_BADGE_W, SS_BADGE_H);
+      db.badges[badgeType] = ssEncodeImgData(d);
+      ssSaveTpls();
+    }
+
+    // ----- テンプレートキャッシュ（分析時プリロード） -----
+    async function ssPreloadCache() {
+      const db    = ssLoadTpls();
+      const cache = { survivors: {}, hunters: {}, ranks: { survivor: {}, hunter: {} }, maps: {}, badges: {} };
+      const tasks = [];
+
+      for (const [name, tpls] of Object.entries(db.survivors)) {
+        tasks.push((async () => {
+          cache.survivors[name] = await Promise.all(
+            (tpls || []).map(b => b ? ssDecodeB64(b, SS_ICON_SZ, SS_ICON_SZ) : null)
+          );
+        })());
+      }
+      for (const [name, tpls] of Object.entries(db.hunters)) {
+        tasks.push((async () => {
+          cache.hunters[name] = await Promise.all(
+            (tpls || []).map(b => b ? ssDecodeB64(b, SS_ICON_SZ, SS_ICON_SZ) : null)
+          );
+        })());
+      }
+      for (const [name, b] of Object.entries(db.ranks.survivor || {})) {
+        if (b) tasks.push((async () => { cache.ranks.survivor[name] = await ssDecodeB64(b, SS_ICON_SZ, SS_ICON_SZ); })());
+      }
+      for (const [name, b] of Object.entries(db.ranks.hunter || {})) {
+        if (b) tasks.push((async () => { cache.ranks.hunter[name]   = await ssDecodeB64(b, SS_ICON_SZ, SS_ICON_SZ); })());
+      }
+      for (const [name, b] of Object.entries(db.maps)) {
+        if (b) tasks.push((async () => { cache.maps[name] = await ssDecodeB64(b, SS_MAP_W, SS_MAP_H); })());
+      }
+      if (db.badges.escape)  tasks.push((async () => { cache.badges.escape  = await ssDecodeB64(db.badges.escape,  SS_BADGE_W, SS_BADGE_H); })());
+      if (db.badges.missing) tasks.push((async () => { cache.badges.missing = await ssDecodeB64(db.badges.missing, SS_BADGE_W, SS_BADGE_H); })());
+
+      await Promise.all(tasks);
+      _ssTplCache = cache;
+      return cache;
+    }
+
+    // ----- マッチング -----
+    function ssMatchCharIcon(iconData, cache) {
+      let bestName = null, bestRole = null, bestMad = 255;
+      for (const [name, tpls] of Object.entries(cache.survivors)) {
+        for (const tpl of (tpls || [])) {
+          if (!tpl) continue;
+          const mad = ssCircularMAD(iconData.data, tpl.data, SS_ICON_SZ);
+          if (mad < bestMad) { bestMad = mad; bestName = name; bestRole = 'survivor'; }
+        }
+      }
+      for (const [name, tpls] of Object.entries(cache.hunters)) {
+        for (const tpl of (tpls || [])) {
+          if (!tpl) continue;
+          const mad = ssCircularMAD(iconData.data, tpl.data, SS_ICON_SZ);
+          if (mad < bestMad) { bestMad = mad; bestName = name; bestRole = 'hunter'; }
+        }
+      }
+      if (bestMad > 55) return null;
+      return { name: bestName, role: bestRole, mad: bestMad };
+    }
+
+    function ssMatchRankIcon(rankData, cache, role) {
+      const sec = role === 'survivor' ? cache.ranks.survivor : cache.ranks.hunter;
+      if (!sec || Object.keys(sec).length === 0) return null;
+      let bestName = null, bestMad = 255;
+      for (const [name, tpl] of Object.entries(sec)) {
+        if (!tpl) continue;
+        const mad = ssCircularMAD(rankData.data, tpl.data, SS_ICON_SZ);
+        if (mad < bestMad) { bestMad = mad; bestName = name; }
+      }
+      return bestMad < 40 ? bestName : null;
+    }
+
+    function ssMatchMapRegion(mapData, cache) {
+      if (!cache.maps || Object.keys(cache.maps).length === 0) return null;
+      let bestName = null, bestMad = 255;
+      for (const [name, tpl] of Object.entries(cache.maps)) {
+        if (!tpl) continue;
+        const mad = ssRectMAD(mapData.data, tpl.data, SS_MAP_W, SS_MAP_H);
+        if (mad < bestMad) { bestMad = mad; bestName = name; }
+      }
+      return bestMad < 30 ? bestName : null;
+    }
+
+    function ssCountEscapes(ctx, W, H, cache) {
+      if (!cache.badges.escape || !cache.badges.missing) return null;
+      let count = 0;
+      for (let row = 0; row < 4; row++) {
+        const bY = SS_RESULT.rowY[row] - SS_RESULT.badgeH / 2;
+        const d  = ssExtractRect(ctx, W, H, SS_RESULT.badgeX, bY, SS_RESULT.badgeW, SS_RESULT.badgeH, SS_BADGE_W, SS_BADGE_H);
+        const madE = ssRectMAD(d.data, cache.badges.escape.data,  SS_BADGE_W, SS_BADGE_H);
+        const madM = ssRectMAD(d.data, cache.badges.missing.data, SS_BADGE_W, SS_BADGE_H);
+        if (madE < madM) count++;
+      }
+      return count;
+    }
+
+    // ----- 戦績スクリーンショット分析 -----
+    async function ssAnalyze(img, perspective) {
+      const cache = await ssPreloadCache();
+      const ctx   = ssDrawToCanvas(img);
+      const W = img.width, H = img.height;
+
+      // 各行のキャラアイコン照合
+      const rowChars = [];
+      for (let row = 0; row < 5; row++) {
+        const d = ssExtractCircle(ctx, W, H, SS_RESULT.iconX, SS_RESULT.rowY[row], SS_RESULT.iconR, SS_ICON_SZ);
+        rowChars.push(ssMatchCharIcon(d, cache));
+      }
+
+      // ハンター行のインデックス
+      const hunterRowIdx = rowChars.findIndex(c => c && c.role === 'hunter');
+
+      // 「自分」の行を特定
+      let myRowIdx = -1, myChar = null;
+      if (perspective === 'hunter') {
+        myRowIdx = hunterRowIdx;
+        if (myRowIdx >= 0) myChar = rowChars[myRowIdx];
+      } else {
+        // サバ視点: 現在フォームの選択値と一致するキャラを優先
+        const currentMy = document.getElementById('my-survivor')?.value;
+        const survRows  = rowChars.map((c, i) => ({ c, i })).filter(x => x.c && x.c.role === 'survivor');
+        if (currentMy) {
+          const match = survRows.find(x => x.c.name === currentMy);
+          if (match) { myRowIdx = match.i; myChar = match.c; }
+        }
+        if (myRowIdx < 0 && survRows.length > 0) {
+          myRowIdx = survRows[0].i; myChar = survRows[0].c;
+        }
+      }
+
+      // 段位（自分の行から）
+      let myRank = null;
+      if (myRowIdx >= 0) {
+        const sec = perspective === 'hunter' ? cache.ranks.hunter : cache.ranks.survivor;
+        if (sec && Object.keys(sec).length > 0) {
+          const d = ssExtractCircle(ctx, W, H, SS_RESULT.rankX, SS_RESULT.rowY[myRowIdx], SS_RESULT.rankR, SS_ICON_SZ);
+          myRank = ssMatchRankIcon(d, cache, perspective);
+        }
+      }
+
+      // マップ
+      const mapData = ssExtractRect(ctx, W, H, SS_RESULT.mapX, SS_RESULT.mapY, SS_RESULT.mapW, SS_RESULT.mapH, SS_MAP_W, SS_MAP_H);
+      const mapName = ssMatchMapRegion(mapData, cache);
+
+      // 脱出人数
+      const escapeCount = ssCountEscapes(ctx, W, H, cache);
+
+      // 相手・味方（自分行と判明しているハンター行を除外）
+      const survivorChars = rowChars
+        .map((c, i) => ({ c, i }))
+        .filter(x => x.c && x.c.role === 'survivor' && x.i !== myRowIdx)
+        .map(x => x.c.name);
+      const hunterChar = (hunterRowIdx >= 0 && hunterRowIdx !== myRowIdx)
+        ? rowChars[hunterRowIdx]?.name : null;
+
+      return { myChar: myChar?.name || null, myRank, survivorChars, hunterChar, mapName, escapeCount };
+    }
+
+    // ----- フォーム自動入力 -----
+    function ssAutoFill(result, perspective) {
+      if (perspective === 'hunter') {
+        if (result.myChar) setSearchableSelectValue('my-hunter', result.myChar);
+        result.survivorChars.forEach((name, i) => {
+          if (name) setSearchableSelectValue('opponent-survivor-' + (i + 1), name);
+        });
+        if (result.mapName) setSearchableSelectValue('hunter-map', result.mapName);
+        if (result.myRank)  setSearchableSelectValue('hunter-rank', result.myRank);
+        if (result.escapeCount !== null) {
+          const btns = document.querySelectorAll('#hunter-input .result-button');
+          if (btns[result.escapeCount]) selectEscapeCount('hunter', result.escapeCount, btns[result.escapeCount]);
+        }
+        updateHunterOpponentSelectOptions();
+      } else {
+        if (result.myChar) setSearchableSelectValue('my-survivor', result.myChar);
+        result.survivorChars.slice(0, 3).forEach((name, i) => {
+          if (name) setSearchableSelectValue('teammate-' + (i + 1), name);
+        });
+        if (result.hunterChar) setSearchableSelectValue('opponent-hunter', result.hunterChar);
+        if (result.mapName)    setSearchableSelectValue('survivor-map', result.mapName);
+        if (result.myRank)     setSearchableSelectValue('survivor-rank', result.myRank);
+        if (result.escapeCount !== null) {
+          const btns = document.querySelectorAll('#survivor-input .result-button');
+          if (btns[result.escapeCount]) selectEscapeCount('survivor', result.escapeCount, btns[result.escapeCount]);
+        }
+        updateSurvivorSelectOptions();
+      }
+    }
+
+    // ----- スクショ読み込みエントリーポイント -----
+    function ssOpenReader(perspective) {
+      const db       = ssLoadTpls();
+      const hasChars = Object.keys(db.survivors).length > 0 || Object.keys(db.hunters).length > 0;
+      if (!hasChars) {
+        if (confirm('スクショ読み込みを使用するには、まず設定タブでセットアップが必要です。\n今すぐ設定タブへ移動しますか？')) {
+          document.querySelector('.main-tab[onclick*="settings"]')?.click();
+          setTimeout(() => document.getElementById('ss-setup-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+        }
+        return;
+      }
+      const fileInput = document.createElement('input');
+      fileInput.type  = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const btn = document.getElementById('ss-btn-' + perspective);
+        if (btn) { btn.disabled = true; btn.textContent = '解析中…'; }
+        try {
+          const img    = await ssLoadImgFromFile(file);
+          const result = await ssAnalyze(img, perspective);
+          ssAutoFill(result, perspective);
+          // 結果サマリー
+          const ok   = [], ng = [];
+          if (result.myChar)           ok.push('自キャラ: ' + result.myChar);     else ng.push('自キャラ');
+          if (result.mapName)          ok.push('マップ: ' + result.mapName);      else ng.push('マップ');
+          if (result.escapeCount !== null) ok.push('脱出: ' + result.escapeCount + '人'); else ng.push('脱出人数');
+          let msg = '読み込み完了！\n';
+          if (ok.length) msg += '✓ ' + ok.join(' / ') + '\n';
+          if (ng.length) msg += '△ 未取得（手動入力）: ' + ng.join('・');
+          alert(msg);
+        } catch (err) {
+          console.error('ssAnalyze error:', err);
+          alert('解析中にエラーが発生しました。\n' + err.message);
+        } finally {
+          if (btn) { btn.disabled = false; btn.textContent = 'スクショから読み込む'; }
+        }
+      };
+      fileInput.click();
+    }
+
+    // ----- セットアップ状況表示 -----
+    function renderSsSetupUI() {
+      const el = document.getElementById('ss-setup-status');
+      if (!el) return;
+      const db = ssLoadTpls();
+      const charCount = Object.keys(db.survivors).length + Object.keys(db.hunters).length;
+      const mapCount  = Object.keys(db.maps).length;
+      const rankCount = Object.keys(db.ranks?.survivor || {}).length;
+      const hasBadge  = !!(db.badges?.escape && db.badges?.missing);
+      if (charCount === 0) {
+        el.innerHTML = '<span style="color:#f59e0b;">設定中…</span>';
+        return;
+      }
+      const row = (ok, label) => `<span style="color:${ok?'#10b981':'#9ca3af'}">${ok?'✓':'△'}</span> ${label}`;
+      el.innerHTML = [
+        row(charCount > 0, `キャラアイコン: ${charCount}件`),
+        row(rankCount > 0, `段位: ${rankCount > 0 ? rankCount + '件' : '未登録'}`),
+        row(mapCount  > 0, `マップ: ${mapCount > 0 ? mapCount + '件' : '未登録'}`),
+        row(hasBadge,      `脱出バッジ: ${hasBadge ? '登録済' : '未登録'}`),
+      ].join('<br>');
+    }
+
+    // ----- 自動セットアップ -----
+    // 各スロットID → 同梱ファイルパス のマッピング
+    const SS_AUTO_FILES = [
+      { slotId: 'surv_p1',           url: './サバイバーアイコン画像/IMG_2419.PNG' },
+      { slotId: 'surv_p2',           url: './サバイバーアイコン画像/IMG_2420.PNG' },
+      { slotId: 'surv_p3',           url: './サバイバーアイコン画像/IMG_2421.PNG' },
+      { slotId: 'surv_sp_off',       url: './サバイバーアイコン画像/IMG_2422.PNG' },
+      { slotId: 'hunt_p1',           url: './ハンターアイコン画像/IMG_2423.PNG'   },
+      { slotId: 'hunt_p2',           url: './ハンターアイコン画像/IMG_2424.PNG'   },
+      { slotId: 'hunt_sp_rv1',       url: './ハンターアイコン画像/IMG_2425.PNG'   },
+      { slotId: 'hunt_sp_rv2',       url: './ハンターアイコン画像/IMG_2426.PNG'   },
+      { slotId: 'hunt_sp_rv3',       url: './ハンターアイコン画像/IMG_2759.PNG'   },
+      { slotId: 'rank_icons',        url: './段位アイコン画像/IMG_2767.PNG'        },
+      { slotId: 'map_レオの思い出',  url: './マップ名戦績画像/IMG_2756.PNG'        },
+      { slotId: 'map_赤の教会',      url: './マップ名戦績画像/IMG_2757.PNG'        },
+      { slotId: 'map_中華街',        url: './マップ名戦績画像/IMG_2758.PNG'        },
+      { slotId: 'map_聖心病院',      url: './マップ名戦績画像/IMG_2760.PNG'        },
+      { slotId: 'map_湖景村',        url: './マップ名戦績画像/IMG_2762.PNG'        },
+      { slotId: 'map_軍需工場',      url: './マップ名戦績画像/IMG_2763.PNG'        },
+      { slotId: 'map_永眠町',        url: './マップ名戦績画像/IMG_2764.PNG'        },
+      { slotId: 'map_月の河公園',    url: './マップ名戦績画像/IMG_2765.PNG'        },
+      { slotId: 'map_罪の森',        url: './マップ名戦績画像/IMG_2766.PNG'        },
+    ];
+    // バッジ用: 全員行方不明スクショ / 脱出バッジが含まれるスクショ
+    const SS_AUTO_BADGE_MISS_URL   = './マップ名戦績画像/IMG_2757.PNG';  // ハンター勝ち = 全員行方不明
+    const SS_AUTO_BADGE_ESCAPE_URL = './マップ名戦績画像/IMG_2756.PNG';  // 引き分け（脱出バッジあり）
+
+    // URL から Image を読み込む
+    function ssLoadImgFromUrl(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload  = () => resolve(img);
+        img.onerror = () => reject(new Error('読み込み失敗: ' + url));
+        img.src = url;
+      });
+    }
+
+    // バッジ自動抽出（行方不明テンプレート vs 最も差が大きい行 = 脱出テンプレート）
+    async function ssAutoExtractBadges(missImg, escapeImg) {
+      const db   = ssLoadTpls();
+      const ctxM = ssDrawToCanvas(missImg);
+      const WM = missImg.width, HM = missImg.height;
+
+      // 行方不明: missImg の row 0（全行が行方不明なので確実）
+      const bYM = SS_RESULT.rowY[0] - SS_RESULT.badgeH / 2;
+      const dM  = ssExtractRect(ctxM, WM, HM, SS_RESULT.badgeX, bYM, SS_RESULT.badgeW, SS_RESULT.badgeH, SS_BADGE_W, SS_BADGE_H);
+      db.badges.missing = ssEncodeImgData(dM);
+
+      // 脱出: escapeImg の 4 行のうち、行方不明テンプレートと最も差が大きい行を採用
+      const ctxE = ssDrawToCanvas(escapeImg);
+      const WE = escapeImg.width, HE = escapeImg.height;
+      let bestData = null, bestDiff = -1;
+      for (let row = 0; row < 4; row++) {
+        const bY = SS_RESULT.rowY[row] - SS_RESULT.badgeH / 2;
+        const d  = ssExtractRect(ctxE, WE, HE, SS_RESULT.badgeX, bY, SS_RESULT.badgeW, SS_RESULT.badgeH, SS_BADGE_W, SS_BADGE_H);
+        const diff = ssRectMAD(d.data, dM.data, SS_BADGE_W, SS_BADGE_H);
+        if (diff > bestDiff) { bestDiff = diff; bestData = d; }
+      }
+      if (bestData) db.badges.escape = ssEncodeImgData(bestData);
+
+      ssSaveTpls();
+    }
+
+    // 起動時の自動セットアップ（キャラ未登録の場合のみ実行）
+    async function ssAutoInit() {
+      const db = ssLoadTpls();
+      const charCount = Object.keys(db.survivors).length + Object.keys(db.hunters).length;
+
+      if (charCount === 0) {
+        // キャラ未登録: 全項目を自動セットアップ
+        renderSsSetupUI(); // 「設定中…」を表示
+        let ok = 0;
+        for (const { slotId, url } of SS_AUTO_FILES) {
+          const slot = SS_SLOTS.find(s => s.id === slotId);
+          if (!slot) continue;
+          try {
+            const img = await ssLoadImgFromUrl(url);
+            if      (slot.type === 'char_grid')    await ssExtractCharGrid(img, slot.role, slot.charStart, slot.charCount);
+            else if (slot.type === 'char_special') await ssExtractCharSpecial(img, slot.role, slot.charIndex, slot.charName, slot.skinIdx);
+            else if (slot.type === 'rank_grid')    await ssExtractRankGrid(img);
+            else if (slot.type === 'map_region')   await ssExtractMapRegion(img, slot.mapName);
+            const d = ssLoadTpls();
+            if (!d.done) d.done = {};
+            d.done[slotId] = true;
+            ssSaveTpls();
+            ok++;
+          } catch (e) {
+            console.warn('ssAutoInit: failed for', slotId, e.message);
+          }
+        }
+        // バッジ
+        try {
+          const missImg   = await ssLoadImgFromUrl(SS_AUTO_BADGE_MISS_URL);
+          const escapeImg = await ssLoadImgFromUrl(SS_AUTO_BADGE_ESCAPE_URL);
+          await ssAutoExtractBadges(missImg, escapeImg);
+          const d = ssLoadTpls();
+          if (!d.done) d.done = {};
+          d.done['badge_miss'] = d.done['badge_escape'] = true;
+          ssSaveTpls();
+        } catch (e) {
+          console.warn('ssAutoInit: badge failed', e.message);
+        }
+        _ssTplCache = null;
+      }
+
+      // マップは ss_templates.json から補完（既登録は上書きしない）
+      try {
+        const res = await fetch('./ss_templates.json', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.maps) {
+            const d = ssLoadTpls();
+            let added = 0;
+            for (const [name, tpl] of Object.entries(data.maps)) {
+              if (!d.maps[name]) { d.maps[name] = tpl; added++; }
+            }
+            if (added > 0) { ssSaveTpls(); _ssTplCache = null; }
+          }
+        }
+      } catch (e) { /* ss_templates.json が存在しない場合は無視 */ }
+
+      renderSsSetupUI();
+    }
+
+    // リセット後に自動再セットアップ
+    function ssResetAndReload() {
+      if (!confirm('テンプレートをリセットして再読み込みしますか？')) return;
+      localStorage.removeItem(SS_LS_KEY);
+      _ssTpls = null;
+      _ssTplCache = null;
+      ssAutoInit();
     }
 
     window.addEventListener('DOMContentLoaded', init);

@@ -1,9 +1,10 @@
-const CACHE_NAME = 'idv-tracker-v2';
+const CACHE_NAME = 'idv-tracker-v3';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
-  './sync-guide.html'
+  './sync-guide.html',
+  './guide.html'
 ];
 
 // インストール時にキャッシュ

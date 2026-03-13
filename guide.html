@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使い方ガイド | 第五人格トラッカー</title>
+  <script>
+    (function() {
+      if (localStorage.getItem('identity5_dark_mode') === 'on') {
+        document.documentElement.classList.add('dark-mode');
+      }
+    })();
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+      color: white;
+      padding: 25px;
+      text-align: center;
+    }
+    .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 5px; }
+    .header .subtitle { font-size: 13px; opacity: 0.8; }
+
+    .content { padding: 25px; }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #6b7280;
+      text-decoration: none;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    .back-link:hover { color: #374151; }
+
+    /* 目次 */
+    .toc {
+      background: #f8f9fa;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+    }
+    .toc-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 10px;
+    }
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 18px;
+    }
+    .toc-list li::before {
+      content: '›';
+      color: #9ca3af;
+      margin-right: 4px;
+    }
+    .toc-list a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .toc-list a:hover { text-decoration: underline; }
+
+    /* セクション */
+    .section { margin-bottom: 36px; }
+    .section-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0f3460;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .section-desc {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    /* 機能リスト */
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .feature-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 3px;
+    }
+    .feature-desc {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+    .feature-link {
+      color: #3b82f6;
+      text-decoration: none;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+    .feature-link:hover { text-decoration: underline; }
+
+    /* ハイライトボックス */
+    .info-box {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding: 12px 15px;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+      color: #1e40af;
+      line-height: 1.7;
+      margin: 14px 0;
+    }
+
+    .highlight-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-left: 3px solid #10b981;
+      padding: 14px 16px;
+      border-radius: 0 8px 8px 0;
+      font-size: 13px;
+      color: #065f46;
+      line-height: 1.7;
+      margin: 14px 0;
+    }
+    .highlight-box .highlight-title {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* UI模擬 */
+    .ui-mock {
+      background: #f8f9fa;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-top: 8px;
+      font-size: 13px;
+      color: #374151;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .ui-tab {
+      padding: 5px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid #e5e7eb;
+      background: white;
+      color: #374151;
+    }
+    .ui-tab.active {
+      background: #0f3460;
+      color: white;
+      border-color: #0f3460;
+    }
+    .ui-escape-btns { display: flex; gap: 5px; }
+    .ui-escape-btn {
+      padding: 5px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      background: white;
+      color: #374151;
+    }
+    .ui-escape-btn.selected {
+      background: #0f3460;
+      color: white;
+      border-color: #0f3460;
+    }
+
+    /* 視点ラベル */
+    .perspective-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 10px;
+      padding: 4px 10px;
+      background: #f3f4f6;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .perspective-section { margin-bottom: 16px; }
+
+    /* 区切り */
+    .divider {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 20px 0;
+    }
+
+    /* 目次に戻る */
+    .back-to-toc {
+      display: block;
+      text-align: right;
+      font-size: 12px;
+      color: #9ca3af;
+      text-decoration: none;
+      margin-top: 18px;
+    }
+    .back-to-toc:hover { color: #6b7280; }
+
+    /* フッター */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .footer a {
+      display: inline-block;
+      padding: 10px 28px;
+      background: linear-gradient(135deg, #0f3460 0%, #533483 100%);
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* ダークモード */
+    html.dark-mode body {
+      background: linear-gradient(135deg, #0d0d1a 0%, #0a0f1e 100%);
+    }
+    html.dark-mode .container { background: #1e1e2e; }
+    html.dark-mode .toc { background: #2a2a3e; border-color: #3a3a55; }
+    html.dark-mode .toc-title { color: #d1d5db; }
+    html.dark-mode .toc-list a { color: #60a5fa; }
+    html.dark-mode .toc-list li::before { color: #6b7280; }
+    html.dark-mode .section-title { color: #93c5fd; border-bottom-color: #2e2e48; }
+    html.dark-mode .section-desc { color: #9ca3af; }
+    html.dark-mode .feature-name { color: #d1d5db; }
+    html.dark-mode .feature-desc { color: #9ca3af; }
+    html.dark-mode .feature-link { color: #60a5fa; }
+    html.dark-mode .back-link { color: #9ca3af; }
+    html.dark-mode .back-link:hover { color: #d1d5db; }
+    html.dark-mode .back-to-toc { color: #6b7280; }
+    html.dark-mode .back-to-toc:hover { color: #9ca3af; }
+    html.dark-mode .divider { border-top-color: #2e2e48; }
+    html.dark-mode .info-box { background: #1e2e4a; border-left-color: #3b82f6; color: #93c5fd; }
+    html.dark-mode .highlight-box { background: #1e2e4a; border-color: #1e3a5f; border-left-color: #3b82f6; color: #93c5fd; }
+    html.dark-mode .ui-mock { background: #2a2a3e; border-color: #3a3a55; color: #d1d5db; }
+    html.dark-mode .ui-tab { background: #1e1e2e; border-color: #3a3a55; color: #d1d5db; }
+    html.dark-mode .ui-tab.active { background: #3b82f6; border-color: #3b82f6; color: white; }
+    html.dark-mode .ui-escape-btn { background: #1e1e2e; border-color: #3a3a55; color: #d1d5db; }
+    html.dark-mode .ui-escape-btn.selected { background: #3b82f6; border-color: #3b82f6; color: white; }
+    html.dark-mode .perspective-label { background: #2a2a3e; color: #d1d5db; }
+    html.dark-mode .footer { border-top-color: #2e2e48; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>使い方ガイド</h1>
+      <div class="subtitle">第五人格トラッカー</div>
+    </div>
+
+    <div class="content">
+      <a href="index.html" class="back-link">← アプリに戻る</a>
+
+      <!-- 目次 -->
+      <div class="toc" id="toc">
+        <div class="toc-title">目次</div>
+        <ul class="toc-list">
+          <li><a href="#settings">設定</a></li>
+          <li><a href="#input">試合入力</a></li>
+          <li><a href="#overall">総合勝率</a></li>
+          <li><a href="#character">自キャラ別勝率</a></li>
+          <li><a href="#map">マップ別勝率</a></li>
+          <li><a href="#opponent">対戦相手別勝率</a></li>
+          <li><a href="#history">試合履歴</a></li>
+        </ul>
+      </div>
+
+      <!-- 設定 -->
+      <div class="section" id="settings">
+        <div class="section-title">設定</div>
+        <div class="section-desc">最初に設定タブで環境を整えておくと、より快適に使えます。</div>
+
+        <ul class="feature-list">
+          <li>
+            <div class="feature-name">ダークモード</div>
+            <div class="feature-desc">目に優しい暗い配色に切り替えられます。設定は次回以降も維持されます。</div>
+          </li>
+          <li>
+            <div class="feature-name">ホーム画面に追加</div>
+            <div class="feature-desc">スマートフォンのホーム画面に追加するとアプリのように起動できます。<a href="install-guide.html" class="feature-link" target="_blank">設定方法を見る ›</a></div>
+          </li>
+          <li>
+            <div class="feature-name">クラウド同期</div>
+            <div class="feature-desc">複数のデバイスでデータを共有できます。同期コードを発行するだけでアカウント登録不要で利用できます。<a href="sync-guide.html" class="feature-link" target="_blank">設定方法を見る ›</a></div>
+          </li>
+          <li>
+            <div class="feature-name">ファイルで書き出し・読み込み</div>
+            <div class="feature-desc">データをJSONファイルとして書き出し・読み込みできます。他のユーザーへのデータ共有や手動バックアップとして利用できます。</div>
+          </li>
+        </ul>
+
+        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+      </div>
+
+      <hr class="divider">
+
+      <!-- 試合入力 -->
+      <div class="section" id="input">
+        <div class="section-title">試合入力</div>
+        <div class="section-desc">試合結果を記録するタブです。画面上部のサバイバー/ハンタータブで視点を切り替えてから入力します。</div>
+
+        <div class="ui-mock" style="margin-bottom: 18px;">
+          <span class="ui-tab active">サバイバー</span>
+          <span class="ui-tab">ハンター</span>
+        </div>
+
+        <ul class="feature-list">
+          <li>
+            <div class="feature-name">日付・段位</div>
+            <div class="feature-desc">試合日と試合時の段位を記録します。</div>
+          </li>
+          <li>
+            <div class="feature-name">自分のキャラクター</div>
+            <div class="feature-desc">使用したサバイバーまたはハンターを選択します。</div>
+          </li>
+          <li>
+            <div class="feature-name">味方・相手キャラクター</div>
+            <div class="feature-desc">サバイバー視点では味方3人と相手ハンター、ハンター視点では相手サバイバー4人を選択します。</div>
+          </li>
+          <li>
+            <div class="feature-name">マップ</div>
+            <div class="feature-desc">試合が行われたマップを選択します。</div>
+          </li>
+          <li>
+            <div class="feature-name">脱出人数</div>
+            <div class="feature-desc">0〜4人から選択します。</div>
+            <div class="ui-mock">
+              <div class="ui-escape-btns">
+                <span class="ui-escape-btn">0人</span>
+                <span class="ui-escape-btn">1人</span>
+                <span class="ui-escape-btn selected">2人</span>
+                <span class="ui-escape-btn">3人</span>
+                <span class="ui-escape-btn">4人</span>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div class="feature-name">コメント（任意）</div>
+            <div class="feature-desc">試合のメモを自由に記入できます。</div>
+          </li>
+        </ul>
+
+        <hr class="divider">
+
+        <ul class="feature-list">
+          <li>
+            <div class="feature-name">保持機能</div>
+            <div class="feature-desc">各フィールドの「保持」チェックボックスをオンにすると、次回記録時に同じ値が引き継がれます。同じ段位やキャラで連続して記録する際に便利です。「保持を全て解除」ボタンで一括解除できます。</div>
+          </li>
+          <li>
+            <div class="feature-name">キャラクター検索</div>
+            <div class="feature-desc">キャラ選択欄はひらがな・カタカナで名前を入力して絞り込める検索機能があります。見た目には検索欄が表示されていませんが、フィールドをタップすると検索ボックスが表示されます。</div>
+          </li>
+        </ul>
+
+        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+      </div>
+
+      <hr class="divider">
+
+      <!-- 総合勝率 -->
+      <div class="section" id="overall">
+        <div class="section-title">総合勝率</div>
+        <div class="section-desc">サバイバー・ハンターそれぞれの勝率・勝敗数を確認できます。2連勝以上では連勝バッジが表示されます。</div>
+
+        <div class="highlight-box">
+          <div class="highlight-title">百戦勝率</div>
+          期間フィルターで「百戦勝率」を選ぶと、直近100試合の勝率を表示します。<br>
+          かつての第五人格ではこの表記が標準でしたが、現在はシーズン勝率表記に変更されており、ゲーム内では確認できません。<br>
+          期間フィルターではシーズン別の集計も選択できます。
+        </div>
+
+        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+      </div>
+
+      <hr class="divider">
+
+      <!-- 自キャラ別勝率 -->
+      <div class="section" id="character">
+        <div class="section-title">自キャラ別勝率</div>
+        <div class="section-desc">使用したキャラクター別の勝率を一覧で確認できます。</div>
+
+        <ul class="feature-list">
+          <li>
+            <div class="feature-name">フィルター</div>
+            <div class="feature-desc">期間・対戦相手・マップ・段位の4種類でデータを絞り込めます。段位フィルターは複数の段位を同時に選択できます。これは他の統計タブも同様です。</div>
+          </li>
+          <li>
+            <div class="feature-name">苦手キャラクター</div>
+            <div class="feature-desc">一定数以上こなした対戦データから苦手なキャラクターを自動で検出し、上部に表示します。</div>
+          </li>
+          <li>
+            <div class="feature-name">平均脱出人数</div>
+            <div class="feature-desc">各キャラクターの勝率バーに加え、平均脱出人数（ハンター視点では平均脱落人数）も表示します。</div>
+          </li>
+          <li>
+            <div class="feature-name">ソート</div>
+            <div class="feature-desc">勝率順・試合数順に並び替えられます。</div>
+          </li>
+          <li>
+            <div class="feature-name">最低試合数</div>
+            <div class="feature-desc">試合数が少なく参考にならないデータを除外できます。</div>
+          </li>
+        </ul>
+
+        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+      </div>
+
+      <hr class="divider">
+
+      <!-- マップ別勝率 -->
+      <div class="section" id="map">
+        <div class="section-title">マップ別勝率</div>
+        <div class="section-desc">マップ別の勝率を一覧で確認できます。</div>
+
+        <ul class="feature-list">
+          <li>
+            <div class="feature-name">フィルター</div>
+            <div class="feature-desc">期間・自キャラ・段位（複数選択可）でデータを絞り込めます。</div>
+          </li>
+          <li>
+            <div class="feature-name">苦手マップ</div>
+            <div class="feature-desc">一定数以上こなした対戦データから苦手なマップを自動で検出し、上部に表示します。</div>
+          </li>
+          <li>
+            <div class="feature-name">ソート・最低試合数</div>
+            <div class="feature-desc">勝率順・試合数順の並び替えと、最低試合数フィルターに対応しています。</div>
+          </li>
+        </ul>
+
+        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+      </div>
+
+      <hr class="divider">
+
+      <!-- 対戦相手別勝率 -->
+      <div class="section" id="opponent">
+        <div class="section-title">対戦相手別勝率</div>
+        <div class="section-desc">期間・自キャラ・対戦相手・マップ・段位（複数選択可）でデータを絞り込めます。サバイバーとハンターで表示内容が異なります。</div>
+
+        <div class="perspective-section">
+          <div class="perspective-label">サバイバー視点</div>
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">苦手ハンター・苦手味方</div>
+              <div class="feature-desc">苦手なハンターと苦手な味方キャラクターを自動で検出し、上部に表示します。</div>
+            </li>
+            <li>
+              <div class="feature-name">ハンター別勝率</div>
+              <div class="feature-desc">対戦したハンター別の勝率を一覧で確認できます。</div>
+            </li>
+            <li>
+              <div class="feature-name">味方編成別勝率</div>
+              <div class="feature-desc">「味方編成別勝率を見る」ボタンで味方キャラクター別の勝率を展開表示できます。初期状態では折りたたまれています。</div>
+            </li>
+          </ul>
+        </div>
+
+        <hr class="divider">
+
+        <div class="perspective-section">
+          <div class="perspective-label">ハンター視点</div>
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">苦手サバイバー</div>
+              <div class="feature-desc">苦手な相手サバイバーを自動で検出し、上部に表示します。</div>
+            </li>
+            <li>
+              <div class="feature-name">サバイバー別勝率</div>
+              <div class="feature-desc">相手サバイバー別の勝率を一覧で確認できます。</div>
+            </li>
+            <li>
+              <div class="feature-name">ペア別勝率</div>
+              <div class="feature-desc">「ペア別勝率を見る」ボタンで相手サバイバーの2キャラ組み合わせ別勝率を展開表示できます。初期状態では折りたたまれています。</div>
+            </li>
+          </ul>
+        </div>
+
+        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+      </div>
+
+      <hr class="divider">
+
+      <!-- 試合履歴 -->
+      <div class="section" id="history">
+        <div class="section-title">試合履歴</div>
+        <div class="section-desc">記録した試合を一覧で確認できます。</div>
+
+        <ul class="feature-list">
+          <li>
+            <div class="feature-name">フィルター</div>
+            <div class="feature-desc">期間・相手キャラ・自キャラ・マップ・段位の複数条件で絞り込めます。</div>
+          </li>
+          <li>
+            <div class="feature-name">編集・削除</div>
+            <div class="feature-desc">各試合の内容を編集したり削除したりできます。</div>
+          </li>
+        </ul>
+
+        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <a href="index.html">← アプリに戻る</a>
+    </div>
+  </div>
+
+  <script>
+    localStorage.setItem('identity5_guide_visited', 'true');
+  </script>
+</body>
+</html>

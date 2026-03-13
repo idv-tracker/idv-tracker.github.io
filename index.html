@@ -1443,6 +1443,14 @@
       <div class="subtitle">戦績管理・勝率計算</div>
     </div>
     
+    <div class="install-banner hidden" id="guide-banner">
+      <a href="guide.html" onclick="markGuideVisited()">
+        <span class="install-banner-text">初めての方へ — 使い方ガイド</span>
+        <span class="install-banner-arrow">›</span>
+      </a>
+      <button class="install-banner-close" onclick="dismissGuideBanner()" aria-label="閉じる">✕</button>
+    </div>
+
     <div class="install-banner" id="install-banner">
       <a href="install-guide.html">
         <span class="install-banner-text">ホーム画面に追加してアプリとして使う</span>
@@ -1813,6 +1821,10 @@
           </label>
         </div>
         
+        <a href="guide.html" class="install-guide-link" style="display: block; padding: 14px 20px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px; text-decoration: none; color: #3b82f6; font-size: 14px; font-weight: 600;">
+          使い方ガイド ›
+        </a>
+
         <a href="install-guide.html" class="install-guide-link" style="display: block; padding: 14px 20px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px; text-decoration: none; color: #3b82f6; font-size: 14px; font-weight: 600;">
           ホーム画面に追加する方法 ›
         </a>
@@ -2854,7 +2866,8 @@
       // ダークモード復元
       loadDarkMode();
       
-      // インストールバナーチェック
+      // ガイドバナー・インストールバナーチェック
+      checkGuideBanner();
       checkInstallBanner();
       
       // データを先に読み込む
@@ -5226,19 +5239,47 @@
       reader.readAsText(file);
     }
     
+    // ===== ガイドバナー =====
+    function checkGuideBanner() {
+      const banner = document.getElementById('guide-banner');
+      if (!banner) return;
+      const visited = localStorage.getItem('identity5_guide_visited') === 'true';
+      const dismissed = localStorage.getItem('identity5_guide_banner_dismissed') === 'true';
+      if (!visited && !dismissed) {
+        banner.classList.remove('hidden');
+      }
+    }
+
+    function dismissGuideBanner() {
+      const banner = document.getElementById('guide-banner');
+      if (banner) banner.classList.add('hidden');
+      localStorage.setItem('identity5_guide_banner_dismissed', 'true');
+      checkInstallBanner();
+    }
+
+    function markGuideVisited() {
+      localStorage.setItem('identity5_guide_visited', 'true');
+      const banner = document.getElementById('guide-banner');
+      if (banner) banner.classList.add('hidden');
+      checkInstallBanner();
+    }
+
     // ===== インストールバナー =====
     function dismissInstallBanner() {
       document.getElementById('install-banner').classList.add('hidden');
       localStorage.setItem('identity5_install_banner_dismissed', 'true');
     }
-    
+
     function checkInstallBanner() {
       const banner = document.getElementById('install-banner');
       if (!banner) return;
       // 既にPWAとして動作中、または閉じた場合は非表示
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const dismissed = localStorage.getItem('identity5_install_banner_dismissed') === 'true';
-      if (isStandalone || dismissed) {
+      // ガイドバナーが表示中は非表示
+      const guideEl = document.getElementById('guide-banner');
+      const guideVisible = guideEl && !guideEl.classList.contains('hidden');
+      if (isStandalone || dismissed || guideVisible) {
         banner.classList.add('hidden');
       }
     }

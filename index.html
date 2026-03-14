@@ -4220,6 +4220,9 @@
         mapStats.push({ map, total: mapMatches.length, wins, losses, draws, mapPct, color: MAP_COLORS[i] });
       });
 
+      // 試合数の多い順にソート
+      mapStats.sort((a, b) => b.total - a.total);
+
       // データなし
       if (mapStats.length === 0) {
         if (mapPieChart) { mapPieChart.destroy(); mapPieChart = null; }

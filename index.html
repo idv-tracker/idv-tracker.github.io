@@ -1400,6 +1400,71 @@
     body.dark-mode button[style*="background: #6c757d"] {
       background: #3a3a55 !important;
     }
+    /* ===== マップ円グラフ ===== */
+    .map-pie-wrapper {
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    .map-pie-canvas-wrap {
+      flex: 0 0 200px;
+      width: 200px;
+      height: 200px;
+    }
+    .map-pie-legend {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      justify-content: center;
+    }
+    .map-pie-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.4;
+    }
+    .map-pie-color-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .map-pie-label {
+      font-weight: 600;
+      min-width: 80px;
+    }
+    .map-pie-detail {
+      color: #6b7280;
+    }
+    @media (max-width: 600px) {
+      .map-pie-wrapper {
+        flex-direction: column;
+        align-items: center;
+      }
+      .map-pie-canvas-wrap {
+        flex: none;
+      }
+      .map-pie-legend {
+        width: 100%;
+      }
+    }
+    body.dark-mode .map-pie-wrapper {
+      background: #222238;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    body.dark-mode .map-pie-legend-item {
+      color: #d1d5db;
+    }
+    body.dark-mode .map-pie-detail {
+      color: #9ca3af;
+    }
     /* ===== クラウド同期UI ===== */
     body.dark-mode .sync-code-input {
       background: #1e1e3a !important;
@@ -1669,6 +1734,12 @@
           <div class="chart-container">
             <canvas id="winrate-chart" style="max-height: 300px;"></canvas>
           </div>
+        </div>
+
+        <!-- マップ別試合数円グラフ -->
+        <div id="map-pie-section" style="margin-top: 30px;">
+          <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">マップ別試合数</h3>
+          <div id="map-pie-content"></div>
         </div>
       </div>
       
@@ -4048,6 +4119,7 @@
     
     // 総合勝率タブの更新
     let winrateChart = null; // グラフのインスタンスを保持
+    let mapPieChart = null;  // マップ円グラフのインスタンスを保持
     
     function updateOverallStatsTab() {
       const container = document.getElementById('overall-stats-display');
@@ -4056,10 +4128,10 @@
       if (perspectiveMatches.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
         // グラフも空にする
-        if (winrateChart) {
-          winrateChart.destroy();
-          winrateChart = null;
-        }
+        if (winrateChart) { winrateChart.destroy(); winrateChart = null; }
+        if (mapPieChart) { mapPieChart.destroy(); mapPieChart = null; }
+        const pieContent = document.getElementById('map-pie-content');
+        if (pieContent) pieContent.innerHTML = '';
         return;
       }
       
@@ -4117,8 +4189,127 @@
       
       // グラフを更新
       updateWinrateChart(displayMatches);
+      updateMapPieChart(displayMatches);
     }
-    
+
+    // マップ別試合数の円グラフを描画
+    function updateMapPieChart(displayMatches) {
+      const container = document.getElementById('map-pie-content');
+      if (!container) return;
+
+      // マップ別集計（MAPSの定数順、0試合を除外）
+      const MAP_COLORS = [
+        '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
+        '#8b5cf6', '#06b6d4', '#f97316', '#ec4899', '#84cc16'
+      ];
+      const totalMatches = displayMatches.length;
+      const mapStats = [];
+      MAPS.forEach((map, i) => {
+        const mapMatches = displayMatches.filter(m => m.map === map);
+        if (mapMatches.length === 0) return;
+        const wins = mapMatches.filter(m =>
+          (currentPerspective === 'survivor' && m.result === 'survivor_win') ||
+          (currentPerspective === 'hunter' && m.result === 'hunter_win')
+        ).length;
+        const losses = mapMatches.filter(m =>
+          (currentPerspective === 'survivor' && m.result === 'hunter_win') ||
+          (currentPerspective === 'hunter' && m.result === 'survivor_win')
+        ).length;
+        const draws = mapMatches.filter(m => m.result === 'draw').length;
+        const mapPct = (mapMatches.length / totalMatches * 100).toFixed(1);
+        mapStats.push({ map, total: mapMatches.length, wins, losses, draws, mapPct, color: MAP_COLORS[i] });
+      });
+
+      // データなし
+      if (mapStats.length === 0) {
+        if (mapPieChart) { mapPieChart.destroy(); mapPieChart = null; }
+        container.innerHTML = '<div class="empty-state"><p>データがありません</p></div>';
+        return;
+      }
+
+      // HTML構築
+      const isDark = document.body.classList.contains('dark-mode');
+      const legendHTML = mapStats.map(s => `
+        <div class="map-pie-legend-item">
+          <div class="map-pie-color-dot" style="background:${s.color};"></div>
+          <span class="map-pie-label">${escapeHTML(s.map)}</span>
+          <span class="map-pie-detail">${s.total}試合（${s.mapPct}%）　${s.wins}勝 ${s.losses}敗 ${s.draws}分</span>
+        </div>`).join('');
+
+      container.innerHTML = `
+        <div class="map-pie-wrapper">
+          <div class="map-pie-canvas-wrap">
+            <canvas id="map-pie-chart"></canvas>
+          </div>
+          <div class="map-pie-legend">${legendHTML}</div>
+        </div>`;
+
+      // 既存グラフを破棄
+      if (mapPieChart) { mapPieChart.destroy(); mapPieChart = null; }
+
+      const canvas = document.getElementById('map-pie-chart');
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      // スライス内に頭文字を描画するカスタムプラグイン
+      const sliceLabelPlugin = {
+        id: 'sliceLabel',
+        afterDraw(chart) {
+          const ctx = chart.ctx;
+          const meta = chart.getDatasetMeta(0);
+          const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+          ctx.save();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 13px sans-serif';
+          meta.data.forEach((arc, index) => {
+            const value = chart.data.datasets[0].data[index];
+            if (value / total < 0.05) return; // 5%未満は非表示
+            const midAngle = (arc.startAngle + arc.endAngle) / 2;
+            const midRadius = (arc.outerRadius + arc.innerRadius) / 2;
+            const x = arc.x + midRadius * Math.cos(midAngle);
+            const y = arc.y + midRadius * Math.sin(midAngle);
+            ctx.fillText(chart.data.labels[index].charAt(0), x, y);
+          });
+          ctx.restore();
+        }
+      };
+
+      mapPieChart = new Chart(canvas.getContext('2d'), {
+        type: 'doughnut',
+        plugins: [sliceLabelPlugin],
+        data: {
+          labels: mapStats.map(s => s.map),
+          datasets: [{
+            data: mapStats.map(s => s.total),
+            backgroundColor: mapStats.map(s => s.color),
+            borderColor: isDark ? '#222238' : '#fff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              titleFont: { size: 14, weight: 'bold' },
+              bodyFont: { size: 13 },
+              padding: 10,
+              callbacks: {
+                title: function(items) {
+                  return mapStats[items[0].dataIndex].map;
+                },
+                label: function(context) {
+                  return ` ${mapStats[context.dataIndex].mapPct}%`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
     // 直近10試合の勝率推移グラフを描画
     function updateWinrateChart(perspectiveMatches) {
       try {

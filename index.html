@@ -1497,6 +1497,88 @@
     body.dark-mode .map-pie-detail {
       color: #9ca3af;
     }
+    /* ===== 直近試合カラーブロック ===== */
+    .recent-blocks-wrapper {
+      display: flex;
+      gap: 4px;
+      padding: 6px 0 10px;
+    }
+    .recent-block {
+      flex: 1;
+      max-width: 48px;
+      min-width: 20px;
+      height: 26px;
+      border-radius: 4px;
+    }
+    @media (max-width: 767px) {
+      .recent-block {
+        max-width: 40px;
+      }
+    }
+    .recent-blocks-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #9ca3af;
+      padding: 2px 0 4px;
+    }
+    body.dark-mode .recent-blocks-label {
+      color: #6b7280;
+    }
+    /* ===== ハイライトサマリー ===== */
+    .highlight-summary-card {
+      margin-bottom: 0;
+    }
+    .highlight-summary-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #6b7280;
+      margin-bottom: 10px;
+    }
+    .highlight-summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .highlight-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+    }
+    .highlight-best {
+      background: #fef3c7;
+    }
+    .highlight-worst {
+      background: #f8d7da;
+    }
+    .highlight-category {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .highlight-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 2px;
+    }
+    .highlight-rate {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    body.dark-mode .highlight-best {
+      background: #3a2e0a;
+    }
+    body.dark-mode .highlight-worst {
+      background: #3a1e1e;
+    }
+    body.dark-mode .highlight-name {
+      color: #e5e7eb;
+    }
+    body.dark-mode .highlight-category,
+    body.dark-mode .highlight-rate {
+      color: #9ca3af;
+    }
     /* ===== クラウド同期UI ===== */
     body.dark-mode .sync-code-input {
       background: #1e1e3a !important;
@@ -1756,11 +1838,23 @@
             <option value="recent100">百戦勝率</option>
           </select>
         </div>
-        
+
         <!-- 総合勝率表示 -->
         <div id="overall-stats-display"></div>
-        
-        <!-- 直近10試合の勝率推移グラフ -->
+
+        <!-- 勝敗割合ドーナツグラフ -->
+        <div id="result-pie-section" style="margin-top: 20px;">
+          <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">勝敗内訳</h3>
+          <div id="result-pie-content"></div>
+        </div>
+
+        <!-- 直近試合カラーブロック -->
+        <div id="recent-blocks-section" style="margin-top: 20px;">
+          <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 10px;">直近の試合</h3>
+          <div id="recent-blocks-content"></div>
+        </div>
+
+        <!-- 勝率推移グラフ -->
         <div style="margin-top: 30px;">
           <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">勝率推移</h3>
           <div class="chart-container">
@@ -1768,10 +1862,9 @@
           </div>
         </div>
 
-        <!-- マップ別試合数円グラフ -->
-        <div id="map-pie-section" style="margin-top: 30px;">
-          <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">マップ別試合数</h3>
-          <div id="map-pie-content"></div>
+        <!-- ハイライトサマリー -->
+        <div id="highlight-summary-section" style="margin-top: 20px;">
+          <div id="highlight-summary-content"></div>
         </div>
       </div>
       
@@ -1805,8 +1898,14 @@
           </div>
         </div>
         <div id="character-stats"></div>
+
+        <!-- 使用キャラクター割合グラフ -->
+        <div id="char-pie-section" style="margin-top: 30px;">
+          <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">使用キャラクター割合</h3>
+          <div id="char-pie-content"></div>
+        </div>
       </div>
-      
+
       <!-- マップ別勝率タブ -->
       <div id="map-tab" class="tab-content">
         <div class="filter-section">
@@ -1831,8 +1930,14 @@
           </div>
         </div>
         <div id="map-stats"></div>
+
+        <!-- マップ別試合数グラフ -->
+        <div id="map-pie-section" style="margin-top: 30px;">
+          <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">マップ割合</h3>
+          <div id="map-pie-content"></div>
+        </div>
       </div>
-      
+
       <!-- 対戦相手別勝率タブ -->
       <div id="opponent-tab" class="tab-content">
         <div class="filter-section">
@@ -4150,8 +4255,10 @@
     }
     
     // 総合勝率タブの更新
-    let winrateChart = null; // グラフのインスタンスを保持
-    let mapPieChart = null;  // マップ円グラフのインスタンスを保持
+    let winrateChart = null;    // 勝率推移グラフ
+    let mapPieChart = null;     // マップ別試合数グラフ
+    let charPieChart = null;    // 自キャラ使用数グラフ
+    let resultPieChart = null;  // 勝敗割合グラフ
     
     function updateOverallStatsTab() {
       const container = document.getElementById('overall-stats-display');
@@ -4159,11 +4266,14 @@
       
       if (perspectiveMatches.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
-        // グラフも空にする
         if (winrateChart) { winrateChart.destroy(); winrateChart = null; }
-        if (mapPieChart) { mapPieChart.destroy(); mapPieChart = null; }
-        const pieContent = document.getElementById('map-pie-content');
-        if (pieContent) pieContent.innerHTML = '';
+        if (resultPieChart) { resultPieChart.destroy(); resultPieChart = null; }
+        const rpc = document.getElementById('result-pie-content');
+        if (rpc) rpc.innerHTML = '';
+        const rbc = document.getElementById('recent-blocks-content');
+        if (rbc) rbc.innerHTML = '';
+        const hsc = document.getElementById('highlight-summary-content');
+        if (hsc) hsc.innerHTML = '';
         return;
       }
       
@@ -4221,24 +4331,25 @@
       
       // グラフを更新
       updateWinrateChart(displayMatches);
-      updateMapPieChart(displayMatches);
+      updateResultPieChart(displayMatches);
+      updateRecentBlocks(displayMatches);
+      updateHighlightSummary(displayMatches);
     }
 
-    // マップ別試合数の円グラフを描画
-    function updateMapPieChart(displayMatches) {
+    // マップ割合の円グラフを描画
+    function updateMapPieChart(displayMatches, minCount = 1) {
       const container = document.getElementById('map-pie-content');
       if (!container) return;
 
-      // マップ別集計（MAPSの定数順、0試合を除外）
+      // マップ別集計（MAPSの定数順、最低試合数未満を除外）
       const MAP_COLORS = [
         '#3b82f6', '#ef4444', '#f59e0b', '#10b981',
         '#8b5cf6', '#06b6d4', '#f97316', '#ec4899', '#84cc16'
       ];
-      const totalMatches = displayMatches.length;
       const mapStats = [];
       MAPS.forEach((map, i) => {
         const mapMatches = displayMatches.filter(m => m.map === map);
-        if (mapMatches.length === 0) return;
+        if (mapMatches.length < minCount) return;
         const wins = mapMatches.filter(m =>
           (currentPerspective === 'survivor' && m.result === 'survivor_win') ||
           (currentPerspective === 'hunter' && m.result === 'hunter_win')
@@ -4248,12 +4359,15 @@
           (currentPerspective === 'hunter' && m.result === 'survivor_win')
         ).length;
         const draws = mapMatches.filter(m => m.result === 'draw').length;
-        const mapPct = (mapMatches.length / totalMatches * 100).toFixed(1);
-        mapStats.push({ map, total: mapMatches.length, wins, losses, draws, mapPct, color: MAP_COLORS[i] });
+        mapStats.push({ map, total: mapMatches.length, wins, losses, draws, color: MAP_COLORS[i] });
       });
 
       // 試合数の多い順にソート
       mapStats.sort((a, b) => b.total - a.total);
+
+      // ソート後に合計を計算してパーセントを付与
+      const totalMatches = mapStats.reduce((sum, s) => sum + s.total, 0);
+      mapStats.forEach(s => { s.mapPct = (s.total / totalMatches * 100).toFixed(1); });
 
       // データなし
       if (mapStats.length === 0) {
@@ -4346,6 +4460,365 @@
           }
         }
       });
+    }
+
+    // 自キャラ使用数割合グラフを描画
+    function updateCharPieChart(perspectiveMatches, characterStats, minCharCount) {
+      const container = document.getElementById('char-pie-content');
+      if (!container) return;
+
+      const filteredChars = Object.keys(characterStats).filter(c => characterStats[c].length >= minCharCount);
+
+      if (filteredChars.length === 0) {
+        if (charPieChart) { charPieChart.destroy(); charPieChart = null; }
+        container.innerHTML = '';
+        return;
+      }
+
+      const totalMatches = filteredChars.reduce((sum, c) => sum + characterStats[c].length, 0);
+      const sorted = [...filteredChars].sort((a, b) => characterStats[b].length - characterStats[a].length);
+
+      const CHAR_PIE_COLORS = [
+        '#3b82f6', '#ef4444', '#f59e0b', '#10b981',
+        '#8b5cf6', '#06b6d4', '#f97316', '#ec4899', '#84cc16'
+      ];
+      const OTHER_COLOR = '#9ca3af';
+
+      let displayChars;
+      let otherMatches = [];
+      if (sorted.length > 9) {
+        displayChars = sorted.slice(0, 9);
+        otherMatches = sorted.slice(9).flatMap(c => characterStats[c]);
+      } else {
+        displayChars = sorted;
+      }
+
+      const chartData = displayChars.map((char, i) => {
+        const matchArr = characterStats[char];
+        const stats = calculateWinrate(matchArr, currentPerspective);
+        const pct = (matchArr.length / totalMatches * 100).toFixed(1);
+        return { char, total: matchArr.length, wins: stats.wins, losses: stats.losses, draws: stats.draws, pct, color: CHAR_PIE_COLORS[i] };
+      });
+      if (otherMatches.length > 0) {
+        const stats = calculateWinrate(otherMatches, currentPerspective);
+        const pct = (otherMatches.length / totalMatches * 100).toFixed(1);
+        chartData.push({ char: 'その他', total: otherMatches.length, wins: stats.wins, losses: stats.losses, draws: stats.draws, pct, color: OTHER_COLOR });
+      }
+
+      const isDark = document.body.classList.contains('dark-mode');
+      const legendHTML = chartData.map(d => `
+        <div class="map-pie-legend-item">
+          <div class="map-pie-color-dot" style="background:${d.color};"></div>
+          <span class="map-pie-label">${escapeHTML(d.char)}</span>
+          <div class="map-pie-detail">
+            <span class="map-pie-count">${d.total}試合（${d.pct}%）</span>
+            <div class="map-pie-wld"><span>${d.wins}勝</span><span>${d.losses}敗</span><span>${d.draws}分</span></div>
+          </div>
+        </div>`).join('');
+
+      container.innerHTML = `
+        <div class="map-pie-wrapper">
+          <div class="map-pie-canvas-wrap">
+            <canvas id="char-pie-chart"></canvas>
+          </div>
+          <div class="map-pie-legend">${legendHTML}</div>
+        </div>`;
+
+      if (charPieChart) { charPieChart.destroy(); charPieChart = null; }
+      const canvas = document.getElementById('char-pie-chart');
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      const sliceLabelPlugin = {
+        id: 'charSliceLabel',
+        afterDraw(chart) {
+          const ctx = chart.ctx;
+          const meta = chart.getDatasetMeta(0);
+          const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+          ctx.save();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 13px sans-serif';
+          meta.data.forEach((arc, index) => {
+            const value = chart.data.datasets[0].data[index];
+            if (value / total < 0.05) return;
+            const midAngle = (arc.startAngle + arc.endAngle) / 2;
+            const midRadius = (arc.outerRadius + arc.innerRadius) / 2;
+            const x = arc.x + midRadius * Math.cos(midAngle);
+            const y = arc.y + midRadius * Math.sin(midAngle);
+            const label = chart.data.labels[index];
+            const displayChar = label.startsWith('「') ? label.charAt(1) : label.charAt(0);
+            ctx.fillText(displayChar, x, y);
+          });
+          ctx.restore();
+        }
+      };
+
+      charPieChart = new Chart(canvas.getContext('2d'), {
+        type: 'doughnut',
+        plugins: [sliceLabelPlugin],
+        data: {
+          labels: chartData.map(d => d.char),
+          datasets: [{
+            data: chartData.map(d => d.total),
+            backgroundColor: chartData.map(d => d.color),
+            borderColor: isDark ? '#222238' : '#fff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              titleFont: { size: 14, weight: 'bold' },
+              bodyFont: { size: 13 },
+              padding: 10,
+              callbacks: {
+                title: (items) => chartData[items[0].dataIndex].char,
+                label: (context) => ` ${chartData[context.dataIndex].pct}%`
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 勝敗割合ドーナツグラフを描画
+    function updateResultPieChart(displayMatches) {
+      const container = document.getElementById('result-pie-content');
+      if (!container) return;
+
+      const wins = displayMatches.filter(m =>
+        (currentPerspective === 'survivor' && m.result === 'survivor_win') ||
+        (currentPerspective === 'hunter' && m.result === 'hunter_win')
+      ).length;
+      const losses = displayMatches.filter(m =>
+        (currentPerspective === 'survivor' && m.result === 'hunter_win') ||
+        (currentPerspective === 'hunter' && m.result === 'survivor_win')
+      ).length;
+      const draws = displayMatches.filter(m => m.result === 'draw').length;
+      const total = displayMatches.length;
+
+      if (total === 0) {
+        if (resultPieChart) { resultPieChart.destroy(); resultPieChart = null; }
+        container.innerHTML = '';
+        return;
+      }
+
+      const RESULT_COLORS = { win: '#fbbf24', lose: '#ef4444', draw: '#9ca3af' };
+      const entries = [
+        { label: '勝利', count: wins, color: RESULT_COLORS.win },
+        { label: '敗北', count: losses, color: RESULT_COLORS.lose },
+        { label: '引き分け', count: draws, color: RESULT_COLORS.draw }
+      ].filter(e => e.count > 0);
+
+      const isDark = document.body.classList.contains('dark-mode');
+      const legendHTML = entries.map(e => {
+        const pct = (e.count / total * 100).toFixed(1);
+        return `
+          <div class="map-pie-legend-item">
+            <div class="map-pie-color-dot" style="background:${e.color};"></div>
+            <span class="map-pie-label">${e.label}</span>
+            <div class="map-pie-detail">
+              <span class="map-pie-count">${pct}%</span>
+            </div>
+          </div>`;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="map-pie-wrapper">
+          <div class="map-pie-canvas-wrap">
+            <canvas id="result-pie-chart"></canvas>
+          </div>
+          <div class="map-pie-legend">${legendHTML}</div>
+        </div>`;
+
+      if (resultPieChart) { resultPieChart.destroy(); resultPieChart = null; }
+      const canvas = document.getElementById('result-pie-chart');
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      const sliceLabelPlugin = {
+        id: 'resultSliceLabel',
+        afterDraw(chart) {
+          const ctx = chart.ctx;
+          const meta = chart.getDatasetMeta(0);
+          const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+          ctx.save();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 13px sans-serif';
+          meta.data.forEach((arc, index) => {
+            const value = chart.data.datasets[0].data[index];
+            if (value / total < 0.05) return;
+            const midAngle = (arc.startAngle + arc.endAngle) / 2;
+            const midRadius = (arc.outerRadius + arc.innerRadius) / 2;
+            const x = arc.x + midRadius * Math.cos(midAngle);
+            const y = arc.y + midRadius * Math.sin(midAngle);
+            ctx.fillText(chart.data.labels[index].charAt(0), x, y);
+          });
+          ctx.restore();
+        }
+      };
+
+      resultPieChart = new Chart(canvas.getContext('2d'), {
+        type: 'doughnut',
+        plugins: [sliceLabelPlugin],
+        data: {
+          labels: entries.map(e => e.label),
+          datasets: [{
+            data: entries.map(e => e.count),
+            backgroundColor: entries.map(e => e.color),
+            borderColor: isDark ? '#222238' : '#fff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              titleFont: { size: 14, weight: 'bold' },
+              bodyFont: { size: 13 },
+              padding: 10,
+              callbacks: {
+                title: (items) => entries[items[0].dataIndex].label,
+                label: (context) => ` ${(entries[context.dataIndex].count / total * 100).toFixed(1)}% (${entries[context.dataIndex].count}試合)`
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 直近試合カラーブロックを描画
+    function updateRecentBlocks(displayMatches) {
+      const container = document.getElementById('recent-blocks-content');
+      if (!container) return;
+
+      if (displayMatches.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      const sorted = [...displayMatches].sort((a, b) => {
+        if (a.date !== b.date) return (b.date || '') > (a.date || '') ? 1 : -1;
+        return (b.id || 0) - (a.id || 0);
+      });
+      const maxBlocks = window.innerWidth >= 768 ? 20 : 10;
+      // 古い順（左）→新しい順（右）に並べる
+      const recent = sorted.slice(0, maxBlocks).reverse();
+
+      const BLOCK_COLORS = { win: '#fbbf24', lose: '#ef4444', draw: '#9ca3af' };
+
+      const blocksHTML = recent.map(match => {
+        const isWin = (currentPerspective === 'survivor' && match.result === 'survivor_win') ||
+                      (currentPerspective === 'hunter' && match.result === 'hunter_win');
+        const isDraw = match.result === 'draw';
+        const key = isWin ? 'win' : isDraw ? 'draw' : 'lose';
+        return `<div class="recent-block" style="background:${BLOCK_COLORS[key]};" title="${match.date || ''}"></div>`;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="recent-blocks-wrapper">${blocksHTML}</div>
+        <div class="recent-blocks-label">
+          <span>← 古い</span>
+          <span>新しい →</span>
+        </div>`;
+    }
+
+    // ハイライトサマリーを描画
+    function updateHighlightSummary(displayMatches) {
+      const container = document.getElementById('highlight-summary-content');
+      if (!container) return;
+
+      if (displayMatches.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      // 相手キャラ別集計
+      const opponentStats = {};
+      displayMatches.forEach(match => {
+        if (currentPerspective === 'survivor') {
+          const h = match.opponentHunter;
+          if (!h) return;
+          if (!opponentStats[h]) opponentStats[h] = [];
+          opponentStats[h].push(match);
+        } else {
+          if (!match.opponentSurvivors) return;
+          match.opponentSurvivors.forEach(s => {
+            if (!s) return;
+            if (!opponentStats[s]) opponentStats[s] = [];
+            opponentStats[s].push(match);
+          });
+        }
+      });
+
+      // マップ別集計
+      const mapStats = {};
+      displayMatches.forEach(match => {
+        if (!match.map) return;
+        if (!mapStats[match.map]) mapStats[match.map] = [];
+        mapStats[match.map].push(match);
+      });
+
+      const MIN_GAMES = 5;
+      const validOpponents = Object.keys(opponentStats).filter(k => opponentStats[k].length >= MIN_GAMES);
+      const validMaps = Object.keys(mapStats).filter(k => mapStats[k].length >= MIN_GAMES);
+
+      // 各カテゴリで3つ以上ないと表示しない
+      if (validOpponents.length < 3 || validMaps.length < 3) {
+        container.innerHTML = '';
+        return;
+      }
+
+      const calcWR = (arr) => parseFloat(calculateWinrate(arr, currentPerspective).winrate);
+
+      const opponentData = validOpponents.map(k => ({
+        name: k, winrate: calcWR(opponentStats[k]), total: opponentStats[k].length
+      })).sort((a, b) => b.winrate - a.winrate);
+
+      const mapData = validMaps.map(k => ({
+        name: k, winrate: calcWR(mapStats[k]), total: mapStats[k].length
+      })).sort((a, b) => b.winrate - a.winrate);
+
+      const bestOpponent  = opponentData[0];
+      const worstOpponent = opponentData[opponentData.length - 1];
+      const bestMap  = mapData[0];
+      const worstMap = mapData[mapData.length - 1];
+
+      const opponentLabel = currentPerspective === 'survivor' ? '相手ハンター' : '相手サバイバー';
+
+      container.innerHTML = `
+        <div class="stats-card highlight-summary-card">
+          <div class="highlight-summary-title">ハイライト</div>
+          <div class="highlight-summary-grid">
+            <div class="highlight-item highlight-best">
+              <div class="highlight-category">得意${opponentLabel}</div>
+              <div class="highlight-name">${escapeHTML(bestOpponent.name)}</div>
+              <div class="highlight-rate">${bestOpponent.winrate.toFixed(1)}%（${bestOpponent.total}試合）</div>
+            </div>
+            <div class="highlight-item highlight-worst">
+              <div class="highlight-category">苦手${opponentLabel}</div>
+              <div class="highlight-name">${escapeHTML(worstOpponent.name)}</div>
+              <div class="highlight-rate">${worstOpponent.winrate.toFixed(1)}%（${worstOpponent.total}試合）</div>
+            </div>
+            <div class="highlight-item highlight-best">
+              <div class="highlight-category">得意マップ</div>
+              <div class="highlight-name">${escapeHTML(bestMap.name)}</div>
+              <div class="highlight-rate">${bestMap.winrate.toFixed(1)}%（${bestMap.total}試合）</div>
+            </div>
+            <div class="highlight-item highlight-worst">
+              <div class="highlight-category">苦手マップ</div>
+              <div class="highlight-name">${escapeHTML(worstMap.name)}</div>
+              <div class="highlight-rate">${worstMap.winrate.toFixed(1)}%（${worstMap.total}試合）</div>
+            </div>
+          </div>
+        </div>`;
     }
 
     // 勝率推移グラフを描画
@@ -4690,9 +5163,12 @@
       
       if (perspectiveMatches.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
+        if (charPieChart) { charPieChart.destroy(); charPieChart = null; }
+        const cpc = document.getElementById('char-pie-content');
+        if (cpc) cpc.innerHTML = '';
         return;
       }
-      
+
       const characterStats = {};
       
       perspectiveMatches.forEach(match => {
@@ -4741,8 +5217,9 @@
 
       html += '</div></div>';
       container.innerHTML = html;
+      updateCharPieChart(perspectiveMatches, characterStats, minCharCount);
     }
-    
+
     // マップ別勝率を更新
     function updateMapStats() {
       const container = document.getElementById('map-stats');
@@ -4761,9 +5238,12 @@
       
       if (perspectiveMatches.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
+        if (mapPieChart) { mapPieChart.destroy(); mapPieChart = null; }
+        const mpc = document.getElementById('map-pie-content');
+        if (mpc) mpc.innerHTML = '';
         return;
       }
-      
+
       const mapStats = {};
       
       perspectiveMatches.forEach(match => {
@@ -4808,8 +5288,9 @@
 
       html += '</div></div>';
       container.innerHTML = html;
+      updateMapPieChart(perspectiveMatches, minMapCount);
     }
-    
+
     // 対戦相手別勝率を更新
     function updateOpponentStats() {
       const container = document.getElementById('opponent-stats');
@@ -5589,8 +6070,9 @@
       const isOn = document.getElementById('dark-mode-switch').checked;
       document.body.classList.toggle('dark-mode', isOn);
       localStorage.setItem('identity5_dark_mode', isOn ? 'on' : 'off');
-      // グラフの色を更新
+      // 全グラフの色を更新
       updateOverallStatsTab();
+      updateAllStats();
     }
     
     function loadDarkMode() {

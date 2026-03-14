@@ -199,6 +199,36 @@
       color: white;
       border-color: #0f3460;
     }
+    /* トグルボタン模擬 */
+    .ui-toggle {
+      display: flex;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .ui-toggle-btn {
+      padding: 6px 18px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #f8fafc;
+      color: #6b7280;
+      border: none;
+    }
+    .ui-toggle-btn.active {
+      background: #0f3460;
+      color: white;
+    }
+    /* カラーブロック模擬 */
+    .ui-blocks {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .ui-block {
+      width: 22px;
+      height: 18px;
+      border-radius: 3px;
+    }
 
     /* 視点ラベル */
     .perspective-label {
@@ -276,6 +306,9 @@
     html.dark-mode .ui-escape-btn.selected { background: #3b82f6; border-color: #3b82f6; color: white; }
     html.dark-mode .perspective-label { background: #2a2a3e; color: #d1d5db; }
     html.dark-mode .footer { border-top-color: #2e2e48; }
+    html.dark-mode .ui-toggle { border-color: #3a3a55; }
+    html.dark-mode .ui-toggle-btn { background: #1e1e2e; color: #9ca3af; }
+    html.dark-mode .ui-toggle-btn.active { background: #3b82f6; color: white; }
   </style>
 </head>
 <body>
@@ -360,7 +393,7 @@
           </li>
           <li>
             <div class="feature-name">脱出人数</div>
-            <div class="feature-desc">0〜4人から選択します。</div>
+            <div class="feature-desc">0〜4人から選択します。選んだ人数から勝敗が自動で判定されます。</div>
             <div class="ui-mock">
               <div class="ui-escape-btns">
                 <span class="ui-escape-btn">0人</span>
@@ -386,7 +419,7 @@
           </li>
           <li>
             <div class="feature-name">キャラクター検索</div>
-            <div class="feature-desc">キャラ選択欄はひらがな・カタカナで名前を入力して絞り込める検索機能があります。見た目には検索欄が表示されていませんが、フィールドをタップすると検索ボックスが表示されます。</div>
+            <div class="feature-desc">キャラ選択欄はひらがな・カタカナで名前を入力して絞り込める検索機能があります。フィールドをタップすると検索ボックスが表示されます。</div>
           </li>
         </ul>
 
@@ -398,13 +431,67 @@
       <!-- 総合勝率 -->
       <div class="section" id="overall">
         <div class="section-title">総合勝率</div>
-        <div class="section-desc">サバイバー・ハンターそれぞれの勝率・勝敗数を確認できます。2連勝以上では連勝バッジが表示されます。</div>
+        <div class="section-desc">勝率・勝敗数・連勝情報をまとめて確認できるダッシュボードです。2連勝以上では連勝バッジが表示されます。</div>
+
+        <ul class="feature-list">
+          <li>
+            <div class="feature-name">総合勝率 / 百戦勝率 の切り替え</div>
+            <div class="feature-desc">上部のトグルボタンで表示モードを切り替えられます。「百戦勝率」モードでは直近100試合の勝率を表示し、期間フィルターは無効になります。</div>
+            <div class="ui-mock" style="margin-top: 8px;">
+              <div class="ui-toggle">
+                <span class="ui-toggle-btn active">総合勝率</span>
+                <span class="ui-toggle-btn">百戦勝率</span>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div class="feature-name">期間フィルター</div>
+            <div class="feature-desc">全期間・今日・直近7日・直近30日・シーズン別から選択できます。</div>
+          </li>
+          <li>
+            <div class="feature-name">段位フィルター</div>
+            <div class="feature-desc">特定の段位のデータのみ絞り込んで集計できます。複数の段位を同時に選択することも可能です。</div>
+          </li>
+        </ul>
+
+        <hr class="divider">
+
+        <ul class="feature-list">
+          <li>
+            <div class="feature-name">勝敗内訳グラフ</div>
+            <div class="feature-desc">勝利・敗北・引き分けの割合をドーナツグラフで表示します。フィルターの内容が反映されます。</div>
+          </li>
+          <li>
+            <div class="feature-name">直近の試合</div>
+            <div class="feature-desc">直近の試合結果をカラーブロックで一覧表示します。左が古い試合、右が新しい試合です。</div>
+            <div class="ui-mock" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+              <div class="ui-blocks">
+                <div class="ui-block" style="background:#9ca3af;"></div>
+                <div class="ui-block" style="background:#ef4444;"></div>
+                <div class="ui-block" style="background:#fbbf24;"></div>
+                <div class="ui-block" style="background:#fbbf24;"></div>
+                <div class="ui-block" style="background:#ef4444;"></div>
+                <div class="ui-block" style="background:#fbbf24;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; width:100%; font-size:11px; color:#9ca3af;">
+                <span>← 古い</span><span>新しい →</span>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div class="feature-name">勝率推移グラフ</div>
+            <div class="feature-desc">一定数の試合をひとまとまりとした移動平均で勝率の推移を折れ線グラフで表示します。</div>
+          </li>
+          <li>
+            <div class="feature-name">ハイライトサマリー</div>
+            <div class="feature-desc">得意・苦手な相手キャラクターとマップをそれぞれ1件ずつ表示します。</div>
+          </li>
+        </ul>
 
         <div class="highlight-box">
-          <div class="highlight-title">百戦勝率</div>
-          期間フィルターで「百戦勝率」を選ぶと、直近100試合の勝率を表示します。<br>
-          かつての第五人格ではこの表記が標準でしたが、現在はシーズン勝率表記に変更されており、ゲーム内では確認できません。<br>
-          期間フィルターではシーズン別の集計も選択できます。
+          <div class="highlight-title">百戦勝率について</div>
+          「百戦勝率」モードでは直近100試合（段位フィルター適用後）の勝率を表示します。<br>
+          かつての第五人格ではこの表記が標準でしたが、現在はシーズン勝率表記に変更されており、ゲーム内では確認できません。
         </div>
 
         <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
@@ -431,12 +518,12 @@
             <div class="feature-desc">各キャラクターの勝率バーに加え、平均脱出人数（ハンター視点では平均脱落人数）も表示します。</div>
           </li>
           <li>
-            <div class="feature-name">ソート</div>
-            <div class="feature-desc">勝率順・試合数順に並び替えられます。</div>
+            <div class="feature-name">ソート・最低試合数</div>
+            <div class="feature-desc">勝率順・試合数順に並び替えられます。試合数が少なく参考にならないデータを最低試合数フィルターで除外できます。</div>
           </li>
           <li>
-            <div class="feature-name">最低試合数</div>
-            <div class="feature-desc">試合数が少なく参考にならないデータを除外できます。</div>
+            <div class="feature-name">使用キャラクター割合グラフ</div>
+            <div class="feature-desc">タブ下部に使用したキャラクターの試合数割合をドーナツグラフで表示します。全フィルターと最低試合数が反映されます。</div>
           </li>
         </ul>
 
@@ -462,6 +549,10 @@
           <li>
             <div class="feature-name">ソート・最低試合数</div>
             <div class="feature-desc">勝率順・試合数順の並び替えと、最低試合数フィルターに対応しています。</div>
+          </li>
+          <li>
+            <div class="feature-name">マップ割合グラフ</div>
+            <div class="feature-desc">タブ下部に各マップの試合数割合をドーナツグラフで表示します。フィルターと最低試合数が反映されるため、バーチャートと同じ条件のマップのみ表示されます。</div>
           </li>
         </ul>
 
@@ -521,7 +612,7 @@
       <!-- 試合履歴 -->
       <div class="section" id="history">
         <div class="section-title">試合履歴</div>
-        <div class="section-desc">記録した試合を一覧で確認できます。</div>
+        <div class="section-desc">記録した試合を新しい順で一覧表示します。</div>
 
         <ul class="feature-list">
           <li>

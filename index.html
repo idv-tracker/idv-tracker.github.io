@@ -1497,6 +1497,59 @@
     body.dark-mode .map-pie-detail {
       color: #9ca3af;
     }
+    /* ===== 総合勝率モードトグル ===== */
+    .overall-mode-toggle {
+      display: flex;
+      gap: 0;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #cbd5e1;
+    }
+    .overall-mode-btn {
+      flex: 1;
+      padding: 10px 0;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      background: #f8fafc;
+      color: #6b7280;
+      transition: background 0.15s, color 0.15s;
+    }
+    .overall-mode-btn.active {
+      background: #0f3460;
+      color: #fff;
+    }
+    .overall-filter-select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+      color: #374151;
+    }
+    .overall-filter-select:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    body.dark-mode .overall-mode-toggle {
+      border-color: #3a3a55;
+    }
+    body.dark-mode .overall-mode-btn {
+      background: #1e1e3a;
+      color: #9ca3af;
+    }
+    body.dark-mode .overall-mode-btn.active {
+      background: #3b82f6;
+      color: #fff;
+    }
+    body.dark-mode .overall-filter-select {
+      background: #222238;
+      border-color: #3a3a55;
+      color: #d1d5db;
+    }
     /* ===== 直近試合カラーブロック ===== */
     .recent-blocks-wrapper {
       display: flex;
@@ -1830,13 +1883,27 @@
       
       <!-- 総合勝率タブ -->
       <div id="overall-tab" class="tab-content">
+        <!-- 総合勝率 / 百戦勝率 トグル -->
+        <div class="overall-mode-toggle">
+          <button type="button" class="overall-mode-btn active" data-mode="total" onclick="setOverallMode('total')">総合勝率</button>
+          <button type="button" class="overall-mode-btn" data-mode="recent100" onclick="setOverallMode('recent100')">百戦勝率</button>
+        </div>
+
         <!-- 期間フィルター -->
-        <div style="margin-bottom: 20px;">
-          <label style="font-size: 13px; color: #374151; margin-bottom: 5px; display: block; font-weight: 600;">期間フィルター</label>
-          <select id="overall-period-filter" onchange="updateOverallStatsTab()" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+        <div style="margin-bottom: 12px;">
+          <label class="filter-label">期間フィルター</label>
+          <select id="overall-period-filter" onchange="updateOverallStatsTab()" class="overall-filter-select">
             <option value="all">全期間</option>
-            <option value="recent100">百戦勝率</option>
+            <option value="today">今日</option>
+            <option value="last7days">直近7日</option>
+            <option value="last30days">直近30日</option>
           </select>
+        </div>
+
+        <!-- 段位フィルター -->
+        <div style="margin-bottom: 20px;">
+          <label class="filter-label">段位フィルター</label>
+          <div id="overall-rank-filter" class="multi-rank-wrapper"></div>
         </div>
 
         <!-- 総合勝率表示 -->
@@ -2630,7 +2697,7 @@
     function populatePeriodFilters() {
       const sortedSeasons = [...SEASONS].reverse();
 
-      // 総合勝率タブの期間フィルター（全期間、百戦勝率、シーズン）
+      // 総合勝率タブの期間フィルター（全期間、今日、直近7日、直近30日はHTML側に静的定義済み。シーズンを動的追加）
       const overallFilter = document.getElementById('overall-period-filter');
       if (overallFilter) {
         sortedSeasons.forEach(season => {
@@ -3578,7 +3645,7 @@
       // RANKS配列の順序を保持してソート
       const sortedRanks = RANKS.filter(rank => usedRanks.includes(rank));
       
-      const filterIds = ['character-rank-filter', 'map-rank-filter', 'opponent-rank-filter', 'history-rank-filter'];
+      const filterIds = ['overall-rank-filter', 'character-rank-filter', 'map-rank-filter', 'opponent-rank-filter', 'history-rank-filter'];
       filterIds.forEach(id => {
         const wrapper = document.getElementById(id);
         if (!wrapper) return;
@@ -4259,11 +4326,23 @@
     let mapPieChart = null;     // マップ別試合数グラフ
     let charPieChart = null;    // 自キャラ使用数グラフ
     let resultPieChart = null;  // 勝敗割合グラフ
+    let overallMode = 'total';  // 'total' or 'recent100'
+
+    function setOverallMode(mode) {
+      overallMode = mode;
+      document.querySelectorAll('.overall-mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+      const periodFilter = document.getElementById('overall-period-filter');
+      if (periodFilter) periodFilter.disabled = (mode === 'recent100');
+      updateOverallStatsTab();
+    }
     
     function updateOverallStatsTab() {
       const container = document.getElementById('overall-stats-display');
-      let perspectiveMatches = matches.filter(m => m.perspective === currentPerspective);
-      
+      const rankFilter = getRankFilterValue('overall-rank-filter');
+      let perspectiveMatches = getFilteredMatches(rankFilter);
+
       if (perspectiveMatches.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
         if (winrateChart) { winrateChart.destroy(); winrateChart = null; }
@@ -4276,43 +4355,40 @@
         if (hsc) hsc.innerHTML = '';
         return;
       }
-      
+
       // 期間フィルターを取得
       const periodFilter = document.getElementById('overall-period-filter');
       const periodValue = periodFilter ? periodFilter.value : 'all';
-      
-      // 期間でフィルタリング
-      let displayMatches = perspectiveMatches;
-      if (periodValue === 'recent100') {
-        // 百戦勝率
+
+      // モードに応じてフィルタリング
+      let displayMatches;
+      if (overallMode === 'recent100') {
         displayMatches = perspectiveMatches.slice(-100);
       } else if (periodValue !== 'all') {
-        // シーズンフィルター
         displayMatches = filterByPeriod(perspectiveMatches, periodValue);
+      } else {
+        displayMatches = perspectiveMatches;
       }
-      
+
       const stats = calculateWinrate(displayMatches, currentPerspective);
       const streak = calculateWinStreak(perspectiveMatches, currentPerspective); // 連勝は全期間で計算
-      
+
       // 小数点第二位まで計算
       const filtered = displayMatches.filter(m => m.result !== 'draw');
-      const winrateDecimal = filtered.length > 0 ? 
+      const winrateDecimal = filtered.length > 0 ?
         (stats.wins / filtered.length * 100).toFixed(2) : '0.00';
-      
+
       // タイトルを決定
       let statsTitle = '総合勝率';
-      if (periodValue === 'recent100') {
+      if (overallMode === 'recent100') {
         statsTitle = '百戦勝率';
       } else if (periodValue !== 'all') {
-        // シーズンの場合
         const season = SEASONS.find(s => s.id === periodValue);
-        if (season) {
-          statsTitle = `総合勝率（${season.label}）`;
-        }
+        if (season) statsTitle = `総合勝率（${season.label}）`;
       }
-      
+
       // 百戦勝率モードでは試合数を表示しない
-      const matchCountText = periodValue === 'recent100' ? '' : ` (${stats.totalWithDraws}試合)`;
+      const matchCountText = overallMode === 'recent100' ? '' : ` (${stats.totalWithDraws}試合)`;
       
       let html = `<div class="stats-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">

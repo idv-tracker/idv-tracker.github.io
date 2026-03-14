@@ -1730,7 +1730,7 @@
         
         <!-- 直近10試合の勝率推移グラフ -->
         <div style="margin-top: 30px;">
-          <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">直近10試合の勝率推移</h3>
+          <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">勝率推移</h3>
           <div class="chart-container">
             <canvas id="winrate-chart" style="max-height: 300px;"></canvas>
           </div>
@@ -4313,7 +4313,7 @@
       });
     }
 
-    // 直近10試合の勝率推移グラフを描画
+    // 勝率推移グラフを描画
     function updateWinrateChart(perspectiveMatches) {
       try {
         // Chart.jsが読み込まれているか確認
@@ -4321,15 +4321,19 @@
           console.error('Chart.js is not loaded');
           return;
         }
-        
+
         const canvas = document.getElementById('winrate-chart');
         if (!canvas) {
           console.error('Canvas element not found');
           return;
         }
-        
-        // 直近10試合を取得
-        const recentMatches = perspectiveMatches.slice(-10);
+
+        // 総試合数に応じてグループサイズと参照数を決定
+        const matchesPerPoint = Math.max(1, Math.ceil(perspectiveMatches.length / 100));
+        const referenceCount = matchesPerPoint * 10;
+
+        // 直近referenceCount試合を取得
+        const recentMatches = perspectiveMatches.slice(-referenceCount);
 
         if (recentMatches.length === 0) {
           // データがない場合
@@ -4342,14 +4346,19 @@
           return;
         }
 
-        // 累積勝率を計算（全フィルター済み試合を基準に、直近10試合の各時点での勝率を算出）
+        // 10グループに分割して累積勝率を計算
         const labels = [];
         const data = [];
         const offset = perspectiveMatches.length - recentMatches.length;
 
-        recentMatches.forEach((match, index) => {
-          // 引き分けを除いた勝率を計算（全フィルター済み試合の該当位置まで）
-          const matchesExcludingDraws = perspectiveMatches.slice(0, offset + index + 1).filter(m => m.result !== 'draw');
+        for (let i = 0; i < 10; i++) {
+          const groupStart = i * matchesPerPoint;
+          const groupEnd = Math.min((i + 1) * matchesPerPoint, recentMatches.length) - 1;
+          if (groupStart >= recentMatches.length) break;
+
+          // グループ末尾時点での累積勝率を計算
+          const cumulativeEnd = offset + groupEnd + 1;
+          const matchesExcludingDraws = perspectiveMatches.slice(0, cumulativeEnd).filter(m => m.result !== 'draw');
           const winsCount = matchesExcludingDraws.filter(m =>
             (currentPerspective === 'survivor' && m.result === 'survivor_win') ||
             (currentPerspective === 'hunter' && m.result === 'hunter_win')
@@ -4358,9 +4367,10 @@
           const winrate = matchesExcludingDraws.length > 0 ?
             (winsCount / matchesExcludingDraws.length * 100) : 0;
 
-          labels.push(`${index + 1}試合目`);
+          const labelNum = (i + 1) * matchesPerPoint;
+          labels.push(matchesPerPoint === 1 ? `${i + 1}試合目` : `${labelNum}試合目`);
           data.push(winrate.toFixed(2));
-        });
+        }
 
         // Y軸範囲をデータに合わせて自動調整（±3%余白、0〜100にクランプ）
         const dataNumbers = data.map(Number);
@@ -4514,7 +4524,7 @@
     }
     
     // 苦手要素を検出
-    function detectWeaknesses(stats, minGames = 5) {
+    function detectWeaknesses(stats, minGames = 1) {
       const threshold = currentPerspective === 'hunter' ? 50 : 38;
       
       // ステップ1：有効なデータを抽出（5試合以上）
@@ -4659,7 +4669,7 @@
       });
       
       // 苦手キャラクターを検出
-      const weakCharacters = detectWeaknesses(characterStats);
+      const weakCharacters = detectWeaknesses(characterStats, Math.max(5, minMatchCounts.character || 1));
       
       const sortedChars = sortByState(Object.keys(characterStats), characterStats, currentPerspective, sortState.character);
       const minCharCount = minMatchCounts.character || 1;
@@ -4730,7 +4740,7 @@
       });
       
       // 苦手マップを検出
-      const weakMaps = detectWeaknesses(mapStats);
+      const weakMaps = detectWeaknesses(mapStats, Math.max(5, minMatchCounts.map || 1));
       
       const sortedMaps = sortByState(Object.keys(mapStats), mapStats, currentPerspective, sortState.map);
       const minMapCount = minMatchCounts.map || 1;
@@ -4817,8 +4827,8 @@
           });
         });
         
-        const weakHunters = detectWeaknesses(hunterStats);
-        const weakTeammates = detectWeaknesses(teammateStats);
+        const weakHunters = detectWeaknesses(hunterStats, Math.max(5, minMatchCounts.opponentHunter || 1));
+        const weakTeammates = detectWeaknesses(teammateStats, Math.max(5, minMatchCounts.teammate || 1));
 
         let html = '';
 
@@ -4929,7 +4939,7 @@
           }
         });
 
-        const weakSurvivors = detectWeaknesses(survivorStats);
+        const weakSurvivors = detectWeaknesses(survivorStats, Math.max(5, minMatchCounts.opponent || 1));
 
         let html = '';
 
@@ -5035,7 +5045,7 @@
           }
 
           // 苦手ペア表示
-          html += generateWeaknessHTML(detectWeaknesses(filteredPairStats), 'ペア', '👥');
+          html += generateWeaknessHTML(detectWeaknesses(filteredPairStats, Math.max(5, minMatchCounts.opponentPair || 1)), 'ペア', '👥');
 
           // 並び替えボタン
           html += generateSortButtons('opponentPair');

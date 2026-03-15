@@ -1660,6 +1660,8 @@ body.dark-mode .sync-sublabel {
   border-top: 1px solid #e0e0e0;
   z-index: 200;
   transition: transform 0.3s ease;
+  /* iPhoneホームバー領域まで拡張 */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 .bottom-nav.scroll-hidden { transform: translateY(100%); }
 
@@ -1677,10 +1679,21 @@ body.dark-mode .sync-sublabel {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* タップ遅延を除去 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .bottom-nav-item.active {
   color: #3b82f6;
   border-top-color: #3b82f6;
+}
+
+/* 極小スマホ（iPhone SE等 375px以下） */
+@media (max-width: 375px) {
+  .bottom-nav-item {
+    font-size: 14px;
+    padding: 15px 6px;
+  }
 }
 
 
@@ -1694,7 +1707,7 @@ body.dark-mode .sync-sublabel {
   }
   .main-tabs { display: none !important; }
   .bottom-nav { display: flex; }
-  .content { padding-bottom: 80px; }
+  .content { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
 }
 
 /* ダークモード: サブタブ */

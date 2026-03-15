@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>環境分析 対戦相手Tier表 | 第五人格トラッカー</title>
+  <meta name="description" content="自分の対戦データをもとに、対戦相手キャラクターの流行度Tier表を自動生成します。">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f3460">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="環境分析">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
+  <link rel="shortcut icon" href="icon.png">
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EL23B3L2TD"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-EL23B3L2TD');
+  </script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="tier-style.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- ダークモード（ちらつき防止） -->
+  <script>
+    if (localStorage.getItem('identity5_dark_mode') === 'on') {
+      document.documentElement.classList.add('dark-init');
+    }
+  </script>
+</head>
+<body>
+
+  <!-- ===== 接続ページ ===== -->
+  <div id="connect-page" class="page">
+    <div class="connect-wrap">
+      <div class="connect-header">
+        <div class="connect-app-brand">第五人格トラッカー</div>
+        <h1 class="connect-app-title">環境分析</h1>
+        <div class="connect-app-sub">対戦相手Tier表</div>
+        <p class="connect-desc">トラッカーの対戦データを読み込むと、あなたの環境での対戦相手の流行度Tier表を自動生成します。</p>
+      </div>
+
+      <!-- sync code -->
+      <div class="connect-card">
+        <h2 class="connect-card-title">🔗 同期コードで連携</h2>
+        <p class="connect-card-desc">第五人格トラッカーの設定タブで発行した同期コードを入力してください。データは自動的に最新の状態で読み込まれます。</p>
+        <input type="text" id="sync-code-input" class="connect-input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+        <button type="button" class="connect-btn primary" onclick="connectWithSyncCode()">読み込む</button>
+      </div>
+
+      <!-- JSON -->
+      <div class="connect-card">
+        <h2 class="connect-card-title">📁 JSONで読み込む</h2>
+        <p class="connect-card-desc">トラッカーの設定タブからエクスポートしたデータを貼り付けるか、ファイルを選択してください。</p>
+        <textarea id="json-input" class="connect-textarea" placeholder="エクスポートしたJSONデータをここに貼り付け"></textarea>
+        <div class="connect-btn-row">
+          <button type="button" class="connect-btn primary" onclick="connectWithJSON()">貼り付けから読み込む</button>
+          <button type="button" class="connect-btn secondary" onclick="document.getElementById('json-file').click()">ファイルを選択</button>
+        </div>
+        <input type="file" id="json-file" accept=".json,.txt" style="display:none" onchange="connectWithJSONFile(event)">
+      </div>
+
+      <a href="index.html" class="connect-back-link">← トラッカーに戻る</a>
+    </div>
+  </div>
+
+  <!-- ===== Tier表ページ ===== -->
+  <div id="tier-page" class="page hidden">
+
+    <!-- ヘッダー -->
+    <div class="tier-header">
+      <div class="tier-header-top">
+        <a href="index.html" class="back-link">← トラッカー</a>
+        <button type="button" class="disconnect-btn" onclick="showDisconnectMenu()">接続解除</button>
+      </div>
+      <div class="tier-header-titles">
+        <div class="tier-brand">第五人格トラッカー</div>
+        <div class="tier-title">環境分析 対戦相手Tier表</div>
+      </div>
+      <div class="perspective-toggle">
+        <button type="button" id="btn-survivor" class="ptab active" onclick="switchPerspective('survivor')">サバイバー</button>
+        <button type="button" id="btn-hunter"   class="ptab"        onclick="switchPerspective('hunter')">ハンター</button>
+      </div>
+      <div id="stats-header" class="stats-header"></div>
+    </div>
+
+    <!-- ロック画面 -->
+    <div id="lock-screen" class="lock-screen hidden">
+      <div class="lock-inner">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-title">データ収集中</div>
+        <div id="lock-message" class="lock-message"></div>
+        <div class="lock-progress-wrap">
+          <div id="lock-progress-bar" class="lock-progress-bar"></div>
+        </div>
+        <div id="lock-progress-text" class="lock-progress-text"></div>
+      </div>
+    </div>
+
+    <!-- Tier表コンテンツ -->
+    <div id="tier-content" class="tier-content hidden">
+
+      <!-- 要対策 -->
+      <div class="priority-section">
+        <div class="priority-heading">⚠️ 要対策</div>
+        <div id="priority-cards" class="priority-cards"></div>
+      </div>
+
+      <!-- フィルターバー -->
+      <div class="filter-bar">
+        <button type="button" id="filter-toggle-btn" class="filter-toggle-btn" onclick="toggleFilterDrawer()">
+          ▼ 段位フィルター<span id="filter-badge" class="filter-badge hidden"></span>
+        </button>
+      </div>
+      <div id="filter-drawer" class="filter-drawer hidden">
+        <div id="rank-filter-wrap" class="multi-rank-wrapper"></div>
+      </div>
+
+      <!-- Tier表 -->
+      <div id="tier-table" class="tier-table"></div>
+
+      <!-- 未対戦 -->
+      <div id="no-encounter-section" class="no-encounter-section hidden">
+        <div class="no-encounter-label">── 未対戦 ──</div>
+        <div id="no-encounter-chars" class="no-encounter-chars"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== 詳細ページ ===== -->
+  <div id="detail-page" class="page hidden">
+
+    <div class="detail-header">
+      <button type="button" class="detail-back-btn" onclick="goBack()">← 戻る</button>
+      <div class="detail-title-area">
+        <img id="detail-char-icon" class="detail-char-icon" src="" alt="">
+        <span id="detail-char-name" class="detail-char-name"></span>
+        <span id="detail-tier-badge" class="detail-tier-badge"></span>
+      </div>
+    </div>
+
+    <div class="detail-body">
+      <div id="detail-summary"  class="detail-card"></div>
+      <div id="detail-trend"    class="detail-card"></div>
+      <div id="detail-map"      class="detail-card"></div>
+      <div id="detail-mychar"   class="detail-card"></div>
+      <div id="detail-copick"   class="detail-card"></div>
+      <div id="detail-history"  class="detail-card"></div>
+    </div>
+
+  </div>
+
+  <script src="tier-app.js"></script>
+</body>
+</html>

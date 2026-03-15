@@ -17,6 +17,30 @@
     const MAPS = ['軍需工場', '赤の教会', '聖心病院', '湖景村', '月の河公園', 'レオの思い出', '永眠町', '中華街', '罪の森'];
     
     const RANKS = ['1段', '2段', '3段', '4段', '5段', '6段', '7段', '最高峰'];
+
+    // ===== アイコンパス =====
+    const ICON_NAME_MAP = {
+      'フールズ・ゴールド': 'フールズゴールド',
+      'ガードNo.26': 'ガードNO.26',
+      '闘牛士': '闘牛師',
+    };
+    function buildIconPath(charName, type) {
+      const folder = type === 'hunter' ? 'hunters' : 'survivors';
+      const prefix = type === 'hunter' ? 'hunter' : 'survivor';
+      let name = charName.replace(/[「」]/g, '');
+      name = ICON_NAME_MAP[name] || name;
+      return `icons/${folder}/${prefix}_${name}.PNG`;
+    }
+    function getMapIconPath(mapName) {
+      return `icons/maps/${encodeURIComponent(mapName)}.PNG`;
+    }
+    function getRankIconPath(rank, perspective) {
+      const folder = perspective === 'survivor' ? 'survivors' : 'hunters';
+      return `icons/ranks/${folder}/${encodeURIComponent(rank)}.PNG`;
+    }
+    function charIconImg(charName, type) {
+      return `<img class="match-char-icon" src="${buildIconPath(charName, type)}" alt="${escapeHTML(charName)}" title="${escapeHTML(charName)}" onerror="this.style.display='none'">`;
+    }
     
     // ===== ひらがな読みデータ =====
     const SURVIVOR_READINGS = {
@@ -2708,6 +2732,11 @@
       const worstMap = mapData[mapData.length - 1];
 
       const opponentLabel = currentPerspective === 'survivor' ? '相手ハンター' : '相手サバイバー';
+      const oppType = currentPerspective === 'survivor' ? 'hunter' : 'survivor';
+      const oppIconBest  = `<img class="highlight-char-icon" src="${buildIconPath(bestOpponent.name, oppType)}" alt="" onerror="this.style.display='none'">`;
+      const oppIconWorst = `<img class="highlight-char-icon" src="${buildIconPath(worstOpponent.name, oppType)}" alt="" onerror="this.style.display='none'">`;
+      const mapIconBest  = `<img class="highlight-char-icon" src="${getMapIconPath(bestMap.name)}" alt="" onerror="this.style.display='none'">`;
+      const mapIconWorst = `<img class="highlight-char-icon" src="${getMapIconPath(worstMap.name)}" alt="" onerror="this.style.display='none'">`;
 
       container.innerHTML = `
         <div class="stats-card highlight-summary-card">
@@ -2715,21 +2744,25 @@
           <div class="highlight-summary-grid">
             <div class="highlight-item highlight-best">
               <div class="highlight-category">得意${opponentLabel}</div>
+              ${oppIconBest}
               <div class="highlight-name">${escapeHTML(bestOpponent.name)}</div>
               <div class="highlight-rate">${bestOpponent.winrate.toFixed(1)}%（${bestOpponent.total}試合）</div>
             </div>
             <div class="highlight-item highlight-worst">
               <div class="highlight-category">苦手${opponentLabel}</div>
+              ${oppIconWorst}
               <div class="highlight-name">${escapeHTML(worstOpponent.name)}</div>
               <div class="highlight-rate">${worstOpponent.winrate.toFixed(1)}%（${worstOpponent.total}試合）</div>
             </div>
             <div class="highlight-item highlight-best">
               <div class="highlight-category">得意マップ</div>
+              ${mapIconBest}
               <div class="highlight-name">${escapeHTML(bestMap.name)}</div>
               <div class="highlight-rate">${bestMap.winrate.toFixed(1)}%（${bestMap.total}試合）</div>
             </div>
             <div class="highlight-item highlight-worst">
               <div class="highlight-category">苦手マップ</div>
+              ${mapIconWorst}
               <div class="highlight-name">${escapeHTML(worstMap.name)}</div>
               <div class="highlight-rate">${worstMap.winrate.toFixed(1)}%（${worstMap.total}試合）</div>
             </div>
@@ -2999,17 +3032,16 @@
     // 苦手要素表示HTMLを生成（控えめなデザイン）
     function generateWeaknessHTML(weaknesses, title, icon) {
       if (weaknesses.length === 0) return '';
-      
+
       const threshold = currentPerspective === 'hunter' ? 50 : 38;
-      const hasWeakness = weaknesses.some(w => w.winrate <= threshold);
       const displayTitle = `苦手${title}`;
-      
+
       let html = `
         <div class="weakness-card">
           <div class="weakness-title">${displayTitle}</div>
           <div style="display: flex; flex-direction: column; gap: 6px;">
       `;
-      
+
       weaknesses.forEach((item, index) => {
         const isWeak = item.winrate <= threshold;
         html += `
@@ -3022,7 +3054,7 @@
           </div>
         `;
       });
-      
+
       html += `</div></div>`;
       return html;
     }
@@ -3567,29 +3599,34 @@
       let html = '<div class="match-history">';
       
       perspectiveMatches.slice(startIndex, endIndex).forEach(match => {
-        const isWin = (currentPerspective === 'survivor' && match.result === 'survivor_win') || 
+        const isWin = (currentPerspective === 'survivor' && match.result === 'survivor_win') ||
                       (currentPerspective === 'hunter' && match.result === 'hunter_win');
         const isDraw = match.result === 'draw';
         const resultText = isWin ? '勝利' : isDraw ? '引き分け' : '敗北';
         const displayResultClass = isWin ? 'win' : isDraw ? 'draw' : 'lose';
-        const escapeInfo = match.escapeCount !== undefined ? ` (脱出${match.escapeCount}人)` : '';
-        const rankInfo = match.rank ? `[${match.rank}] ` : '';
-        const dateInfo = match.date ? `${match.date} ` : '';
+        const escapeInfo = match.escapeCount !== undefined ? `　脱出${match.escapeCount}人` : '';
 
-        let details = '';
+        const rankIconHTML = match.rank
+          ? `<img class="match-rank-icon" src="${getRankIconPath(match.rank, match.perspective)}" alt="${escapeHTML(match.rank)}" title="${escapeHTML(match.rank)}" onerror="this.outerHTML='${escapeHTML(match.rank)}'">` : '';
+        let vsHTML = '';
         if (match.perspective === 'survivor') {
-          details = `${dateInfo}${rankInfo}${match.myCharacter} + ${match.teammates.join(', ')} vs ${match.opponentHunter} @ ${match.map}${escapeInfo}`;
+          const mySide  = [match.myCharacter, ...(match.teammates || [])].filter(Boolean).map(s => charIconImg(s, 'survivor')).join('');
+          const oppSide = match.opponentHunter ? charIconImg(match.opponentHunter, 'hunter') : '';
+          vsHTML = `<div class="match-vs-row"><div class="match-vs-side">${mySide}</div><span class="match-vs-text">vs</span><div class="match-vs-side">${oppSide}</div></div>`;
         } else {
-          details = `${dateInfo}${rankInfo}${match.myCharacter} vs ${match.opponentSurvivors.join(', ')} @ ${match.map}${escapeInfo}`;
+          const mySide  = match.myCharacter ? charIconImg(match.myCharacter, 'hunter') : '';
+          const oppSide = (match.opponentSurvivors || []).map(s => charIconImg(s, 'survivor')).join('');
+          vsHTML = `<div class="match-vs-row"><div class="match-vs-side">${mySide}</div><span class="match-vs-text">vs</span><div class="match-vs-side">${oppSide}</div></div>`;
         }
-        
+
         const commentHTML = match.comment ? `<div class="match-comment">${escapeHTML(match.comment)}</div>` : '';
-        
+
         html += `
           <div class="match-item">
             <div class="match-info">
               <span class="match-result ${displayResultClass}">${resultText}</span>
-              <span>${details}</span>
+              <span class="match-meta">${escapeHTML(match.date || '')}　${escapeHTML(match.map || '')}　${rankIconHTML}${escapeHTML(escapeInfo)}</span>
+              ${vsHTML}
               ${commentHTML}
             </div>
             <div class="match-actions">

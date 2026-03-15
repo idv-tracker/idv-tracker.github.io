@@ -1724,3 +1724,104 @@ body.dark-mode .bottom-nav {
 }
 body.dark-mode .bottom-nav-item { color: #8888aa; }
 body.dark-mode .bottom-nav-item.active { color: #60a5fa; border-top-color: #60a5fa; }
+
+/* ===== 試合履歴アイコン ===== */
+.match-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: #4b5563;
+}
+.match-vs-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.match-vs-side {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+.match-vs-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+.match-char-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+.match-rank-icon {
+  height: 18px;
+  width: auto;
+  vertical-align: middle;
+  object-fit: contain;
+}
+.match-map-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  object-fit: cover;
+  vertical-align: middle;
+}
+/* ===== ハイライトカードアイコン ===== */
+.highlight-char-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  margin: 4px auto 6px;
+}
+/* ===== 苦手ピックアップアイコン ===== */
+.weakness-char-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+/* ダークモード */
+body.dark-mode .match-meta { color: #9ca3af; }
+body.dark-mode .match-vs-text { color: #6b7280; }
+
+/* 環境分析リンクカード */
+.tier-link-card {
+  background: #f8f9fa;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+.tier-link-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  text-decoration: none;
+  color: #3b82f6;
+  font-size: 15px;
+  font-weight: 700;
+  border-bottom: 1px solid #e5e7eb;
+}
+.tier-link-card-body {
+  padding: 14px 20px;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.7;
+}
+.tier-link-card-body p { margin-bottom: 10px; }
+.tier-link-card-features { display: flex; flex-direction: column; gap: 5px; }
+.tier-link-card-features strong { color: #374151; }
+body.dark-mode .tier-link-card { background: #222238; border-color: #2e2e48; }
+body.dark-mode .tier-link-card-header { color: #60a5fa; border-bottom-color: #2e2e48; }
+body.dark-mode .tier-link-card-body { color: #9ca3af; }
+body.dark-mode .tier-link-card-features strong { color: #d1d5db; }

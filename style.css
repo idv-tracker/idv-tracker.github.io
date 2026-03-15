@@ -1668,7 +1668,7 @@ body.dark-mode .sync-sublabel {
 .bottom-nav-item {
   flex: 1;
   padding: 14px 6px 0;
-  min-height: 108px;
+  min-height: 97px;
   border: none;
   background: transparent;
   font-size: 16px;
@@ -1706,7 +1706,7 @@ body.dark-mode .sync-sublabel {
   }
   .main-tabs { display: none !important; }
   .bottom-nav { display: flex; }
-  .content { padding-bottom: calc(116px + env(safe-area-inset-bottom)); }
+  .content { padding-bottom: calc(105px + env(safe-area-inset-bottom)); }
 }
 
 /* ダークモード: サブタブ */

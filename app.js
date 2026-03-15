@@ -29,14 +29,14 @@
       const prefix = type === 'hunter' ? 'hunter' : 'survivor';
       let name = charName.replace(/[「」]/g, '');
       name = ICON_NAME_MAP[name] || name;
-      return `icons/${folder}/${prefix}_${name}.PNG`;
+      return `${folder}/${prefix}_${name}.PNG`;
     }
     function getMapIconPath(mapName) {
-      return `icons/maps/${encodeURIComponent(mapName)}.PNG`;
+      return `maps/${encodeURIComponent(mapName)}.PNG`;
     }
     function getRankIconPath(rank, perspective) {
       const folder = perspective === 'survivor' ? 'survivors' : 'hunters';
-      return `icons/ranks/${folder}/${encodeURIComponent(rank)}.PNG`;
+      return `ranks/${folder}/${encodeURIComponent(rank)}.PNG`;
     }
     function charIconImg(charName, type) {
       return `<img class="match-char-icon" src="${buildIconPath(charName, type)}" alt="${escapeHTML(charName)}" title="${escapeHTML(charName)}" onerror="this.style.display='none'">`;

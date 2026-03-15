@@ -49,7 +49,7 @@ function buildIconPath(charName, type) {
     '闘牛士': '闘牛師',
   };
   name = nameMap[name] || name;
-  return `icons/${folder}/${prefix}_${name}.PNG`;
+  return `${folder}/${prefix}_${name}.PNG`;
 }
 function getCharIconPath(charName) {
   // 相手キャラのアイコン（サバイバー視点→相手はハンター、ハンター視点→相手はサバイバー）
@@ -932,7 +932,7 @@ function renderDetailHistory(charName, fm) {
       })();
       html += `<div class="history-item">
         <span class="history-result ${rl}">${label}</span>
-        <span class="history-info">${escapeHTML(date)}　${escapeHTML(m.map || '')}　${m.rank ? `<img class="history-rank-icon" src="icons/ranks/${m.perspective}s/${encodeURIComponent(m.rank)}.PNG" alt="${escapeHTML(m.rank)}" title="${escapeHTML(m.rank)}" onerror="this.outerHTML='${escapeHTML(m.rank)}'">` : ''}</span>
+        <span class="history-info">${escapeHTML(date)}　${escapeHTML(m.map || '')}　${m.rank ? `<img class="history-rank-icon" src="ranks/${m.perspective}s/${encodeURIComponent(m.rank)}.PNG" alt="${escapeHTML(m.rank)}" title="${escapeHTML(m.rank)}" onerror="this.outerHTML='${escapeHTML(m.rank)}'">` : ''}</span>
         ${vsRowHTML}
         ${m.comment ? `<span class="history-comment">${escapeHTML(m.comment)}</span>` : ''}
       </div>`;

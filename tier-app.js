@@ -564,6 +564,7 @@ function renderRisingChar(fm) {
 
   sec.classList.remove('hidden');
   sec.innerHTML = `
+    <div class="priority-heading">📈 急上昇キャラ</div>
     <div class="rising-card" onclick="navigateToDetail('${escapeHTML(top.char)}')">
       <img class="rising-card-icon" src="${iconSrc}" alt="${escapeHTML(top.char)}" onerror="this.style.display='none'">
       <div class="rising-card-info">
@@ -760,7 +761,7 @@ function renderDetailTrend(charName, fm) {
         <div class="trend-week-label">先週のピック率</div>
         <div class="trend-week-value">${trend.lastPR.toFixed(1)}%</div>
       </div>
-      <div class="trend-arrow-big" style="color:${color}">${trend.arrow}</div>
+      <div class="trend-arrow-big" style="color:${color}">→</div>
       <div>
         <div class="trend-week-label">今週（${diffText}）</div>
         <div class="trend-week-value">${trend.thisPR.toFixed(1)}%</div>

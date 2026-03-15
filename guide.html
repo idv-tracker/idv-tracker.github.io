@@ -52,6 +52,33 @@
     }
     .back-link:hover { color: #374151; }
 
+    /* PC/スマホ切り替えトグル */
+    .view-toggle {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .view-toggle-inner {
+      display: flex;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .view-toggle-btn {
+      padding: 10px 28px;
+      font-size: 14px;
+      font-weight: 600;
+      background: #f8fafc;
+      color: #6b7280;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .view-toggle-btn.active {
+      background: #0f3460;
+      color: white;
+    }
+
     /* 目次 */
     .toc {
       background: #f8f9fa;
@@ -261,6 +288,83 @@
     }
     .back-to-toc:hover { color: #6b7280; }
 
+    /* ボトムナビ模擬 */
+    .ui-bottom-nav {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      display: flex;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .ui-bottom-nav-item {
+      flex: 1;
+      padding: 12px 0;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      border-top: 3px solid transparent;
+    }
+    .ui-bottom-nav-item.active {
+      color: #0f3460;
+      border-top-color: #0f3460;
+    }
+
+    /* サブタブ模擬 */
+    .ui-sub-tabs {
+      background: #f8f9fa;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      display: flex;
+      gap: 4px;
+      padding: 6px;
+      margin-top: 8px;
+      overflow-x: auto;
+    }
+    .ui-sub-tab {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      white-space: nowrap;
+    }
+    .ui-sub-tab.active {
+      background: #0f3460;
+      color: white;
+    }
+
+    /* スクロール説明図 */
+    .scroll-diagram {
+      background: #f8f9fa;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #374151;
+    }
+    .scroll-diagram-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .scroll-diagram-row:last-child { margin-bottom: 0; }
+    .scroll-arrow {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .scroll-label {
+      font-weight: 600;
+      width: 80px;
+      flex-shrink: 0;
+    }
+    .scroll-result { color: #6b7280; }
+
     /* フッター */
     .footer {
       text-align: center;
@@ -309,6 +413,17 @@
     html.dark-mode .ui-toggle { border-color: #3a3a55; }
     html.dark-mode .ui-toggle-btn { background: #1e1e2e; color: #9ca3af; }
     html.dark-mode .ui-toggle-btn.active { background: #3b82f6; color: white; }
+    html.dark-mode .view-toggle-inner { border-color: #3a3a55; }
+    html.dark-mode .view-toggle-btn { background: #1e1e2e; color: #9ca3af; }
+    html.dark-mode .view-toggle-btn.active { background: #3b82f6; color: white; }
+    html.dark-mode .ui-bottom-nav { background: #1e1e2e; border-color: #3a3a55; }
+    html.dark-mode .ui-bottom-nav-item { color: #6b7280; }
+    html.dark-mode .ui-bottom-nav-item.active { color: #60a5fa; border-top-color: #60a5fa; }
+    html.dark-mode .ui-sub-tabs { background: #2a2a3e; border-color: #3a3a55; }
+    html.dark-mode .ui-sub-tab { color: #9ca3af; }
+    html.dark-mode .ui-sub-tab.active { background: #3b82f6; color: white; }
+    html.dark-mode .scroll-diagram { background: #2a2a3e; border-color: #3a3a55; color: #d1d5db; }
+    html.dark-mode .scroll-result { color: #9ca3af; }
   </style>
 </head>
 <body>
@@ -321,312 +436,561 @@
     <div class="content">
       <a href="index.html" class="back-link">← アプリに戻る</a>
 
-      <!-- 目次 -->
-      <div class="toc" id="toc">
-        <div class="toc-title">目次</div>
-        <ul class="toc-list">
-          <li><a href="#settings">設定</a></li>
-          <li><a href="#input">試合入力</a></li>
-          <li><a href="#overall">総合勝率</a></li>
-          <li><a href="#character">自キャラ別勝率</a></li>
-          <li><a href="#map">マップ別勝率</a></li>
-          <li><a href="#opponent">対戦相手別勝率</a></li>
-          <li><a href="#history">試合履歴</a></li>
-        </ul>
-      </div>
-
-      <!-- 設定 -->
-      <div class="section" id="settings">
-        <div class="section-title">設定</div>
-        <div class="section-desc">最初に設定タブで環境を整えておくと、より快適に使えます。</div>
-
-        <ul class="feature-list">
-          <li>
-            <div class="feature-name">ダークモード</div>
-            <div class="feature-desc">目に優しい暗い配色に切り替えられます。設定は次回以降も維持されます。</div>
-          </li>
-          <li>
-            <div class="feature-name">ホーム画面に追加</div>
-            <div class="feature-desc">スマートフォンのホーム画面に追加するとアプリのように起動できます。<a href="install-guide.html" class="feature-link" target="_blank">設定方法を見る ›</a></div>
-          </li>
-          <li>
-            <div class="feature-name">クラウド同期</div>
-            <div class="feature-desc">複数のデバイスでデータを共有できます。同期コードを発行するだけでアカウント登録不要で利用できます。<a href="sync-guide.html" class="feature-link" target="_blank">設定方法を見る ›</a></div>
-          </li>
-          <li>
-            <div class="feature-name">ファイルで書き出し・読み込み</div>
-            <div class="feature-desc">データをJSONファイルとして書き出し・読み込みできます。他のユーザーへのデータ共有や手動バックアップとして利用できます。</div>
-          </li>
-        </ul>
-
-        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
-      </div>
-
-      <hr class="divider">
-
-      <!-- 試合入力 -->
-      <div class="section" id="input">
-        <div class="section-title">試合入力</div>
-        <div class="section-desc">試合結果を記録するタブです。画面上部のサバイバー/ハンタータブで視点を切り替えてから入力します。</div>
-
-        <div class="ui-mock" style="margin-bottom: 18px;">
-          <span class="ui-tab active">サバイバー</span>
-          <span class="ui-tab">ハンター</span>
+      <!-- PC/スマホ切り替えトグル -->
+      <div class="view-toggle">
+        <div class="view-toggle-inner">
+          <button class="view-toggle-btn active" id="btn-mobile" onclick="switchView('mobile')">スマホ</button>
+          <button class="view-toggle-btn" id="btn-pc" onclick="switchView('pc')">PC</button>
         </div>
-
-        <ul class="feature-list">
-          <li>
-            <div class="feature-name">日付・段位</div>
-            <div class="feature-desc">試合日と試合時の段位を記録します。</div>
-          </li>
-          <li>
-            <div class="feature-name">自分のキャラクター</div>
-            <div class="feature-desc">使用したサバイバーまたはハンターを選択します。</div>
-          </li>
-          <li>
-            <div class="feature-name">味方・相手キャラクター</div>
-            <div class="feature-desc">サバイバー視点では味方3人と相手ハンター、ハンター視点では相手サバイバー4人を選択します。</div>
-          </li>
-          <li>
-            <div class="feature-name">マップ</div>
-            <div class="feature-desc">試合が行われたマップを選択します。</div>
-          </li>
-          <li>
-            <div class="feature-name">脱出人数</div>
-            <div class="feature-desc">0〜4人から選択します。選んだ人数から勝敗が自動で判定されます。</div>
-            <div class="ui-mock">
-              <div class="ui-escape-btns">
-                <span class="ui-escape-btn">0人</span>
-                <span class="ui-escape-btn">1人</span>
-                <span class="ui-escape-btn selected">2人</span>
-                <span class="ui-escape-btn">3人</span>
-                <span class="ui-escape-btn">4人</span>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div class="feature-name">コメント（任意）</div>
-            <div class="feature-desc">試合のメモを自由に記入できます。</div>
-          </li>
-        </ul>
-
-        <hr class="divider">
-
-        <ul class="feature-list">
-          <li>
-            <div class="feature-name">保持機能</div>
-            <div class="feature-desc">各フィールドの「保持」チェックボックスをオンにすると、次回記録時に同じ値が引き継がれます。同じ段位やキャラで連続して記録する際に便利です。「保持を全て解除」ボタンで一括解除できます。</div>
-          </li>
-          <li>
-            <div class="feature-name">キャラクター検索</div>
-            <div class="feature-desc">キャラ選択欄はひらがな・カタカナで名前を入力して絞り込める検索機能があります。フィールドをタップすると検索ボックスが表示されます。</div>
-          </li>
-        </ul>
-
-        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
       </div>
 
-      <hr class="divider">
+      <!-- ===== PC ガイド ===== -->
+      <div id="guide-pc" style="display:none;">
 
-      <!-- 総合勝率 -->
-      <div class="section" id="overall">
-        <div class="section-title">総合勝率</div>
-        <div class="section-desc">勝率・勝敗数・連勝情報をまとめて確認できるダッシュボードです。2連勝以上では連勝バッジが表示されます。</div>
-
-        <ul class="feature-list">
-          <li>
-            <div class="feature-name">総合勝率 / 百戦勝率 の切り替え</div>
-            <div class="feature-desc">上部のトグルボタンで表示モードを切り替えられます。「百戦勝率」モードでは直近100試合の勝率を表示し、期間フィルターは無効になります。</div>
-            <div class="ui-mock" style="margin-top: 8px;">
-              <div class="ui-toggle">
-                <span class="ui-toggle-btn active">総合勝率</span>
-                <span class="ui-toggle-btn">百戦勝率</span>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div class="feature-name">期間フィルター</div>
-            <div class="feature-desc">全期間・今日・直近7日・直近30日・シーズン別から選択できます。</div>
-          </li>
-          <li>
-            <div class="feature-name">段位フィルター</div>
-            <div class="feature-desc">特定の段位のデータのみ絞り込んで集計できます。複数の段位を同時に選択することも可能です。</div>
-          </li>
-        </ul>
-
-        <hr class="divider">
-
-        <ul class="feature-list">
-          <li>
-            <div class="feature-name">勝敗内訳グラフ</div>
-            <div class="feature-desc">勝利・敗北・引き分けの割合をドーナツグラフで表示します。フィルターの内容が反映されます。</div>
-          </li>
-          <li>
-            <div class="feature-name">直近の試合</div>
-            <div class="feature-desc">直近の試合結果をカラーブロックで一覧表示します。左が古い試合、右が新しい試合です。</div>
-            <div class="ui-mock" style="flex-direction: column; align-items: flex-start; gap: 4px;">
-              <div class="ui-blocks">
-                <div class="ui-block" style="background:#9ca3af;"></div>
-                <div class="ui-block" style="background:#ef4444;"></div>
-                <div class="ui-block" style="background:#fbbf24;"></div>
-                <div class="ui-block" style="background:#fbbf24;"></div>
-                <div class="ui-block" style="background:#ef4444;"></div>
-                <div class="ui-block" style="background:#fbbf24;"></div>
-              </div>
-              <div style="display:flex; justify-content:space-between; width:100%; font-size:11px; color:#9ca3af;">
-                <span>← 古い</span><span>新しい →</span>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div class="feature-name">勝率推移グラフ</div>
-            <div class="feature-desc">一定数の試合をひとまとまりとした移動平均で勝率の推移を折れ線グラフで表示します。</div>
-          </li>
-          <li>
-            <div class="feature-name">ハイライトサマリー</div>
-            <div class="feature-desc">得意・苦手な相手キャラクターとマップをそれぞれ1件ずつ表示します。</div>
-          </li>
-        </ul>
-
-        <div class="highlight-box">
-          <div class="highlight-title">百戦勝率について</div>
-          「百戦勝率」モードでは直近100試合（段位フィルター適用後）の勝率を表示します。<br>
-          かつての第五人格ではこの表記が標準でしたが、現在はシーズン勝率表記に変更されており、ゲーム内では確認できません。
-        </div>
-
-        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
-      </div>
-
-      <hr class="divider">
-
-      <!-- 自キャラ別勝率 -->
-      <div class="section" id="character">
-        <div class="section-title">自キャラ別勝率</div>
-        <div class="section-desc">使用したキャラクター別の勝率を一覧で確認できます。</div>
-
-        <ul class="feature-list">
-          <li>
-            <div class="feature-name">フィルター</div>
-            <div class="feature-desc">期間・対戦相手・マップ・段位の4種類でデータを絞り込めます。段位フィルターは複数の段位を同時に選択できます。これは他の統計タブも同様です。</div>
-          </li>
-          <li>
-            <div class="feature-name">苦手キャラクター</div>
-            <div class="feature-desc">一定数以上こなした対戦データから苦手なキャラクターを自動で検出し、上部に表示します。</div>
-          </li>
-          <li>
-            <div class="feature-name">平均脱出人数</div>
-            <div class="feature-desc">各キャラクターの勝率バーに加え、平均脱出人数（ハンター視点では平均脱落人数）も表示します。</div>
-          </li>
-          <li>
-            <div class="feature-name">ソート・最低試合数</div>
-            <div class="feature-desc">勝率順・試合数順に並び替えられます。試合数が少なく参考にならないデータを最低試合数フィルターで除外できます。</div>
-          </li>
-          <li>
-            <div class="feature-name">使用キャラクター割合グラフ</div>
-            <div class="feature-desc">タブ下部に使用したキャラクターの試合数割合をドーナツグラフで表示します。全フィルターと最低試合数が反映されます。</div>
-          </li>
-        </ul>
-
-        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
-      </div>
-
-      <hr class="divider">
-
-      <!-- マップ別勝率 -->
-      <div class="section" id="map">
-        <div class="section-title">マップ別勝率</div>
-        <div class="section-desc">マップ別の勝率を一覧で確認できます。</div>
-
-        <ul class="feature-list">
-          <li>
-            <div class="feature-name">フィルター</div>
-            <div class="feature-desc">期間・自キャラ・段位（複数選択可）でデータを絞り込めます。</div>
-          </li>
-          <li>
-            <div class="feature-name">苦手マップ</div>
-            <div class="feature-desc">一定数以上こなした対戦データから苦手なマップを自動で検出し、上部に表示します。</div>
-          </li>
-          <li>
-            <div class="feature-name">ソート・最低試合数</div>
-            <div class="feature-desc">勝率順・試合数順の並び替えと、最低試合数フィルターに対応しています。</div>
-          </li>
-          <li>
-            <div class="feature-name">マップ割合グラフ</div>
-            <div class="feature-desc">タブ下部に各マップの試合数割合をドーナツグラフで表示します。フィルターと最低試合数が反映されるため、バーチャートと同じ条件のマップのみ表示されます。</div>
-          </li>
-        </ul>
-
-        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
-      </div>
-
-      <hr class="divider">
-
-      <!-- 対戦相手別勝率 -->
-      <div class="section" id="opponent">
-        <div class="section-title">対戦相手別勝率</div>
-        <div class="section-desc">期間・自キャラ・対戦相手・マップ・段位（複数選択可）でデータを絞り込めます。サバイバーとハンターで表示内容が異なります。</div>
-
-        <div class="perspective-section">
-          <div class="perspective-label">サバイバー視点</div>
-          <ul class="feature-list">
-            <li>
-              <div class="feature-name">苦手ハンター・苦手味方</div>
-              <div class="feature-desc">苦手なハンターと苦手な味方キャラクターを自動で検出し、上部に表示します。</div>
-            </li>
-            <li>
-              <div class="feature-name">ハンター別勝率</div>
-              <div class="feature-desc">対戦したハンター別の勝率を一覧で確認できます。</div>
-            </li>
-            <li>
-              <div class="feature-name">味方編成別勝率</div>
-              <div class="feature-desc">「味方編成別勝率を見る」ボタンで味方キャラクター別の勝率を展開表示できます。初期状態では折りたたまれています。</div>
-            </li>
+        <!-- 目次 -->
+        <div class="toc" id="toc">
+          <div class="toc-title">目次</div>
+          <ul class="toc-list">
+            <li><a href="#settings">設定</a></li>
+            <li><a href="#input">試合入力</a></li>
+            <li><a href="#overall">総合勝率</a></li>
+            <li><a href="#character">自キャラ別勝率</a></li>
+            <li><a href="#map">マップ別勝率</a></li>
+            <li><a href="#opponent">対戦相手別勝率</a></li>
+            <li><a href="#history">試合履歴</a></li>
           </ul>
         </div>
 
-        <hr class="divider">
+        <!-- 設定 -->
+        <div class="section" id="settings">
+          <div class="section-title">設定</div>
+          <div class="section-desc">最初に設定タブで環境を整えておくと、より快適に使えます。</div>
 
-        <div class="perspective-section">
-          <div class="perspective-label">ハンター視点</div>
           <ul class="feature-list">
             <li>
-              <div class="feature-name">苦手サバイバー</div>
-              <div class="feature-desc">苦手な相手サバイバーを自動で検出し、上部に表示します。</div>
+              <div class="feature-name">ダークモード</div>
+              <div class="feature-desc">目に優しい暗い配色に切り替えられます。設定は次回以降も維持されます。</div>
             </li>
             <li>
-              <div class="feature-name">サバイバー別勝率</div>
-              <div class="feature-desc">相手サバイバー別の勝率を一覧で確認できます。</div>
+              <div class="feature-name">ホーム画面に追加</div>
+              <div class="feature-desc">スマートフォンのホーム画面に追加するとアプリのように起動できます。<a href="install-guide.html" class="feature-link" target="_blank">設定方法を見る ›</a></div>
             </li>
             <li>
-              <div class="feature-name">ペア別勝率</div>
-              <div class="feature-desc">「ペア別勝率を見る」ボタンで相手サバイバーの2キャラ組み合わせ別勝率を展開表示できます。初期状態では折りたたまれています。</div>
+              <div class="feature-name">クラウド同期</div>
+              <div class="feature-desc">複数のデバイスでデータを共有できます。同期コードを発行するだけでアカウント登録不要で利用できます。<a href="sync-guide.html" class="feature-link" target="_blank">設定方法を見る ›</a></div>
             </li>
+            <li>
+              <div class="feature-name">ファイルで書き出し・読み込み</div>
+              <div class="feature-desc">データをJSONファイルとして書き出し・読み込みできます。他のユーザーへのデータ共有や手動バックアップとして利用できます。</div>
+            </li>
+          </ul>
+
+          <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- 試合入力 -->
+        <div class="section" id="input">
+          <div class="section-title">試合入力</div>
+          <div class="section-desc">試合結果を記録するタブです。画面上部のサバイバー/ハンタータブで視点を切り替えてから入力します。</div>
+
+          <div class="ui-mock" style="margin-bottom: 18px;">
+            <span class="ui-tab active">サバイバー</span>
+            <span class="ui-tab">ハンター</span>
+          </div>
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">日付・段位</div>
+              <div class="feature-desc">試合日と試合時の段位を記録します。</div>
+            </li>
+            <li>
+              <div class="feature-name">自分のキャラクター</div>
+              <div class="feature-desc">使用したサバイバーまたはハンターを選択します。</div>
+            </li>
+            <li>
+              <div class="feature-name">味方・相手キャラクター</div>
+              <div class="feature-desc">サバイバー視点では味方3人と相手ハンター、ハンター視点では相手サバイバー4人を選択します。</div>
+            </li>
+            <li>
+              <div class="feature-name">マップ</div>
+              <div class="feature-desc">試合が行われたマップを選択します。</div>
+            </li>
+            <li>
+              <div class="feature-name">脱出人数</div>
+              <div class="feature-desc">0〜4人から選択します。選んだ人数から勝敗が自動で判定されます。</div>
+              <div class="ui-mock">
+                <div class="ui-escape-btns">
+                  <span class="ui-escape-btn">0人</span>
+                  <span class="ui-escape-btn">1人</span>
+                  <span class="ui-escape-btn selected">2人</span>
+                  <span class="ui-escape-btn">3人</span>
+                  <span class="ui-escape-btn">4人</span>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="feature-name">コメント（任意）</div>
+              <div class="feature-desc">試合のメモを自由に記入できます。</div>
+            </li>
+          </ul>
+
+          <hr class="divider">
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">保持機能</div>
+              <div class="feature-desc">各フィールドの「保持」チェックボックスをオンにすると、次回記録時に同じ値が引き継がれます。同じ段位やキャラで連続して記録する際に便利です。「保持を全て解除」ボタンで一括解除できます。</div>
+            </li>
+            <li>
+              <div class="feature-name">キャラクター検索</div>
+              <div class="feature-desc">キャラ選択欄はひらがな・カタカナで名前を入力して絞り込める検索機能があります。フィールドをタップすると検索ボックスが表示されます。</div>
+            </li>
+          </ul>
+
+          <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- 総合勝率 -->
+        <div class="section" id="overall">
+          <div class="section-title">総合勝率</div>
+          <div class="section-desc">勝率・勝敗数・連勝情報をまとめて確認できるダッシュボードです。2連勝以上では連勝バッジが表示されます。</div>
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">総合勝率 / 百戦勝率 の切り替え</div>
+              <div class="feature-desc">上部のトグルボタンで表示モードを切り替えられます。「百戦勝率」モードでは直近100試合の勝率を表示し、期間フィルターは無効になります。</div>
+              <div class="ui-mock" style="margin-top: 8px;">
+                <div class="ui-toggle">
+                  <span class="ui-toggle-btn active">総合勝率</span>
+                  <span class="ui-toggle-btn">百戦勝率</span>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="feature-name">期間フィルター</div>
+              <div class="feature-desc">全期間・今日・直近7日・直近30日・シーズン別から選択できます。</div>
+            </li>
+            <li>
+              <div class="feature-name">段位フィルター</div>
+              <div class="feature-desc">特定の段位のデータのみ絞り込んで集計できます。複数の段位を同時に選択することも可能です。</div>
+            </li>
+          </ul>
+
+          <hr class="divider">
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">勝敗内訳グラフ</div>
+              <div class="feature-desc">勝利・敗北・引き分けの割合をドーナツグラフで表示します。フィルターの内容が反映されます。</div>
+            </li>
+            <li>
+              <div class="feature-name">直近の試合</div>
+              <div class="feature-desc">直近の試合結果をカラーブロックで一覧表示します。左が古い試合、右が新しい試合です。</div>
+              <div class="ui-mock" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                <div class="ui-blocks">
+                  <div class="ui-block" style="background:#9ca3af;"></div>
+                  <div class="ui-block" style="background:#ef4444;"></div>
+                  <div class="ui-block" style="background:#fbbf24;"></div>
+                  <div class="ui-block" style="background:#fbbf24;"></div>
+                  <div class="ui-block" style="background:#ef4444;"></div>
+                  <div class="ui-block" style="background:#fbbf24;"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; width:100%; font-size:11px; color:#9ca3af;">
+                  <span>← 古い</span><span>新しい →</span>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="feature-name">勝率推移グラフ</div>
+              <div class="feature-desc">一定数の試合をひとまとまりとした移動平均で勝率の推移を折れ線グラフで表示します。</div>
+            </li>
+            <li>
+              <div class="feature-name">ハイライトサマリー</div>
+              <div class="feature-desc">得意・苦手な相手キャラクターとマップをそれぞれ1件ずつ表示します。</div>
+            </li>
+          </ul>
+
+          <div class="highlight-box">
+            <div class="highlight-title">百戦勝率について</div>
+            「百戦勝率」モードでは直近100試合（段位フィルター適用後）の勝率を表示します。<br>
+            かつての第五人格ではこの表記が標準でしたが、現在はシーズン勝率表記に変更されており、ゲーム内では確認できません。
+          </div>
+
+          <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- 自キャラ別勝率 -->
+        <div class="section" id="character">
+          <div class="section-title">自キャラ別勝率</div>
+          <div class="section-desc">使用したキャラクター別の勝率を一覧で確認できます。</div>
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">フィルター</div>
+              <div class="feature-desc">期間・対戦相手・マップ・段位の4種類でデータを絞り込めます。段位フィルターは複数の段位を同時に選択できます。これは他の統計タブも同様です。</div>
+            </li>
+            <li>
+              <div class="feature-name">苦手キャラクター</div>
+              <div class="feature-desc">一定数以上こなした対戦データから苦手なキャラクターを自動で検出し、上部に表示します。</div>
+            </li>
+            <li>
+              <div class="feature-name">平均脱出人数</div>
+              <div class="feature-desc">各キャラクターの勝率バーに加え、平均脱出人数（ハンター視点では平均脱落人数）も表示します。</div>
+            </li>
+            <li>
+              <div class="feature-name">ソート・最低試合数</div>
+              <div class="feature-desc">勝率順・試合数順に並び替えられます。試合数が少なく参考にならないデータを最低試合数フィルターで除外できます。</div>
+            </li>
+            <li>
+              <div class="feature-name">使用キャラクター割合グラフ</div>
+              <div class="feature-desc">タブ下部に使用したキャラクターの試合数割合をドーナツグラフで表示します。全フィルターと最低試合数が反映されます。</div>
+            </li>
+          </ul>
+
+          <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- マップ別勝率 -->
+        <div class="section" id="map">
+          <div class="section-title">マップ別勝率</div>
+          <div class="section-desc">マップ別の勝率を一覧で確認できます。</div>
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">フィルター</div>
+              <div class="feature-desc">期間・自キャラ・段位（複数選択可）でデータを絞り込めます。</div>
+            </li>
+            <li>
+              <div class="feature-name">苦手マップ</div>
+              <div class="feature-desc">一定数以上こなした対戦データから苦手なマップを自動で検出し、上部に表示します。</div>
+            </li>
+            <li>
+              <div class="feature-name">ソート・最低試合数</div>
+              <div class="feature-desc">勝率順・試合数順の並び替えと、最低試合数フィルターに対応しています。</div>
+            </li>
+            <li>
+              <div class="feature-name">マップ割合グラフ</div>
+              <div class="feature-desc">タブ下部に各マップの試合数割合をドーナツグラフで表示します。フィルターと最低試合数が反映されるため、バーチャートと同じ条件のマップのみ表示されます。</div>
+            </li>
+          </ul>
+
+          <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- 対戦相手別勝率 -->
+        <div class="section" id="opponent">
+          <div class="section-title">対戦相手別勝率</div>
+          <div class="section-desc">期間・自キャラ・対戦相手・マップ・段位（複数選択可）でデータを絞り込めます。サバイバーとハンターで表示内容が異なります。</div>
+
+          <div class="perspective-section">
+            <div class="perspective-label">サバイバー視点</div>
+            <ul class="feature-list">
+              <li>
+                <div class="feature-name">苦手ハンター・苦手味方</div>
+                <div class="feature-desc">苦手なハンターと苦手な味方キャラクターを自動で検出し、上部に表示します。</div>
+              </li>
+              <li>
+                <div class="feature-name">ハンター別勝率</div>
+                <div class="feature-desc">対戦したハンター別の勝率を一覧で確認できます。</div>
+              </li>
+              <li>
+                <div class="feature-name">味方編成別勝率</div>
+                <div class="feature-desc">「味方編成別勝率を見る」ボタンで味方キャラクター別の勝率を展開表示できます。初期状態では折りたたまれています。</div>
+              </li>
+            </ul>
+          </div>
+
+          <hr class="divider">
+
+          <div class="perspective-section">
+            <div class="perspective-label">ハンター視点</div>
+            <ul class="feature-list">
+              <li>
+                <div class="feature-name">苦手サバイバー</div>
+                <div class="feature-desc">苦手な相手サバイバーを自動で検出し、上部に表示します。</div>
+              </li>
+              <li>
+                <div class="feature-name">サバイバー別勝率</div>
+                <div class="feature-desc">相手サバイバー別の勝率を一覧で確認できます。</div>
+              </li>
+              <li>
+                <div class="feature-name">ペア別勝率</div>
+                <div class="feature-desc">「ペア別勝率を見る」ボタンで相手サバイバーの2キャラ組み合わせ別勝率を展開表示できます。初期状態では折りたたまれています。</div>
+              </li>
+            </ul>
+          </div>
+
+          <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- 試合履歴 -->
+        <div class="section" id="history">
+          <div class="section-title">試合履歴</div>
+          <div class="section-desc">記録した試合を新しい順で一覧表示します。</div>
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">フィルター</div>
+              <div class="feature-desc">期間・相手キャラ・自キャラ・マップ・段位の複数条件で絞り込めます。</div>
+            </li>
+            <li>
+              <div class="feature-name">編集・削除</div>
+              <div class="feature-desc">各試合の内容を編集したり削除したりできます。</div>
+            </li>
+          </ul>
+
+          <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+      </div><!-- /#guide-pc -->
+
+      <!-- ===== スマホ ガイド ===== -->
+      <div id="guide-mobile">
+
+        <!-- 目次 -->
+        <div class="toc" id="toc-mobile">
+          <div class="toc-title">目次</div>
+          <ul class="toc-list">
+            <li><a href="#m-nav">ナビゲーション</a></li>
+            <li><a href="#m-perspective">視点切り替え</a></li>
+            <li><a href="#m-scroll">スクロール操作</a></li>
+            <li><a href="#m-input">入力</a></li>
+            <li><a href="#m-stats">統計</a></li>
+            <li><a href="#m-history">履歴</a></li>
+            <li><a href="#m-settings">設定</a></li>
           </ul>
         </div>
 
-        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
-      </div>
+        <div class="highlight-box" style="margin-bottom: 28px;">
+          <div class="highlight-title">はじめに</div>
+          最初にボトムナビの「設定」タブで環境を整えておくと、より快適に使えます。ダークモードの設定やクラウド同期の有効化はここから行えます。
+        </div>
 
-      <hr class="divider">
+        <!-- ナビゲーション -->
+        <div class="section" id="m-nav">
+          <div class="section-title">ナビゲーション</div>
+          <div class="section-desc">スマホ版では画面下部に固定されたボトムナビでメイン機能を切り替えます。上部のタブメニューは表示されません。</div>
 
-      <!-- 試合履歴 -->
-      <div class="section" id="history">
-        <div class="section-title">試合履歴</div>
-        <div class="section-desc">記録した試合を新しい順で一覧表示します。</div>
+          <div class="ui-bottom-nav">
+            <div class="ui-bottom-nav-item active">入力</div>
+            <div class="ui-bottom-nav-item">統計</div>
+            <div class="ui-bottom-nav-item">履歴</div>
+            <div class="ui-bottom-nav-item">設定</div>
+          </div>
 
-        <ul class="feature-list">
-          <li>
-            <div class="feature-name">フィルター</div>
-            <div class="feature-desc">期間・相手キャラ・自キャラ・マップ・段位の複数条件で絞り込めます。</div>
-          </li>
-          <li>
-            <div class="feature-name">編集・削除</div>
-            <div class="feature-desc">各試合の内容を編集したり削除したりできます。</div>
-          </li>
-        </ul>
+          <ul class="feature-list" style="margin-top: 16px;">
+            <li>
+              <div class="feature-name">入力</div>
+              <div class="feature-desc">試合結果の記録画面です。起動時はこのタブが開きます。</div>
+            </li>
+            <li>
+              <div class="feature-name">統計</div>
+              <div class="feature-desc">勝率・キャラ別・マップ別・対戦相手別の各統計画面です。タップするとサブタブが表示されます。</div>
+            </li>
+            <li>
+              <div class="feature-name">履歴</div>
+              <div class="feature-desc">記録した試合の一覧・編集・削除画面です。</div>
+            </li>
+            <li>
+              <div class="feature-name">設定</div>
+              <div class="feature-desc">ダークモード・クラウド同期・データ書き出し等の設定画面です。</div>
+            </li>
+          </ul>
 
-        <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
-      </div>
+          <a href="#toc-mobile" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- 視点切り替え -->
+        <div class="section" id="m-perspective">
+          <div class="section-title">視点切り替え</div>
+          <div class="section-desc">サバイバー/ハンターの視点はヘッダー直下の視点タブで切り替えます。入力・統計どちらの画面でも共通です。</div>
+
+          <div class="ui-mock" style="margin-bottom: 8px;">
+            <span class="ui-tab active">サバイバー</span>
+            <span class="ui-tab">ハンター</span>
+          </div>
+
+          <div class="info-box">
+            視点タブはページ上部に固定されておらず、スクロールすると隠れます。上にスクロールすると再び表示されます。頻繁に切り替える必要がある場合は先に視点を選択してから入力・確認を行うとスムーズです。
+          </div>
+
+          <a href="#toc-mobile" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- スクロール操作 -->
+        <div class="section" id="m-scroll">
+          <div class="section-title">スクロール操作</div>
+          <div class="section-desc">画面を広く使えるように、スクロール方向によってボトムナビとサブタブの表示が自動で切り替わります。</div>
+
+          <div class="scroll-diagram">
+            <div class="scroll-diagram-row">
+              <div class="scroll-arrow">↓</div>
+              <div class="scroll-label">下スクロール</div>
+              <div class="scroll-result">ボトムナビ・サブタブが隠れる → コンテンツ表示エリアが広がる</div>
+            </div>
+            <div class="scroll-diagram-row">
+              <div class="scroll-arrow">↑</div>
+              <div class="scroll-label">上スクロール</div>
+              <div class="scroll-result">ボトムナビ・サブタブが再表示される</div>
+            </div>
+          </div>
+
+          <div class="info-box" style="margin-top: 12px;">
+            ボトムナビが隠れている状態でもタブの切り替えは可能です。少し上にスクロールするだけでボトムナビが再表示されます。
+          </div>
+
+          <a href="#toc-mobile" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- 入力 -->
+        <div class="section" id="m-input">
+          <div class="section-title">入力</div>
+          <div class="section-desc">ボトムナビの「入力」をタップして試合結果を記録します。まず視点タブでサバイバー/ハンターを選択してから各項目を入力してください。</div>
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">日付・段位</div>
+              <div class="feature-desc">試合日と試合時の段位を記録します。</div>
+            </li>
+            <li>
+              <div class="feature-name">自分のキャラクター</div>
+              <div class="feature-desc">使用したサバイバーまたはハンターを選択します。タップすると検索ボックスが表示され、ひらがな・カタカナで絞り込めます。</div>
+            </li>
+            <li>
+              <div class="feature-name">味方・相手キャラクター</div>
+              <div class="feature-desc">サバイバー視点では味方3人と相手ハンター、ハンター視点では相手サバイバー4人を選択します。</div>
+            </li>
+            <li>
+              <div class="feature-name">マップ・脱出人数</div>
+              <div class="feature-desc">マップを選択し、脱出人数（0〜4人）をタップします。脱出人数から勝敗が自動判定されます。</div>
+              <div class="ui-mock">
+                <div class="ui-escape-btns">
+                  <span class="ui-escape-btn">0人</span>
+                  <span class="ui-escape-btn">1人</span>
+                  <span class="ui-escape-btn selected">2人</span>
+                  <span class="ui-escape-btn">3人</span>
+                  <span class="ui-escape-btn">4人</span>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="feature-name">保持機能</div>
+              <div class="feature-desc">各フィールドの「保持」チェックをオンにすると、次回も同じ値が引き継がれます。同じキャラや段位で連続して記録するときに便利です。</div>
+            </li>
+          </ul>
+
+          <a href="#toc-mobile" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- 統計 -->
+        <div class="section" id="m-stats">
+          <div class="section-title">統計</div>
+          <div class="section-desc">ボトムナビの「統計」をタップすると、画面上部にサブタブが表示されます。サブタブで見たい統計を切り替えてください。</div>
+
+          <div class="ui-sub-tabs">
+            <div class="ui-sub-tab active">総合勝率</div>
+            <div class="ui-sub-tab">キャラ別</div>
+            <div class="ui-sub-tab">マップ別</div>
+            <div class="ui-sub-tab">対戦相手別</div>
+          </div>
+
+          <ul class="feature-list" style="margin-top: 16px;">
+            <li>
+              <div class="feature-name">総合勝率</div>
+              <div class="feature-desc">勝率・勝敗数・連勝情報・グラフをまとめて確認できます。期間・段位フィルターに対応しています。</div>
+            </li>
+            <li>
+              <div class="feature-name">キャラ別</div>
+              <div class="feature-desc">使用キャラクター別の勝率一覧です。苦手キャラクターの自動検出や勝率順・試合数順のソートができます。</div>
+            </li>
+            <li>
+              <div class="feature-name">マップ別</div>
+              <div class="feature-desc">マップ別の勝率一覧です。苦手マップの自動検出に対応しています。</div>
+            </li>
+            <li>
+              <div class="feature-name">対戦相手別</div>
+              <div class="feature-desc">サバイバー視点ではハンター別・味方編成別、ハンター視点ではサバイバー別・ペア別の勝率を確認できます。</div>
+            </li>
+          </ul>
+
+          <div class="info-box">
+            サブタブは横スクロールに対応しています。画面に収まりきらない場合は左右にスワイプしてください。
+          </div>
+
+          <a href="#toc-mobile" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- 履歴 -->
+        <div class="section" id="m-history">
+          <div class="section-title">履歴</div>
+          <div class="section-desc">ボトムナビの「履歴」をタップすると記録した試合を新しい順で一覧表示します。</div>
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">フィルター</div>
+              <div class="feature-desc">期間・相手キャラ・自キャラ・マップ・段位の複数条件で絞り込めます。</div>
+            </li>
+            <li>
+              <div class="feature-name">編集・削除</div>
+              <div class="feature-desc">各試合の内容を編集したり削除したりできます。</div>
+            </li>
+          </ul>
+
+          <a href="#toc-mobile" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- 設定 -->
+        <div class="section" id="m-settings">
+          <div class="section-title">設定</div>
+          <div class="section-desc">ボトムナビの「設定」をタップして各種設定を行います。</div>
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">ダークモード</div>
+              <div class="feature-desc">目に優しい暗い配色に切り替えられます。設定は次回以降も維持されます。</div>
+            </li>
+            <li>
+              <div class="feature-name">ホーム画面に追加</div>
+              <div class="feature-desc">ホーム画面に追加するとアプリのように起動できます。<a href="install-guide.html" class="feature-link" target="_blank">設定方法を見る ›</a></div>
+            </li>
+            <li>
+              <div class="feature-name">クラウド同期</div>
+              <div class="feature-desc">複数のデバイスでデータを共有できます。同期コードを発行するだけでアカウント登録不要で利用できます。<a href="sync-guide.html" class="feature-link" target="_blank">設定方法を見る ›</a></div>
+            </li>
+            <li>
+              <div class="feature-name">ファイルで書き出し・読み込み</div>
+              <div class="feature-desc">データをJSONファイルとして書き出し・読み込みできます。手動バックアップやデータ共有に利用できます。</div>
+            </li>
+          </ul>
+
+          <a href="#toc-mobile" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+      </div><!-- /#guide-mobile -->
 
     </div>
 
@@ -637,6 +1001,28 @@
 
   <script>
     localStorage.setItem('identity5_guide_visited', 'true');
+
+    function switchView(view) {
+      var pcGuide = document.getElementById('guide-pc');
+      var mobileGuide = document.getElementById('guide-mobile');
+      var btnPc = document.getElementById('btn-pc');
+      var btnMobile = document.getElementById('btn-mobile');
+
+      if (view === 'pc') {
+        pcGuide.style.display = '';
+        mobileGuide.style.display = 'none';
+        btnPc.classList.add('active');
+        btnMobile.classList.remove('active');
+      } else {
+        pcGuide.style.display = 'none';
+        mobileGuide.style.display = '';
+        btnPc.classList.remove('active');
+        btnMobile.classList.add('active');
+      }
+
+      // ページ先頭に戻る
+      window.scrollTo(0, 0);
+    }
   </script>
 </body>
 </html>

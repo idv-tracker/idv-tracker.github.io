@@ -1,4 +1,4 @@
-const CACHE_NAME = 'idv-tracker-v4';
+const CACHE_NAME = 'idv-tracker-v5';
 const urlsToCache = [
   './',
   './index.html',

@@ -1665,19 +1665,24 @@ body.dark-mode .sync-sublabel {
 
 .bottom-nav-item {
   flex: 1;
-  padding: 12px 0;
+  padding: 16px 0;
+  min-height: 60px;
   border: none;
   background: transparent;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #6b7280;
   cursor: pointer;
-  border-top: 2px solid transparent;
+  border-top: 3px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .bottom-nav-item.active {
   color: #3b82f6;
   border-top-color: #3b82f6;
 }
+
 
 /* ===== レスポンシブ ===== */
 @media (max-width: 767px) {

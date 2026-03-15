@@ -197,10 +197,13 @@ function showDisconnectMenu() {
 }
 
 // ===== 画面切替 =====
+let _detailScrollHandler = null;
+
 function showConnectPage() {
   document.getElementById('connect-page').classList.remove('hidden');
   document.getElementById('tier-page').classList.add('hidden');
   document.getElementById('detail-page').classList.add('hidden');
+  _removeDetailScrollHandler();
   window.scrollTo(0, 0);
 }
 
@@ -208,6 +211,7 @@ function showTierPage() {
   document.getElementById('connect-page').classList.add('hidden');
   document.getElementById('tier-page').classList.remove('hidden');
   document.getElementById('detail-page').classList.add('hidden');
+  _removeDetailScrollHandler();
   window.scrollTo(0, 0);
   renderTierPage();
 }
@@ -223,6 +227,37 @@ function showDetailPage(charName) {
   if (coPickChart) { coPickChart.destroy(); coPickChart = null; }
   window.scrollTo(0, 0);
   renderDetailPage(charName);
+  _initDetailScrollBehavior();
+}
+
+function _initDetailScrollBehavior() {
+  _removeDetailScrollHandler();
+  const header = document.querySelector('.detail-header');
+  if (!header) return;
+  let lastY = 0;
+  _detailScrollHandler = () => {
+    if (window.innerWidth > 767) {
+      header.classList.remove('hide');
+      return;
+    }
+    const y = window.scrollY;
+    if (y > lastY && y > 60) {
+      header.classList.add('hide');
+    } else {
+      header.classList.remove('hide');
+    }
+    lastY = y;
+  };
+  window.addEventListener('scroll', _detailScrollHandler, { passive: true });
+}
+
+function _removeDetailScrollHandler() {
+  if (_detailScrollHandler) {
+    window.removeEventListener('scroll', _detailScrollHandler);
+    _detailScrollHandler = null;
+  }
+  const header = document.querySelector('.detail-header');
+  if (header) header.classList.remove('hide');
 }
 
 // ===== ハッシュルーティング =====
@@ -400,6 +435,7 @@ function renderTierPage() {
   const statsMap = computeCharStats(fm);
   const { tiered, notAppeared } = assignTiers(statsMap);
 
+  renderRisingChar(fm);
   renderPriorityCards(statsMap);
   renderTierTable(tiered, fm);
   renderNoEncounter(notAppeared);
@@ -495,7 +531,51 @@ function assignTiers(statsMap) {
   return { tiered, notAppeared };
 }
 
-// ===== 要対策カード =====
+// ===== 急上昇キャラ =====
+function renderRisingChar(fm) {
+  const sec = document.getElementById('rising-section');
+  const { thisWeek, lastWeek } = getLastTwoCompletedWeeks();
+  const thisMatches = filterByDateRange(fm, thisWeek.start, thisWeek.end);
+  const lastMatches = filterByDateRange(fm, lastWeek.start, lastWeek.end);
+
+  if (thisMatches.length === 0 || lastMatches.length === 0) {
+    sec.classList.add('hidden');
+    return;
+  }
+
+  const chars = currentPerspective === 'survivor' ? HUNTERS : SURVIVORS;
+  const rising = chars
+    .map(char => ({
+      char,
+      diff: pickRateOf(char, thisMatches) - pickRateOf(char, lastMatches),
+      thisPR: pickRateOf(char, thisMatches),
+    }))
+    .filter(d => d.diff >= 5)
+    .sort((a, b) => b.diff - a.diff);
+
+  if (rising.length === 0) {
+    sec.classList.add('hidden');
+    return;
+  }
+
+  const top = rising[0];
+  const diffText = `+${top.diff.toFixed(1)}%`;
+  const iconSrc = getCharIconPath(top.char);
+
+  sec.classList.remove('hidden');
+  sec.innerHTML = `
+    <div class="rising-card" onclick="navigateToDetail('${escapeHTML(top.char)}')">
+      <img class="rising-card-icon" src="${iconSrc}" alt="${escapeHTML(top.char)}" onerror="this.style.display='none'">
+      <div class="rising-card-info">
+        <div class="rising-card-name">${escapeHTML(top.char)}</div>
+        <div class="rising-card-sub">今週のピック率 ${top.thisPR.toFixed(1)}%</div>
+      </div>
+      <div class="rising-card-badge">↑ ${diffText}</div>
+    </div>
+  `;
+}
+
+// ===== 脅威キャラカード =====
 function renderPriorityCards(statsMap) {
   const top3 = Object.values(statsMap)
     .filter(s => s.appeared > 0)
@@ -536,11 +616,6 @@ function renderTierTable(tiered, fm) {
   });
   html += '</div>';
   document.getElementById('tier-table').innerHTML = html;
-}
-
-function renderArrowHTML(trend) {
-  const color = { '↑': '#22c55e', '→': '#9ca3af', '↓': '#ef4444' }[trend.arrow];
-  return `<span class="trend-arrow" style="color:${color}">${trend.arrow}</span>`;
 }
 
 // ===== 未対戦 =====
@@ -662,7 +737,7 @@ function renderDetailSummary(s) {
       <div class="summary-item"><div class="summary-value">${s.appeared}</div><div class="summary-label">対戦数</div></div>
       <div class="summary-item"><div class="summary-value">${wr}</div><div class="summary-label">自分の勝率</div></div>
       <div class="summary-item"><div class="summary-value">${pr}</div><div class="summary-label">ピック率</div></div>
-      <div class="summary-item"><div class="summary-value">${ds}</div><div class="summary-label">要対策スコア※</div></div>
+      <div class="summary-item"><div class="summary-value">${ds}</div><div class="summary-label">脅威度スコア※</div></div>
     </div>
     <div class="danger-breakdown">※独自の基準でスコアを算出しています</div>
   `;
@@ -682,13 +757,13 @@ function renderDetailTrend(charName, fm) {
     <div class="detail-section-title">前週比トレンド</div>
     <div class="trend-display">
       <div>
-        <div class="trend-week-label">今週のピック率</div>
-        <div class="trend-week-value">${trend.thisPR.toFixed(1)}%</div>
+        <div class="trend-week-label">先週のピック率</div>
+        <div class="trend-week-value">${trend.lastPR.toFixed(1)}%</div>
       </div>
       <div class="trend-arrow-big" style="color:${color}">${trend.arrow}</div>
       <div>
-        <div class="trend-week-label">先週（${diffText}）</div>
-        <div class="trend-week-value">${trend.lastPR.toFixed(1)}%</div>
+        <div class="trend-week-label">今週（${diffText}）</div>
+        <div class="trend-week-value">${trend.thisPR.toFixed(1)}%</div>
       </div>
     </div>
   `;

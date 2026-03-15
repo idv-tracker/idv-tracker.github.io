@@ -1765,13 +1765,6 @@ body.dark-mode .bottom-nav-item.active { color: #60a5fa; border-top-color: #60a5
   vertical-align: middle;
   object-fit: contain;
 }
-.match-map-icon {
-  width: 18px;
-  height: 18px;
-  border-radius: 3px;
-  object-fit: cover;
-  vertical-align: middle;
-}
 /* ===== ハイライトカードアイコン ===== */
 .highlight-char-icon {
   width: 44px;
@@ -1780,14 +1773,6 @@ body.dark-mode .bottom-nav-item.active { color: #60a5fa; border-top-color: #60a5
   object-fit: cover;
   display: block;
   margin: 4px auto 6px;
-}
-/* ===== 苦手ピックアップアイコン ===== */
-.weakness-char-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 5px;
-  object-fit: cover;
-  flex-shrink: 0;
 }
 /* ダークモード */
 body.dark-mode .match-meta { color: #9ca3af; }

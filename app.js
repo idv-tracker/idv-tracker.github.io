@@ -4419,12 +4419,14 @@
         if (subTabs) subTabs.classList.remove('visible');
         switchTab('settings', getMainTabEl('settings'));
       }
+      window.scrollTo(0, 0);
     }
 
     function switchSubTab(tabName, el) {
       document.querySelectorAll('.sub-tab').forEach(btn => btn.classList.remove('active'));
       if (el) el.classList.add('active');
       switchTab(tabName, getMainTabEl(tabName));
+      window.scrollTo(0, 0);
     }
 
     function getMainTabEl(tabName) {

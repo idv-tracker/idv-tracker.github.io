@@ -758,13 +758,13 @@ function renderDetailTrend(charName, fm) {
     <div class="detail-section-title">前週比トレンド</div>
     <div class="trend-display">
       <div>
-        <div class="trend-week-label">先週のピック率</div>
-        <div class="trend-week-value">${trend.lastPR.toFixed(1)}%</div>
-      </div>
-      <div class="trend-arrow-big" style="color:${color}">→</div>
-      <div>
-        <div class="trend-week-label">今週（${diffText}）</div>
+        <div class="trend-week-label">今週のピック率</div>
         <div class="trend-week-value">${trend.thisPR.toFixed(1)}%</div>
+      </div>
+      <div class="trend-arrow-big" style="color:${color}">←</div>
+      <div>
+        <div class="trend-week-label">先週（${diffText}）</div>
+        <div class="trend-week-value">${trend.lastPR.toFixed(1)}%</div>
       </div>
     </div>
   `;

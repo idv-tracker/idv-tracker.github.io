@@ -71,6 +71,9 @@ let db                = null;
 let mapChart          = null;
 let coPickChart       = null;
 let mapSortOrder      = 'count';
+let mapSortDir        = 'desc';
+let myCharSortOrder   = 'count';
+let myCharSortDir     = 'desc';
 let lastUpdated       = null;
 
 // ===== 初期化 =====
@@ -224,6 +227,9 @@ function showDetailPage(charName) {
   detailPage         = 1;
   detailResultFilter = 'all';
   mapSortOrder       = 'count';
+  mapSortDir         = 'desc';
+  myCharSortOrder    = 'count';
+  myCharSortDir      = 'desc';
   if (coPickChart) { coPickChart.destroy(); coPickChart = null; }
   window.scrollTo(0, 0);
   renderDetailPage(charName);
@@ -780,34 +786,52 @@ function renderDetailMap(s) {
     return;
   }
 
-  const mapData = [...rawData].sort((a, b) => {
-    if (mapSortOrder === 'count') return b[1].appeared - a[1].appeared;
-    const wrA = (a[1].wins + a[1].losses) > 0 ? a[1].wins / (a[1].wins + a[1].losses) : 0.5;
-    const wrB = (b[1].wins + b[1].losses) > 0 ? b[1].wins / (b[1].wins + b[1].losses) : 0.5;
-    return wrB - wrA;
+  // グラフ用：常に試合数降順
+  const chartData = [...rawData].sort((a, b) => b[1].appeared - a[1].appeared);
+  const colorMap  = {};
+  chartData.forEach(([map], i) => { colorMap[map] = mapColor(map, i); });
+
+  // テーブル用：ユーザー選択ソート
+  const tableData = [...rawData].sort((a, b) => {
+    let diff;
+    if (mapSortOrder === 'count') {
+      diff = b[1].appeared - a[1].appeared;
+    } else {
+      const wrA = (a[1].wins + a[1].losses) > 0 ? a[1].wins / (a[1].wins + a[1].losses) : 0.5;
+      const wrB = (b[1].wins + b[1].losses) > 0 ? b[1].wins / (b[1].wins + b[1].losses) : 0.5;
+      diff = wrB - wrA;
+    }
+    return mapSortDir === 'asc' ? -diff : diff;
   });
 
-  const colors = mapData.map(([map], i) => mapColor(map, i));
+  const showSort = rawData.length >= 3;
+  const sortBtns = showSort ? `
+    <div class="sort-control">
+      <button type="button" class="sort-key-btn${mapSortOrder === 'count' ? ' active' : ''}" onclick="switchMapSort('count')">試合数</button>
+      <button type="button" class="sort-key-btn${mapSortOrder === 'winrate' ? ' active' : ''}" onclick="switchMapSort('winrate')">勝率</button>
+      <div class="sort-divider"></div>
+      <button type="button" class="sort-arrow-btn${mapSortDir === 'desc' ? ' active' : ''}" onclick="switchMapSortDir('desc')">↓</button>
+      <button type="button" class="sort-arrow-btn${mapSortDir === 'asc' ? ' active' : ''}" onclick="switchMapSortDir('asc')">↑</button>
+    </div>` : '';
 
   container.innerHTML = `
     <div class="detail-section-title">マップ分布</div>
-    <div class="map-sort-row">
-      <button type="button" class="map-sort-btn${mapSortOrder === 'count' ? ' active' : ''}" onclick="switchMapSort('count')">試合数順</button>
-      <button type="button" class="map-sort-btn${mapSortOrder === 'winrate' ? ' active' : ''}" onclick="switchMapSort('winrate')">勝率順</button>
-    </div>
     <div class="map-pie-layout">
       <div class="map-pie-canvas-wrap"><canvas id="detail-map-chart"></canvas></div>
-      <div class="map-table">
-        <div class="map-table-header"><span style="width:10px"></span><span class="map-name">マップ</span><span class="map-count">試合</span><span class="map-wr">勝率</span></div>
-        ${mapData.map(([map, d], i) => {
-          const wr = (d.wins + d.losses) > 0 ? (d.wins / (d.wins + d.losses) * 100).toFixed(1) + '%' : '-';
-          return `<div class="map-table-row">
-            <span class="map-color-dot" style="background:${colors[i]}"></span>
-            <span class="map-name">${escapeHTML(map)}</span>
-            <span class="map-count">${d.appeared}</span>
-            <span class="map-wr">${wr}</span>
-          </div>`;
-        }).join('')}
+      <div class="map-table-wrap">
+        ${sortBtns}
+        <div class="map-table">
+          <div class="map-table-header"><span style="width:10px"></span><span class="map-name">マップ</span><span class="map-count">試合</span><span class="map-wr">勝率</span></div>
+          ${tableData.map(([map, d]) => {
+            const wr = (d.wins + d.losses) > 0 ? (d.wins / (d.wins + d.losses) * 100).toFixed(1) + '%' : '-';
+            return `<div class="map-table-row">
+              <span class="map-color-dot" style="background:${colorMap[map]}"></span>
+              <span class="map-name">${escapeHTML(map)}</span>
+              <span class="map-count">${d.appeared}</span>
+              <span class="map-wr">${wr}</span>
+            </div>`;
+          }).join('')}
+        </div>
       </div>
     </div>
   `;
@@ -815,11 +839,12 @@ function renderDetailMap(s) {
   if (mapChart) { mapChart.destroy(); mapChart = null; }
   const isDark = document.body.classList.contains('dark-mode');
   const ctx = document.getElementById('detail-map-chart').getContext('2d');
+  const chartColors = chartData.map(([map]) => colorMap[map]);
   mapChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: mapData.map(([m]) => m),
-      datasets: [{ data: mapData.map(([, d]) => d.appeared), backgroundColor: colors, borderWidth: 2, borderColor: isDark ? '#222238' : '#fff' }]
+      labels: chartData.map(([m]) => m),
+      datasets: [{ data: chartData.map(([, d]) => d.appeared), backgroundColor: chartColors, borderWidth: 2, borderColor: isDark ? '#222238' : '#fff' }]
     },
     options: {
       responsive: true,
@@ -863,26 +888,70 @@ function switchMapSort(order) {
   if (s) renderDetailMap(s);
 }
 
+function switchMapSortDir(dir) {
+  mapSortDir = dir;
+  const fm = getFilteredMatches();
+  const statsMap = computeCharStats(fm);
+  const s = statsMap[currentDetailChar];
+  if (s) renderDetailMap(s);
+}
+
 // ④ 自キャラ別
 function renderDetailMyChar(s) {
-  const data = Object.entries(s.myChars)
-    .filter(([, d]) => d.appeared > 0)
-    .sort((a, b) => b[1].appeared - a[1].appeared);
+  const all = Object.entries(s.myChars).filter(([, d]) => d.appeared > 0);
 
   const container = document.getElementById('detail-mychar');
-  if (data.length === 0) {
+  if (all.length === 0) {
     container.innerHTML = `<div class="detail-section-title">自キャラ別勝率</div><p class="no-data-text">データがありません</p>`;
     return;
   }
 
+  const data = [...all].sort((a, b) => {
+    let diff;
+    if (myCharSortOrder === 'count') {
+      diff = b[1].appeared - a[1].appeared;
+    } else {
+      const wrA = (a[1].wins + a[1].losses) > 0 ? a[1].wins / (a[1].wins + a[1].losses) : -1;
+      const wrB = (b[1].wins + b[1].losses) > 0 ? b[1].wins / (b[1].wins + b[1].losses) : -1;
+      diff = wrB - wrA;
+    }
+    return myCharSortDir === 'asc' ? -diff : diff;
+  });
+
+  const showSort = all.length >= 3;
+
   container.innerHTML = `
     <div class="detail-section-title">自キャラ別勝率</div>
+    ${showSort ? `
+    <div class="sort-control">
+      <button type="button" class="sort-key-btn${myCharSortOrder === 'count' ? ' active' : ''}" onclick="switchMyCharSort('count')">試合数</button>
+      <button type="button" class="sort-key-btn${myCharSortOrder === 'winrate' ? ' active' : ''}" onclick="switchMyCharSort('winrate')">勝率</button>
+      <div class="sort-divider"></div>
+      <button type="button" class="sort-arrow-btn${myCharSortDir === 'desc' ? ' active' : ''}" onclick="switchMyCharSortDir('desc')">↓</button>
+      <button type="button" class="sort-arrow-btn${myCharSortDir === 'asc' ? ' active' : ''}" onclick="switchMyCharSortDir('asc')">↑</button>
+    </div>` : ''}
     <div class="mychar-table-header"><span class="mychar-name">キャラ</span><span class="mychar-count">試合数</span><span class="mychar-wr">勝率</span></div>
     ${data.map(([char, d]) => {
       const wr = (d.wins + d.losses) > 0 ? (d.wins / (d.wins + d.losses) * 100).toFixed(1) + '%' : '-';
       return `<div class="mychar-row"><span class="mychar-name">${escapeHTML(char)}</span><span class="mychar-count">${d.appeared}試合</span><span class="mychar-wr">${wr}</span></div>`;
     }).join('')}
   `;
+}
+
+function switchMyCharSort(order) {
+  myCharSortOrder = order;
+  const fm = getFilteredMatches();
+  const statsMap = computeCharStats(fm);
+  const s = statsMap[currentDetailChar];
+  if (s) renderDetailMyChar(s);
+}
+
+function switchMyCharSortDir(dir) {
+  myCharSortDir = dir;
+  const fm = getFilteredMatches();
+  const statsMap = computeCharStats(fm);
+  const s = statsMap[currentDetailChar];
+  if (s) renderDetailMyChar(s);
 }
 
 // ⑤ 同時pick（ハンター視点のみ）
@@ -992,23 +1061,24 @@ function renderDetailHistory(charName, fm) {
       const rl    = getResultLabel(m);
       const label = { win: '勝', loss: '敗', draw: '分' }[rl];
       const date  = m.date || (m.timestamp ? m.timestamp.substring(0, 10) : '');
+      const rankIconHTML = m.rank ? `<img class="history-rank-icon" src="ranks/${m.perspective}s/${encodeURIComponent(m.rank)}.PNG" alt="${escapeHTML(m.rank)}" title="${escapeHTML(m.rank)}" onerror="this.outerHTML='${escapeHTML(m.rank)}'">` : '';
       const vsRowHTML = (() => {
         const iconImg = (src, alt) => `<img class="history-co-icon" src="${src}" alt="${escapeHTML(alt)}" title="${escapeHTML(alt)}" onerror="this.style.display='none'">`;
         if (currentPerspective === 'hunter') {
           const survs = [...(m.opponentSurvivors || [])].sort((a, b) => a === charName ? -1 : b === charName ? 1 : 0);
           const mySide  = m.myCharacter ? iconImg(getMyCharIconPath(m.myCharacter), m.myCharacter) : '';
           const oppSide = survs.map(s => iconImg(buildIconPath(s, 'survivor'), s)).join('');
-          return `<div class="history-vs-row"><div class="history-vs-side">${mySide}</div><span class="history-vs-text">vs</span><div class="history-vs-side">${oppSide}</div></div>`;
+          return `<div class="history-vs-row">${rankIconHTML}<div class="history-vs-side">${mySide}</div><span class="history-vs-text">vs</span><div class="history-vs-side">${oppSide}</div></div>`;
         } else {
           const allies  = [m.myCharacter, ...(m.teammates || [])].filter(Boolean);
           const mySide  = allies.map(s => iconImg(buildIconPath(s, 'survivor'), s)).join('');
           const oppSide = m.opponentHunter ? iconImg(buildIconPath(m.opponentHunter, 'hunter'), m.opponentHunter) : '';
-          return `<div class="history-vs-row"><div class="history-vs-side">${mySide}</div><span class="history-vs-text">vs</span><div class="history-vs-side">${oppSide}</div></div>`;
+          return `<div class="history-vs-row">${rankIconHTML}<div class="history-vs-side">${mySide}</div><span class="history-vs-text">vs</span><div class="history-vs-side">${oppSide}</div></div>`;
         }
       })();
       html += `<div class="history-item">
         <span class="history-result ${rl}">${label}</span>
-        <span class="history-info">${escapeHTML(date)}　${escapeHTML(m.map || '')}　${m.rank ? `<img class="history-rank-icon" src="ranks/${m.perspective}s/${encodeURIComponent(m.rank)}.PNG" alt="${escapeHTML(m.rank)}" title="${escapeHTML(m.rank)}" onerror="this.outerHTML='${escapeHTML(m.rank)}'">` : ''}</span>
+        <span class="history-info">${escapeHTML(date)}　${escapeHTML(m.map || '')}${m.escapeCount !== undefined ? `　脱出${m.escapeCount}人` : ''}</span>
         ${vsRowHTML}
         ${m.comment ? `<span class="history-comment">${escapeHTML(m.comment)}</span>` : ''}
       </div>`;

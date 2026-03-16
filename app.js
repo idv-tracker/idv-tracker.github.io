@@ -3612,11 +3612,11 @@
         if (match.perspective === 'survivor') {
           const mySide  = [match.myCharacter, ...(match.teammates || [])].filter(Boolean).map(s => charIconImg(s, 'survivor')).join('');
           const oppSide = match.opponentHunter ? charIconImg(match.opponentHunter, 'hunter') : '';
-          vsHTML = `<div class="match-vs-row"><div class="match-vs-side">${mySide}</div><span class="match-vs-text">vs</span><div class="match-vs-side">${oppSide}</div></div>`;
+          vsHTML = `<div class="match-vs-row">${rankIconHTML}<div class="match-vs-side">${mySide}</div><span class="match-vs-text">vs</span><div class="match-vs-side">${oppSide}</div></div>`;
         } else {
           const mySide  = match.myCharacter ? charIconImg(match.myCharacter, 'hunter') : '';
           const oppSide = (match.opponentSurvivors || []).map(s => charIconImg(s, 'survivor')).join('');
-          vsHTML = `<div class="match-vs-row"><div class="match-vs-side">${mySide}</div><span class="match-vs-text">vs</span><div class="match-vs-side">${oppSide}</div></div>`;
+          vsHTML = `<div class="match-vs-row">${rankIconHTML}<div class="match-vs-side">${mySide}</div><span class="match-vs-text">vs</span><div class="match-vs-side">${oppSide}</div></div>`;
         }
 
         const commentHTML = match.comment ? `<div class="match-comment">${escapeHTML(match.comment)}</div>` : '';
@@ -3625,7 +3625,7 @@
           <div class="match-item">
             <div class="match-info">
               <span class="match-result ${displayResultClass}">${resultText}</span>
-              <span class="match-meta">${escapeHTML(match.date || '')}　${escapeHTML(match.map || '')}　${rankIconHTML}${escapeHTML(escapeInfo)}</span>
+              <span class="match-meta">${escapeHTML(match.date || '')}　${escapeHTML(match.map || '')}${escapeHTML(escapeInfo)}</span>
               ${vsHTML}
               ${commentHTML}
             </div>

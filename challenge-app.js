@@ -70,6 +70,7 @@ let rankIconSide = localStorage.getItem('identity5_challenge_rank_side') || 'hun
 // ===== 初期化 =====
 function init() {
   initFirebase();
+  initScrollBehavior();
   populateCharSelects();
   renderRankIcons('cur');
   renderRankIcons('tgt');
@@ -799,8 +800,6 @@ function onRankInput() {
 
   html += buildPredTable(upper, expected, lower, wr);
 
-  html += `<div class="guard-note">※ ガードシステムにより、実際の段位下降は予測より緩やかになる場合があります</div>`;
-
   resultEl.innerHTML = html;
 }
 
@@ -881,6 +880,26 @@ function formatDate(iso) {
 function formatNum(n) {
   if (n === null || n === undefined) return '—';
   return n.toLocaleString();
+}
+
+// ===== スクロールでヘッダー非表示（モバイルのみ） =====
+function initScrollBehavior() {
+  const header = document.querySelector('.ch-header');
+  if (!header) return;
+  let lastY = window.scrollY;
+  window.addEventListener('scroll', () => {
+    if (window.innerWidth > 768) {
+      header.classList.remove('header-hidden');
+      return;
+    }
+    const currentY = window.scrollY;
+    if (currentY > lastY && currentY > 60) {
+      header.classList.add('header-hidden');
+    } else {
+      header.classList.remove('header-hidden');
+    }
+    lastY = currentY;
+  }, { passive: true });
 }
 
 // ===== 起動 =====

@@ -1030,8 +1030,12 @@ function renderDetailHistory(charName, fm) {
     charMatches = charMatches.filter(m => getResultLabel(m) === detailResultFilter);
   }
 
-  // 日付降順
-  charMatches = [...charMatches].sort((a, b) => new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp));
+  // 日付降順、同日はid（入力時刻）降順
+  charMatches = [...charMatches].sort((a, b) => {
+    const dateDiff = new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp);
+    if (dateDiff !== 0) return dateDiff;
+    return (b.id || 0) - (a.id || 0);
+  });
 
   const total      = charMatches.length;
   const totalPages = Math.max(1, Math.ceil(total / 20));

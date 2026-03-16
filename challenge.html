@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>目標達成予測 | 第五人格トラッカー</title>
+  <meta name="description" content="対戦データをもとに、認知ポイント・段位ポイントの目標達成に必要な試合数を予測します。">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f3460">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="目標達成予測">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
+  <link rel="shortcut icon" href="icon.png">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EL23B3L2TD"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-EL23B3L2TD');
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="challenge-style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    if (localStorage.getItem('identity5_dark_mode') === 'on') {
+      document.documentElement.classList.add('dark-init');
+    }
+  </script>
+</head>
+<body>
+
+  <!-- ===== 接続ページ ===== -->
+  <div id="connect-page" class="page">
+    <div class="connect-wrap">
+      <div class="connect-header">
+        <div class="connect-app-brand">第五人格トラッカー</div>
+        <h1 class="connect-app-title">目標達成予測</h1>
+        <div class="connect-app-sub">認知pt・段位pt</div>
+        <p class="connect-desc">トラッカーの対戦データを読み込むと、認知ポイント・段位ポイントの目標達成に必要な試合数を予測します。</p>
+      </div>
+      <div class="connect-card">
+        <h2 class="connect-card-title">🔗 同期コードで連携</h2>
+        <p class="connect-card-desc">第五人格トラッカーの設定タブで発行した同期コードを入力してください。</p>
+        <input type="text" id="sync-code-input" class="connect-input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+        <button type="button" class="connect-btn primary" onclick="connectWithSyncCode()">読み込む</button>
+      </div>
+      <div class="connect-card">
+        <h2 class="connect-card-title">📁 JSONで読み込む</h2>
+        <p class="connect-card-desc">トラッカーの設定タブからエクスポートしたデータを貼り付けるか、ファイルを選択してください。</p>
+        <textarea id="json-input" class="connect-textarea" placeholder="エクスポートしたJSONデータをここに貼り付け"></textarea>
+        <div class="connect-btn-row">
+          <button type="button" class="connect-btn primary" onclick="connectWithJSON()">貼り付けから読み込む</button>
+          <button type="button" class="connect-btn secondary" onclick="document.getElementById('json-file').click()">ファイルを選択</button>
+        </div>
+        <input type="file" id="json-file" accept=".json,.txt" style="display:none" onchange="connectWithJSONFile(event)">
+      </div>
+      <a href="index.html" class="connect-back-link">← トラッカーに戻る</a>
+    </div>
+  </div>
+
+  <!-- ===== メインページ ===== -->
+  <div id="main-page" class="page hidden">
+
+    <div class="ch-header">
+      <div class="ch-header-top">
+        <a href="index.html" class="back-link">← トラッカー</a>
+        <button type="button" class="disconnect-btn" onclick="showDisconnectMenu()">接続解除</button>
+      </div>
+      <div class="ch-header-titles">
+        <div class="ch-brand">第五人格トラッカー</div>
+        <div class="ch-title">目標達成予測</div>
+      </div>
+      <div class="tab-toggle">
+        <button type="button" id="tab-rank" class="tab-btn active" onclick="switchTab('rank')">段位pt</button>
+        <button type="button" id="tab-cog"  class="tab-btn"        onclick="switchTab('cog')">認知pt</button>
+      </div>
+      <div id="stats-header" class="stats-header"></div>
+    </div>
+
+    <!-- ロック画面 -->
+    <div id="lock-screen" class="lock-screen hidden">
+      <div class="lock-inner">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-title">データ収集中</div>
+        <div id="lock-message" class="lock-message"></div>
+        <div class="lock-progress-wrap">
+          <div id="lock-progress-bar" class="lock-progress-bar"></div>
+        </div>
+        <div id="lock-progress-text" class="lock-progress-text"></div>
+      </div>
+    </div>
+
+    <div id="main-content" class="main-content hidden">
+
+      <!-- ===== 段位セクション ===== -->
+      <div id="rank-section">
+        <div class="ch-card">
+
+          <div class="rank-side-toggle">
+            <button type="button" id="rank-side-survivors" class="rank-side-btn" onclick="setRankIconSide('survivors')">サバイバー</button>
+            <button type="button" id="rank-side-hunters"   class="rank-side-btn active" onclick="setRankIconSide('hunters')">ハンター</button>
+          </div>
+
+          <div class="rank-pos-block">
+            <div class="rank-pos-label">現在の段位</div>
+            <div id="rank-cur-icons"     class="rank-icon-row"></div>
+            <div id="rank-cur-sub-row"   class="sub-rank-row hidden"></div>
+            <div id="rank-cur-stars-area" class="stars-area hidden"></div>
+          </div>
+
+          <div class="rank-block-divider"></div>
+
+          <div class="rank-pos-block">
+            <div class="rank-pos-label">目標の段位</div>
+            <div id="rank-tgt-icons"     class="rank-icon-row"></div>
+            <div id="rank-tgt-sub-row"   class="sub-rank-row hidden"></div>
+            <div id="rank-tgt-stars-area" class="stars-area hidden"></div>
+          </div>
+
+          <div class="samples-hint">ゲーム内で確認できる段位pt増減を複数入力するほど精度が上がります（カンマ区切り）</div>
+          <div class="pt-samples-group">
+            <div class="ch-field">
+              <label class="ch-label">勝利時 段位ptサンプル <span class="ch-help" title="勝利時に増加した段位ptをカンマ区切りで複数入力">?</span></label>
+              <input type="text" id="rank-win-samples"  class="ch-input" placeholder="例: 30, 28, 32" oninput="onRankInput()">
+              <div id="rank-win-avg"  class="pt-avg-display"></div>
+            </div>
+            <div class="ch-field">
+              <label class="ch-label">引分時 段位ptサンプル <span class="ch-help" title="引き分け時の段位pt変化（なければ空欄）">?</span></label>
+              <input type="text" id="rank-draw-samples" class="ch-input" placeholder="例: 5, 0（なければ空欄）" oninput="onRankInput()">
+              <div id="rank-draw-avg" class="pt-avg-display"></div>
+            </div>
+            <div class="ch-field">
+              <label class="ch-label">敗北時 段位ptサンプル <span class="ch-help" title="敗北時の段位pt変化（マイナス可）をカンマ区切りで入力">?</span></label>
+              <input type="text" id="rank-loss-samples" class="ch-input" placeholder="例: -20, -25, -18" oninput="onRankInput()">
+              <div id="rank-loss-avg" class="pt-avg-display"></div>
+            </div>
+          </div>
+
+          <div id="rank-result" class="ch-result"></div>
+        </div>
+      </div>
+
+      <!-- ===== 認知セクション ===== -->
+      <div id="cog-section" class="hidden">
+
+        <!-- キャラカード行 -->
+        <div id="cog-cards-row" class="cog-cards-row"></div>
+
+        <div class="ch-card">
+          <div class="ch-field">
+            <label class="ch-label" for="cog-char">キャラクター</label>
+            <select id="cog-char" class="ch-select" onchange="onCogInput()">
+              <option value="">選択してください</option>
+              <optgroup label="サバイバー"></optgroup>
+              <optgroup label="ハンター"></optgroup>
+            </select>
+          </div>
+
+          <div class="ch-row2">
+            <div class="ch-field">
+              <label class="ch-label" for="cog-current">現在の認知pt</label>
+              <input type="number" id="cog-current" class="ch-input" min="0" placeholder="例: 3500" oninput="onCogInput()">
+            </div>
+            <div class="ch-field">
+              <label class="ch-label" for="cog-target">目標の認知pt</label>
+              <input type="number" id="cog-target" class="ch-input" min="0" placeholder="例: 7000" oninput="onCogInput()">
+            </div>
+          </div>
+
+          <div class="samples-hint">ゲーム内で確認できるpt増減を複数入力するほど精度が上がります（カンマ区切り）</div>
+          <div class="pt-samples-group">
+            <div class="ch-field">
+              <label class="ch-label">勝利時 pt増減サンプル <span class="ch-help" title="勝利時に獲得した認知ptをカンマ区切りで複数入力">?</span></label>
+              <input type="text" id="cog-win-samples"  class="ch-input" placeholder="例: 120, 115, 108" oninput="onCogInput()">
+              <div id="cog-win-avg"  class="pt-avg-display"></div>
+            </div>
+            <div class="ch-field">
+              <label class="ch-label">引分時 pt増減サンプル <span class="ch-help" title="引き分け時の認知pt変化（なければ空欄）">?</span></label>
+              <input type="text" id="cog-draw-samples" class="ch-input" placeholder="例: 60, 55（なければ空欄）" oninput="onCogInput()">
+              <div id="cog-draw-avg" class="pt-avg-display"></div>
+            </div>
+            <div class="ch-field">
+              <label class="ch-label">敗北時 pt増減サンプル <span class="ch-help" title="敗北時の認知pt変化（マイナス可）">?</span></label>
+              <input type="text" id="cog-loss-samples" class="ch-input" placeholder="例: -30, -25, 0" oninput="onCogInput()">
+              <div id="cog-loss-avg" class="pt-avg-display"></div>
+            </div>
+          </div>
+
+          <div id="cog-result" class="ch-result"></div>
+          <button type="button" id="cog-save-btn" class="save-btn hidden" onclick="onSaveCogCard()">このキャラを保存する</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="challenge-app.js"></script>
+</body>
+</html>

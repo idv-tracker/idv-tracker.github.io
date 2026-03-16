@@ -459,13 +459,14 @@
             <li><a href="#opponent">対戦相手別勝率</a></li>
             <li><a href="#history">試合履歴</a></li>
             <li><a href="#tier-analysis">環境分析 Tier表</a></li>
+            <li><a href="#challenge">目標達成予測</a></li>
           </ul>
         </div>
 
         <!-- 設定 -->
         <div class="section" id="settings">
           <div class="section-title">設定</div>
-          <div class="section-desc">最初に設定タブで環境を整えておくと、より快適に使えます。</div>
+          <div class="section-desc">最初に設定タブで環境を整えておくと、より快適に使えます。設定タブの構成は以下の順になっています。</div>
 
           <ul class="feature-list">
             <li>
@@ -473,8 +474,12 @@
               <div class="feature-desc">目に優しい暗い配色に切り替えられます。設定は次回以降も維持されます。</div>
             </li>
             <li>
-              <div class="feature-name">ホーム画面に追加</div>
-              <div class="feature-desc">スマートフォンのホーム画面に追加するとアプリのように起動できます。<a href="install-guide.html" class="feature-link" target="_blank">設定方法を見る ›</a></div>
+              <div class="feature-name">使い方ガイド / ホーム画面に追加</div>
+              <div class="feature-desc">このガイドページへのリンクと、ホーム画面へのインストール手順ページへのリンクです。<a href="install-guide.html" class="feature-link" target="_blank">インストール方法を見る ›</a></div>
+            </li>
+            <li>
+              <div class="feature-name">追加機能（50試合で解放）</div>
+              <div class="feature-desc">50試合記録すると使えるようになる分析ツールです。「環境分析 Tier表」と「目標達成予測」の2つが含まれます。</div>
             </li>
             <li>
               <div class="feature-name">クラウド同期</div>
@@ -483,10 +488,6 @@
             <li>
               <div class="feature-name">ファイルで書き出し・読み込み</div>
               <div class="feature-desc">データをJSONファイルとして書き出し・読み込みできます。他のユーザーへのデータ共有や手動バックアップとして利用できます。</div>
-            </li>
-            <li>
-              <div class="feature-name">環境分析 Tier表</div>
-              <div class="feature-desc">自分の対戦データをもとに、対戦相手キャラクターの流行度Tier表を自動生成します。設定タブのリンクから開きます。<a href="#tier-analysis" class="feature-link">詳しく見る ›</a></div>
             </li>
           </ul>
 
@@ -792,6 +793,39 @@
           <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
         </div>
 
+        <hr class="divider">
+
+        <!-- 目標達成予測 -->
+        <div class="section" id="challenge">
+          <div class="section-title">目標達成予測</div>
+          <div class="section-desc">認知ポイント・段位ポイントの目標を設定すると、あなたの勝率をもとに達成に必要な試合数を予測する専用ページです。設定タブの「追加機能」から開けます（50試合記録後に解放）。</div>
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">段位pt予測</div>
+              <div class="feature-desc">現在の段位・サブ段位・星数を選択し、目標の段位を設定します。段位アイコンの上にあるサバイバー/ハンタートグルで表示するアイコン陣営を切り替えられます。星の途中で積んでいるptは「端数pt」欄に入力すると精度が上がります。</div>
+            </li>
+            <li>
+              <div class="feature-name">認知pt予測</div>
+              <div class="feature-desc">キャラクターを選択し、現在・目標の認知ptを入力します。複数のキャラクターを「保存」してカード切り替えで管理できます。</div>
+            </li>
+            <li>
+              <div class="feature-name">ptサンプル入力</div>
+              <div class="feature-desc">ゲーム内で確認した勝利・引分・敗北時のpt増減をカンマ区切りで複数入力できます。入力が多いほど予測精度が上がります。</div>
+            </li>
+            <li>
+              <div class="feature-name">上振れ・期待値・下振れ</div>
+              <div class="feature-desc">勝率±5%の3パターンで必要試合数を表示します。期待値をベースに、楽観・悲観シナリオの幅を把握できます。</div>
+            </li>
+            <li>
+              <div class="feature-name">参照データ</div>
+              <div class="feature-desc">段位予測は全体の直近50試合、認知予測はそのキャラの直近50試合（不足分は全体直近で補充）を使用して勝率を算出します。</div>
+            </li>
+          </ul>
+
+          <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
       </div><!-- /#guide-pc -->
 
       <!-- ===== スマホ ガイド ===== -->
@@ -809,6 +843,7 @@
             <li><a href="#m-history">履歴</a></li>
             <li><a href="#m-settings">設定</a></li>
             <li><a href="#m-tier-analysis">環境分析 Tier表</a></li>
+            <li><a href="#m-challenge">目標達成予測</a></li>
           </ul>
         </div>
 
@@ -1013,8 +1048,12 @@
               <div class="feature-desc">目に優しい暗い配色に切り替えられます。設定は次回以降も維持されます。</div>
             </li>
             <li>
-              <div class="feature-name">ホーム画面に追加</div>
-              <div class="feature-desc">ホーム画面に追加するとアプリのように起動できます。<a href="install-guide.html" class="feature-link" target="_blank">設定方法を見る ›</a></div>
+              <div class="feature-name">使い方ガイド / ホーム画面に追加</div>
+              <div class="feature-desc">このガイドページへのリンクと、ホーム画面へのインストール手順ページへのリンクです。<a href="install-guide.html" class="feature-link" target="_blank">インストール方法を見る ›</a></div>
+            </li>
+            <li>
+              <div class="feature-name">追加機能（50試合で解放）</div>
+              <div class="feature-desc">50試合記録すると使えるようになる分析ツールです。「環境分析 Tier表」と「目標達成予測」の2つが含まれます。<a href="#m-tier-analysis" class="feature-link">Tier表を見る ›</a> <a href="#m-challenge" class="feature-link">目標達成予測を見る ›</a></div>
             </li>
             <li>
               <div class="feature-name">クラウド同期</div>
@@ -1023,10 +1062,6 @@
             <li>
               <div class="feature-name">ファイルで書き出し・読み込み</div>
               <div class="feature-desc">データをJSONファイルとして書き出し・読み込みできます。手動バックアップやデータ共有に利用できます。</div>
-            </li>
-            <li>
-              <div class="feature-name">環境分析 Tier表</div>
-              <div class="feature-desc">自分の対戦データをもとに、対戦相手キャラクターの流行度Tier表を自動生成します。設定タブのリンクから開きます。<a href="#m-tier-analysis" class="feature-link">詳しく見る ›</a></div>
             </li>
           </ul>
 
@@ -1060,6 +1095,39 @@
             <li>
               <div class="feature-name">自動連携（同期コード）</div>
               <div class="feature-desc">設定タブで発行した同期コードを環境分析ページに入力するだけで、常に最新のデータを自動で読み込めます。</div>
+            </li>
+          </ul>
+
+          <a href="#toc-mobile" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- 目標達成予測 -->
+        <div class="section" id="m-challenge">
+          <div class="section-title">目標達成予測</div>
+          <div class="section-desc">認知ポイント・段位ポイントの目標を設定すると、あなたの勝率をもとに達成に必要な試合数を予測する専用ページです。設定タブの「追加機能」からタップして開けます（50試合記録後に解放）。</div>
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">段位pt予測</div>
+              <div class="feature-desc">現在の段位・サブ段位・星数をタップして選択し、目標の段位を設定します。カード上のサバイバー/ハンタートグルで表示アイコンを切り替えられます。星の途中で積んでいるptは「端数pt」欄に入力すると精度が上がります。</div>
+            </li>
+            <li>
+              <div class="feature-name">認知pt予測</div>
+              <div class="feature-desc">キャラクターを選択し、現在・目標の認知ptを入力します。複数のキャラクターを「このキャラを保存する」ボタンでカード登録でき、タップ切り替えで管理できます。</div>
+            </li>
+            <li>
+              <div class="feature-name">ptサンプル入力</div>
+              <div class="feature-desc">ゲーム内で確認した勝利・引分・敗北時のpt増減をカンマ区切りで複数入力します。入力が多いほど予測精度が上がります。</div>
+            </li>
+            <li>
+              <div class="feature-name">上振れ・期待値・下振れ</div>
+              <div class="feature-desc">勝率±5%の3パターンで必要試合数を表示します。</div>
+            </li>
+            <li>
+              <div class="feature-name">参照データ</div>
+              <div class="feature-desc">段位予測は全体の直近50試合、認知予測はそのキャラの直近50試合（不足分は全体直近で補充）を使用します。</div>
             </li>
           </ul>
 

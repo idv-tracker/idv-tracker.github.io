@@ -5,6 +5,52 @@
   }
 })();
 
+// ===== ヘルプツールチップ =====
+(function () {
+  const tooltip = document.createElement('div');
+  tooltip.id = 'help-tooltip';
+  document.body.appendChild(tooltip);
+
+  let activeHelp = null;
+
+  function showTooltip(el, text) {
+    tooltip.textContent = text;
+    tooltip.classList.add('visible');
+    el.classList.add('active');
+    activeHelp = el;
+
+    const rect = el.getBoundingClientRect();
+    const tw = 220;
+    let left = rect.left + rect.width / 2 - tw / 2;
+    let top  = rect.bottom + 6;
+    left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+    if (top + 60 > window.innerHeight) top = rect.top - 60;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top  = top  + 'px';
+    tooltip.style.width = tw + 'px';
+  }
+
+  function hideTooltip() {
+    tooltip.classList.remove('visible');
+    if (activeHelp) { activeHelp.classList.remove('active'); activeHelp = null; }
+  }
+
+  document.addEventListener('click', function (e) {
+    const el = e.target.closest('.ch-help');
+    if (el) {
+      e.stopPropagation();
+      if (activeHelp === el) { hideTooltip(); return; }
+      showTooltip(el, el.title);
+      return;
+    }
+    hideTooltip();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') hideTooltip();
+  });
+})();
+
 // ===== 定数 =====
 const SURVIVORS = ['幸運児', '医師', '弁護士', '泥棒', '庭師', 'マジシャン', '冒険家', '傭兵', '祭司', '空軍', '機械技師', 'オフェンス', '心眼', '調香師', 'カウボーイ', '踊り子', '占い師', '納棺師', '探鉱者', '呪術師', '野人', '曲芸師', '一等航海士', 'バーメイド', 'ポストマン', '墓守', '「囚人」', '昆虫学者', '画家', 'バッツマン', '玩具職人', '患者', '「心理学者」', '小説家', '「少女」', '泣きピエロ', '教授', '骨董商', '作曲家', '記者', '航空エンジニア', '応援団', '人形師', '火災調査員', '「レディ・ファウロ」', '「騎士」', '気象学者', '弓使い', '「脱出マスター」', '幻灯師', '闘牛士'];
 const HUNTERS  = ['復讐者', '道化師', '断罪狩人', 'リッパー', '結魂者', '芸者', '白黒無常', '写真家', '狂眼', '黄衣の王', '夢の魔女', '泣き虫', '魔トカゲ', '血の女王', 'ガードNo.26', '「使徒」', 'ヴァイオリニスト', '彫刻師', 'アンデッド', '破輪', '漁師', '蝋人形師', '「悪夢」', '書記官', '隠者', '夜の番人', 'オペラ歌手', '「フールズ・ゴールド」', '時空の影', '「足萎えの羊」', '「フラバルー」', '雑貨商', '「ビリヤードプレイヤー」', '「女王蜂」'];
@@ -539,7 +585,7 @@ function updateAvgDisplay(inputId, displayId) {
   display.textContent = `平均 ${avgText}pt（${parsed.values.length}件）`;
 }
 
-// ===== 勝率取得 =====
+// ===== 勝ち率取得 =====
 function isWin(match) {
   return (match.perspective === 'survivor' && match.result === 'survivor_win') ||
          (match.perspective === 'hunter'   && match.result === 'hunter_win');
@@ -609,6 +655,34 @@ function positionToPt(rank, subRank, stars) {
   return rankStart + subIdx * cfg.starsPerSubRank * cfg.ptPerStar + parseInt(stars || 0) * cfg.ptPerStar;
 }
 
+// ===== 累積pt → 段位ポジション =====
+function ptToPosition(pt) {
+  const rankOrder = ['1段', '2段', '3段', '4段', '5段', '6段', '7段', '最高峰'];
+  let rank = rankOrder[0];
+  for (let i = rankOrder.length - 1; i >= 0; i--) {
+    if (pt >= RANK_START_PT[rankOrder[i]]) { rank = rankOrder[i]; break; }
+  }
+  const cfg     = RANK_CONFIG[rank];
+  const rankPt  = pt - RANK_START_PT[rank];
+  if (rank === '最高峰') {
+    return { rank, subRank: '', stars: cfg.starsMin + Math.floor(rankPt / cfg.ptPerStar) };
+  }
+  if (!cfg.subRanks) {
+    return { rank, subRank: '', stars: Math.min(cfg.starsTotal - 1, Math.floor(rankPt / cfg.ptPerStar)) };
+  }
+  const ptPerSubRank = cfg.starsPerSubRank * cfg.ptPerStar;
+  const subIdx = Math.min(cfg.subRanks.length - 1, Math.floor(rankPt / ptPerSubRank));
+  const stars  = Math.min(cfg.starsPerSubRank - 1, Math.floor((rankPt - subIdx * ptPerSubRank) / cfg.ptPerStar));
+  return { rank, subRank: cfg.subRanks[subIdx], stars };
+}
+
+function fmtPositionLabel(pos) {
+  if (!pos) return '';
+  if (pos.rank === '最高峰') return `最高峰 ${pos.stars}★`;
+  if (!RANK_CONFIG[pos.rank]?.subRanks) return `${pos.rank} ${pos.stars}★`;
+  return `${pos.rank}${pos.subRank} ${pos.stars}★`;
+}
+
 // ===== 予測試合数計算 =====
 function calcMatches(remainingPt, avgWin, avgDraw, avgLoss, winRate, drawRate) {
   const lossRate   = Math.max(0, 1 - winRate - drawRate);
@@ -636,9 +710,9 @@ function buildPredTable(upper, expected, lower, wr) {
   }
 
   return `<div class="pred-table">
-    ${col(upper,    'upper',    '勝率 ' + fmtPct(upperWr))}
-    ${col(expected, 'expected', '勝率 ' + fmtPct(wr.winRate))}
-    ${col(lower,    'lower',    '勝率 ' + fmtPct(lowerWr))}
+    ${col(upper,    'upper',    '勝ち率 ' + fmtPct(upperWr))}
+    ${col(expected, 'expected', '勝ち率 ' + fmtPct(wr.winRate))}
+    ${col(lower,    'lower',    '勝ち率 ' + fmtPct(lowerWr))}
   </div>`;
 }
 
@@ -815,7 +889,7 @@ function onCogInput() {
   let html = '';
 
   html += `<div class="result-data-info">
-    <strong>${charName}</strong> — 直近${wr.total}試合 / 勝率 <strong>${(wr.winRate * 100).toFixed(1)}%</strong>
+    <strong>${charName}</strong> — 直近${wr.total}試合 / 勝ち率 <strong>${(wr.winRate * 100).toFixed(1)}%</strong>
     　勝: ${wr.wins} / 分: ${wr.draws} / 負: ${wr.losses}`;
   if (wr.total < 10) {
     html += `<div class="result-data-warn">⚠️ データが${wr.total}試合と少ないため精度が低い場合があります</div>`;
@@ -917,7 +991,7 @@ function onRankInput() {
   let html = '';
 
   html += `<div class="result-data-info">
-    直近${wr.total}試合 / 勝率 <strong>${(wr.winRate * 100).toFixed(1)}%</strong>
+    直近${wr.total}試合 / 勝ち率 <strong>${(wr.winRate * 100).toFixed(1)}%</strong>
     　勝: ${wr.wins} / 分: ${wr.draws} / 負: ${wr.losses}
   </div>`;
 
@@ -1273,8 +1347,20 @@ function buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp) {
     html += `<div class="track-achieved">目標達成！おめでとうございます</div>`;
   }
 
+  const isRankGoal = !goal.char;
+  if (isRankGoal) {
+    const curPos = ptToPosition(predictedPt);
+    const tgtPos = ptToPosition(goal.targetPt);
+    html += `
+    <div class="track-rank-main-row">
+      <span class="track-rank-cur">${fmtPositionLabel(curPos)}</span>
+      <span class="track-rank-arrow">→</span>
+      <span class="track-rank-tgt">目標 ${fmtPositionLabel(tgtPos)}</span>
+    </div>`;
+  }
+
   html += `
-    <div class="track-pt-row">
+    <div class="track-pt-row${isRankGoal ? ' track-pt-row--sub' : ''}">
       <span class="track-pt-current">${Math.round(predictedPt).toLocaleString()}</span>
       <span class="track-pt-sep">pt</span>
       <span class="track-pt-sep">/</span>
@@ -1286,7 +1372,7 @@ function buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp) {
         : `残り <strong>${Math.round(remaining).toLocaleString()}pt</strong>${estMatches !== null ? `　推定あと <strong>${estMatches}試合</strong>` : ''}`
       }
     </div>
-    <div class="track-matches-row">${goal.createdDate} スタート · ${totalSinceGoal}試合経過　${wr ? `（勝率 ${(wr.winRate * 100).toFixed(1)}%）` : ''}</div>
+    <div class="track-matches-row">${goal.createdDate} スタート · ${totalSinceGoal}試合経過　${wr ? `（勝ち率 ${(wr.winRate * 100).toFixed(1)}%）` : ''}</div>
     <div class="track-progress-wrap">
       <div class="track-progress-bar" style="width:${progress.toFixed(1)}%"></div>
     </div>

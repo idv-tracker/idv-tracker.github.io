@@ -144,6 +144,19 @@ body {
   margin-left: 4px; vertical-align: middle;
 }
 .ch-help:hover { background: #d1d5db; }
+.ch-help.active { background: #3b82f6; color: #fff; }
+
+/* ===== ヘルプツールチップ ===== */
+#help-tooltip {
+  position: fixed; z-index: 9999;
+  background: #1f2937; color: #f9fafb;
+  font-size: 12px; line-height: 1.5;
+  padding: 8px 12px; border-radius: 8px;
+  max-width: 220px; pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+  opacity: 0; transition: opacity .15s;
+}
+#help-tooltip.visible { opacity: 1; pointer-events: auto; }
 
 /* ===== ptサンプル ===== */
 .samples-hint { font-size: 12px; color: #9ca3af; margin-bottom: 12px; line-height: 1.5; }
@@ -349,6 +362,8 @@ body.dark-mode .ch-select:focus { border-color: #3b82f6; }
 body.dark-mode .pt-samples-group { background: #161929; border-color: #374151; }
 body.dark-mode .samples-hint { color: #6b7280; }
 body.dark-mode .ch-help { background: #374151; color: #9ca3af; }
+body.dark-mode .ch-help.active { background: #3b82f6; color: #fff; }
+body.dark-mode #help-tooltip { background: #374151; color: #f9fafb; }
 
 body.dark-mode .rank-side-btn { background: #2d3250; border-color: #374151; color: #9ca3af; }
 body.dark-mode .rank-side-btn.active { background: #3b82f6; border-color: #3b82f6; color: white; }
@@ -527,9 +542,18 @@ body.dark-mode .connect-btn-or { color: #6b7280; }
 
 /* ===== 追跡サマリー ===== */
 .track-summary { margin-bottom: 16px; }
+.track-rank-main-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;
+}
+.track-rank-cur  { font-size: 26px; font-weight: 800; color: #0f3460; }
+.track-rank-arrow { font-size: 18px; color: #9ca3af; }
+.track-rank-tgt  { font-size: 18px; font-weight: 700; color: #6b7280; }
 .track-pt-row {
   display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;
 }
+.track-pt-row--sub .track-pt-current { font-size: 18px; font-weight: 600; color: #6b7280; }
+.track-pt-row--sub .track-pt-sep     { font-size: 12px; color: #9ca3af; }
+.track-pt-row--sub .track-pt-target  { font-size: 13px; font-weight: 500; color: #9ca3af; }
 .track-pt-current { font-size: 28px; font-weight: 800; color: #0f3460; }
 .track-pt-sep { font-size: 14px; color: #9ca3af; }
 .track-pt-target { font-size: 16px; font-weight: 700; color: #6b7280; }
@@ -622,8 +646,11 @@ body.dark-mode .connect-btn-or { color: #6b7280; }
 
 /* ===== ダークモード: 追跡・モーダル ===== */
 body.dark-mode .track-card-title { color: #e5e7eb; }
+body.dark-mode .track-rank-cur  { color: #93c5fd; }
+body.dark-mode .track-rank-tgt  { color: #9ca3af; }
 body.dark-mode .track-pt-current { color: #93c5fd; }
 body.dark-mode .track-pt-target { color: #9ca3af; }
+body.dark-mode .track-pt-row--sub .track-pt-current { color: #6b7280; }
 body.dark-mode .track-pt-remaining { color: #d1d5db; }
 body.dark-mode .track-pt-remaining strong { color: #93c5fd; }
 body.dark-mode .track-progress-wrap { background: #374151; }

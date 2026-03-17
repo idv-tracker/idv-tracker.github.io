@@ -6,7 +6,7 @@ html.dark-init body { background: #0d0d1a; }
 body.dark-mode { background: #0d0d1a; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Noto Sans JP', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   min-height: 100vh;
   color: #1f2937;

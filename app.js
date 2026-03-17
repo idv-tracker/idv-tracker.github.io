@@ -2810,6 +2810,34 @@
       const mapIconBest  = `<img class="highlight-char-icon" src="${getMapIconPath(bestMap.name)}" alt="" onerror="this.style.display='none'">`;
       const mapIconWorst = worstMap ? `<img class="highlight-char-icon" src="${getMapIconPath(worstMap.name)}" alt="" onerror="this.style.display='none'">` : '';
 
+      const worstOppHTML = worstOpponent
+        ? `<div class="highlight-item highlight-worst" onclick="openDetailPage('opponent', '${escapeHTML(worstOpponent.name)}')" style="cursor:pointer">
+              <div class="highlight-category">苦手${opponentLabel}</div>
+              ${oppIconWorst}
+              <div class="highlight-name">${escapeHTML(worstOpponent.name)}</div>
+              <div class="highlight-rate">${worstOpponent.winrate.toFixed(1)}%（${worstOpponent.total}試合）</div>
+            </div>`
+        : `<div class="highlight-item highlight-none">
+              <div class="highlight-category">苦手${opponentLabel}</div>
+              <div class="highlight-none-icon">✓</div>
+              <div class="highlight-name">苦手なし</div>
+              <div class="highlight-rate">全${opponentLabel}に勝ち越し</div>
+            </div>`;
+
+      const worstMapHTML = worstMap
+        ? `<div class="highlight-item highlight-worst" onclick="openDetailPage('map', '${escapeHTML(worstMap.name)}')" style="cursor:pointer">
+              <div class="highlight-category">苦手マップ</div>
+              ${mapIconWorst}
+              <div class="highlight-name">${escapeHTML(worstMap.name)}</div>
+              <div class="highlight-rate">${worstMap.winrate.toFixed(1)}%（${worstMap.total}試合）</div>
+            </div>`
+        : `<div class="highlight-item highlight-none">
+              <div class="highlight-category">苦手マップ</div>
+              <div class="highlight-none-icon">✓</div>
+              <div class="highlight-name">苦手なし</div>
+              <div class="highlight-rate">全マップに勝ち越し</div>
+            </div>`;
+
       container.innerHTML = `
         <div class="stats-card highlight-summary-card">
           <div class="highlight-summary-title">ハイライト</div>
@@ -2820,26 +2848,14 @@
               <div class="highlight-name">${escapeHTML(bestOpponent.name)}</div>
               <div class="highlight-rate">${bestOpponent.winrate.toFixed(1)}%（${bestOpponent.total}試合）</div>
             </div>
-            ${worstOpponent ? `
-            <div class="highlight-item highlight-worst" onclick="openDetailPage('opponent', '${escapeHTML(worstOpponent.name)}')" style="cursor:pointer">
-              <div class="highlight-category">苦手${opponentLabel}</div>
-              ${oppIconWorst}
-              <div class="highlight-name">${escapeHTML(worstOpponent.name)}</div>
-              <div class="highlight-rate">${worstOpponent.winrate.toFixed(1)}%（${worstOpponent.total}試合）</div>
-            </div>` : ''}
+            ${worstOppHTML}
             <div class="highlight-item highlight-best" onclick="openDetailPage('map', '${escapeHTML(bestMap.name)}')" style="cursor:pointer">
               <div class="highlight-category">得意マップ</div>
               ${mapIconBest}
               <div class="highlight-name">${escapeHTML(bestMap.name)}</div>
               <div class="highlight-rate">${bestMap.winrate.toFixed(1)}%（${bestMap.total}試合）</div>
             </div>
-            ${worstMap ? `
-            <div class="highlight-item highlight-worst" onclick="openDetailPage('map', '${escapeHTML(worstMap.name)}')" style="cursor:pointer">
-              <div class="highlight-category">苦手マップ</div>
-              ${mapIconWorst}
-              <div class="highlight-name">${escapeHTML(worstMap.name)}</div>
-              <div class="highlight-rate">${worstMap.winrate.toFixed(1)}%（${worstMap.total}試合）</div>
-            </div>` : ''}
+            ${worstMapHTML}
           </div>
         </div>`;
     }
@@ -4360,50 +4376,41 @@
 
       if (!syncCode) {
         container.innerHTML = `
-          <button type="button" onclick="startNewSync()"
-            style="width:100%;padding:12px;background:#3b82f6;color:white;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;">
+          <button type="button" onclick="startNewSync()" class="sync-btn-primary">
             新しく同期を始める
           </button>
-          <a href="sync-guide.html"
-            style="display:block;text-align:center;font-size:13px;color:#6b7280;text-decoration:none;margin-bottom:15px;">
+          <a href="sync-guide.html" class="sync-guide-link">
             同期の設定方法を見る ›
           </a>
-          <div class="sync-divider" style="border-top:1px solid #e5e7eb;padding-top:15px;">
-            <p style="font-size:13px;color:#374151;margin-bottom:8px;font-weight:600;">他のデバイスの同期コードで接続する</p>
+          <div class="sync-divider">
+            <p class="sync-section-heading">他のデバイスの同期コードで接続する</p>
             <input type="text" id="sync-code-input" class="sync-input"
-              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-              style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;font-family:monospace;margin-bottom:8px;box-sizing:border-box;background:white;color:#374151;">
-            <button type="button" onclick="linkWithInputCode()"
-              style="width:100%;padding:10px;background:#8b5cf6;color:white;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;">
+              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+            <button type="button" onclick="linkWithInputCode()" class="sync-btn-connect">
               接続する
             </button>
           </div>
         `;
       } else {
         container.innerHTML = `
-          <div style="margin-bottom:15px;">
-            <p class="sync-sublabel" style="font-size:12px;color:#6b7280;margin-bottom:5px;font-weight:600;">同期コード</p>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <input type="text" value="${syncCode}" readonly class="sync-code-input"
-                style="flex:1;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:11px;font-family:monospace;background:#f9fafb;color:#6b7280;">
-              <button type="button" onclick="copySyncCode()" class="sync-btn-secondary"
-                style="padding:8px 12px;background:#e5e7eb;color:#374151;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:600;">
+          <div class="sync-section">
+            <p class="sync-sublabel">同期コード</p>
+            <div class="sync-code-row">
+              <input type="text" value="${syncCode}" readonly class="sync-code-input">
+              <button type="button" onclick="copySyncCode()" class="sync-btn-secondary sync-btn-copy">
                 コピー
               </button>
             </div>
-            <p class="sync-sublabel" style="font-size:12px;color:#9ca3af;margin-top:5px;">最終同期: ${lastSyncedText}</p>
+            <p class="sync-sublabel sync-sublabel-note">最終同期: ${lastSyncedText}</p>
           </div>
-          <button type="button" onclick="syncData()" id="sync-now-btn"
-            style="width:100%;padding:12px;background:#3b82f6;color:white;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;">
+          <button type="button" onclick="syncData()" id="sync-now-btn" class="sync-btn-primary">
             今すぐ同期
           </button>
-          <div style="display:flex;gap:8px;">
-            <button type="button" onclick="unlinkSync()" class="sync-btn-secondary"
-              style="flex:1;padding:10px;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600;">
+          <div class="sync-btn-row">
+            <button type="button" onclick="unlinkSync()" class="sync-btn-secondary sync-btn-flex">
               同期を解除
             </button>
-            <button type="button" onclick="deleteCloudData()" class="sync-btn-danger"
-              style="flex:1;padding:10px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600;">
+            <button type="button" onclick="deleteCloudData()" class="sync-btn-danger sync-btn-flex">
               クラウドを削除
             </button>
           </div>
@@ -4615,7 +4622,7 @@
     }
 
     function getMainTabEl(tabName) {
-      return document.querySelector(`.main-tab[onclick*="'${tabName}'"]`);
+      return document.querySelector(`.main-tab[data-tab="${tabName}"]`);
     }
 
     function initScrollBehavior() {
@@ -4699,7 +4706,7 @@
 
     // ===== 設定を開く =====
     function openSettings() {
-      switchTab('settings', document.querySelector('.main-tab[onclick*="\'settings\'"]'));
+      switchTab('settings', document.querySelector('.main-tab[data-tab="settings"]'));
     }
 
     // ===== ツールシート（モバイル） =====
@@ -5081,7 +5088,7 @@
 
       // .main-tab ボタンの active 同期（デスクトップ用）
       document.querySelectorAll('.main-tab').forEach(btn => btn.classList.remove('active'));
-      const mainTabBtn = document.querySelector(`.main-tab[onclick*="'${detailPagePreviousTab}'"]`);
+      const mainTabBtn = document.querySelector(`.main-tab[data-tab="${detailPagePreviousTab}"]`);
       if (mainTabBtn) mainTabBtn.classList.add('active');
 
       // ボトムナビ同期（モバイル用）

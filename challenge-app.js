@@ -1,7 +1,7 @@
 // ===== ダークモード =====
 (function () {
   if (localStorage.getItem('identity5_dark_mode') === 'on') {
-    document.documentElement.classList.add('dark-mode');
+    document.body.classList.add('dark-mode');
   }
 })();
 
@@ -1158,7 +1158,7 @@ function renderTrackChart(canvasId, goal, totalSinceGoal, wr) {
   const minY = Math.min(goal.startPt, goal.targetPt * 0.95) * 0.98;
   const maxY = goal.targetPt * 1.02;
 
-  const isDark = document.documentElement.classList.contains('dark-mode');
+  const isDark = document.body.classList.contains('dark-mode');
   const gridColor  = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
   const labelColor = isDark ? '#9ca3af' : '#6b7280';
 

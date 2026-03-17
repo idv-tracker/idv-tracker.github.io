@@ -2020,6 +2020,13 @@
       if (!el) return;
       el.classList.toggle('filter-active', el.value !== 'all' && el.value !== '');
     }
+    function buildEmptyState(hasData = false) {
+      if (hasData) {
+        return '<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">条件に合う試合がありません</div><div class="empty-state-sub">フィルターを変更してみてください</div></div>';
+      }
+      return '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-title">まだ試合データがありません</div><div class="empty-state-sub">試合を入力すると、ここに統計が表示されます</div><button class="empty-state-cta" onclick="switchBottomNav(\'input\',document.querySelector(\'.bottom-nav-item[data-nav=input]\'));switchTab(\'input\')">試合を入力する</button></div>';
+    }
+
     function updateAllSelectStyles() {
       document.querySelectorAll('select[onchange]').forEach(el => updateSelectStyle(el));
     }
@@ -2264,7 +2271,7 @@
       let perspectiveMatches = getFilteredMatches(rankFilter);
 
       if (perspectiveMatches.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
+        container.innerHTML = buildEmptyState();
         if (winrateChart) { winrateChart.destroy(); winrateChart = null; }
         if (resultPieChart) { resultPieChart.destroy(); resultPieChart = null; }
         const rpc = document.getElementById('result-pie-content');
@@ -2368,7 +2375,7 @@
       // データなし
       if (mapStats.length === 0) {
         if (mapPieChart) { mapPieChart.destroy(); mapPieChart = null; }
-        container.innerHTML = '<div class="empty-state"><p>データがありません</p></div>';
+        container.innerHTML = buildEmptyState();
         return;
       }
 
@@ -2790,16 +2797,18 @@
       })).sort((a, b) => b.winrate - a.winrate);
 
       const bestOpponent  = opponentData[0];
-      const worstOpponent = opponentData[opponentData.length - 1];
+      const _worstOppRaw  = opponentData[opponentData.length - 1];
+      const worstOpponent = _worstOppRaw && _worstOppRaw.winrate < 100 ? _worstOppRaw : null;
       const bestMap  = mapData[0];
-      const worstMap = mapData[mapData.length - 1];
+      const _worstMapRawHL = mapData[mapData.length - 1];
+      const worstMap = _worstMapRawHL && _worstMapRawHL.winrate < 100 ? _worstMapRawHL : null;
 
       const opponentLabel = currentPerspective === 'survivor' ? '相手ハンター' : '相手サバイバー';
       const oppType = currentPerspective === 'survivor' ? 'hunter' : 'survivor';
       const oppIconBest  = `<img class="highlight-char-icon" src="${buildIconPath(bestOpponent.name, oppType)}" alt="" onerror="this.style.display='none'">`;
-      const oppIconWorst = `<img class="highlight-char-icon" src="${buildIconPath(worstOpponent.name, oppType)}" alt="" onerror="this.style.display='none'">`;
+      const oppIconWorst = worstOpponent ? `<img class="highlight-char-icon" src="${buildIconPath(worstOpponent.name, oppType)}" alt="" onerror="this.style.display='none'">` : '';
       const mapIconBest  = `<img class="highlight-char-icon" src="${getMapIconPath(bestMap.name)}" alt="" onerror="this.style.display='none'">`;
-      const mapIconWorst = `<img class="highlight-char-icon" src="${getMapIconPath(worstMap.name)}" alt="" onerror="this.style.display='none'">`;
+      const mapIconWorst = worstMap ? `<img class="highlight-char-icon" src="${getMapIconPath(worstMap.name)}" alt="" onerror="this.style.display='none'">` : '';
 
       container.innerHTML = `
         <div class="stats-card highlight-summary-card">
@@ -2811,24 +2820,26 @@
               <div class="highlight-name">${escapeHTML(bestOpponent.name)}</div>
               <div class="highlight-rate">${bestOpponent.winrate.toFixed(1)}%（${bestOpponent.total}試合）</div>
             </div>
+            ${worstOpponent ? `
             <div class="highlight-item highlight-worst" onclick="openDetailPage('opponent', '${escapeHTML(worstOpponent.name)}')" style="cursor:pointer">
               <div class="highlight-category">苦手${opponentLabel}</div>
               ${oppIconWorst}
               <div class="highlight-name">${escapeHTML(worstOpponent.name)}</div>
               <div class="highlight-rate">${worstOpponent.winrate.toFixed(1)}%（${worstOpponent.total}試合）</div>
-            </div>
+            </div>` : ''}
             <div class="highlight-item highlight-best" onclick="openDetailPage('map', '${escapeHTML(bestMap.name)}')" style="cursor:pointer">
               <div class="highlight-category">得意マップ</div>
               ${mapIconBest}
               <div class="highlight-name">${escapeHTML(bestMap.name)}</div>
               <div class="highlight-rate">${bestMap.winrate.toFixed(1)}%（${bestMap.total}試合）</div>
             </div>
+            ${worstMap ? `
             <div class="highlight-item highlight-worst" onclick="openDetailPage('map', '${escapeHTML(worstMap.name)}')" style="cursor:pointer">
               <div class="highlight-category">苦手マップ</div>
               ${mapIconWorst}
               <div class="highlight-name">${escapeHTML(worstMap.name)}</div>
               <div class="highlight-rate">${worstMap.winrate.toFixed(1)}%（${worstMap.total}試合）</div>
-            </div>
+            </div>` : ''}
           </div>
         </div>`;
     }
@@ -3166,7 +3177,7 @@
       }
       
       if (perspectiveMatches.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
+        container.innerHTML = buildEmptyState();
         if (charPieChart) { charPieChart.destroy(); charPieChart = null; }
         const cpc = document.getElementById('char-pie-content');
         if (cpc) cpc.innerHTML = '';
@@ -3215,7 +3226,7 @@
         <div class="bar-chart-horizontal">`;
 
       if (filteredChars.length === 0) {
-        html += '<div class="empty-state"><p>指定した試合数以上のデータがありません</p></div>';
+        html += buildEmptyState(true);
       } else {
         filteredChars.forEach(char => {
           const stats = calculateWinrate(characterStats[char], currentPerspective);
@@ -3259,7 +3270,7 @@
       }
       
       if (perspectiveMatches.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
+        container.innerHTML = buildEmptyState();
         if (mapPieChart) { mapPieChart.destroy(); mapPieChart = null; }
         const mpc = document.getElementById('map-pie-content');
         if (mpc) mpc.innerHTML = '';
@@ -3307,7 +3318,7 @@
         <div class="bar-chart-horizontal">`;
 
       if (filteredMaps.length === 0) {
-        html += '<div class="empty-state"><p>指定した試合数以上のデータがありません</p></div>';
+        html += buildEmptyState(true);
       } else {
         filteredMaps.forEach(map => {
           const stats = calculateWinrate(mapStats[map], currentPerspective);
@@ -3359,7 +3370,7 @@
       }
 
       if (perspectiveMatches.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
+        container.innerHTML = buildEmptyState();
         return;
       }
 
@@ -3419,7 +3430,7 @@
           <div class="bar-chart-horizontal">`;
 
         if (filteredHunters.length === 0) {
-          html += '<div class="empty-state"><p>指定した試合数以上のデータがありません</p></div>';
+          html += buildEmptyState(true);
         } else {
           filteredHunters.slice(hunterStartIndex, hunterEndIndex).forEach(hunter => {
             const stats = calculateWinrate(hunterStats[hunter], currentPerspective);
@@ -3462,7 +3473,7 @@
           const teammateEndIndex = Math.min(teammateStartIndex + itemsPerPage, filteredTeammates.length);
 
           if (filteredTeammates.length === 0) {
-            html += '<div class="empty-state"><p>指定した試合数以上のデータがありません</p></div>';
+            html += buildEmptyState(true);
           } else {
             filteredTeammates.slice(teammateStartIndex, teammateEndIndex).forEach(teammate => {
               const stats = calculateWinrate(teammateStats[teammate], currentPerspective);
@@ -3551,7 +3562,7 @@
           <div class="bar-chart-horizontal">`;
 
         if (filteredSurvivors.length === 0) {
-          html += '<div class="empty-state"><p>指定した試合数以上のデータがありません</p></div>';
+          html += buildEmptyState(true);
         } else {
           filteredSurvivors.slice(survivorStartIndex, survivorEndIndex).forEach(survivor => {
             const stats = calculateWinrate(survivorStats[survivor], currentPerspective);
@@ -3652,7 +3663,7 @@
           const pairEndIndex = Math.min(pairStartIndex + itemsPerPage, finalPairs.length);
 
           if (finalPairs.length === 0) {
-            html += '<div class="empty-state"><p>指定した試合数以上のデータがありません</p></div>';
+            html += buildEmptyState(true);
           } else {
             finalPairs.slice(pairStartIndex, pairEndIndex).forEach(pair => {
               const stats = calculateWinrate(filteredPairStats[pair], currentPerspective);
@@ -3716,7 +3727,7 @@
       perspectiveMatches = perspectiveMatches.reverse();
       
       if (perspectiveMatches.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
+        container.innerHTML = buildEmptyState();
         return;
       }
       
@@ -4906,6 +4917,7 @@
     // ===== 詳細ページ =====
     let detailPagePreviousTab = 'input';
     let detailFilterState = { period: 'all', rank: 'all' };
+    let _detailHideTimeout = null;
     let detailCurrentType = null;
     let detailCurrentName = null;
     const detailBarSortState    = {};  // sectionId → { key: 'winrate'|'games', dir: 'desc'|'asc' }
@@ -5035,8 +5047,14 @@
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       const detailPage = document.getElementById('detail-page');
       if (detailPage) {
+        // 閉じるアニメーション中のタイムアウトをキャンセル
+        if (_detailHideTimeout) {
+          clearTimeout(_detailHideTimeout);
+          _detailHideTimeout = null;
+        }
         detailPage.classList.remove('hidden');
         detailPage.scrollTop = 0;
+        requestAnimationFrame(() => detailPage.classList.add('visible'));
       }
       window.scrollTo(0, 0);
 
@@ -5048,7 +5066,14 @@
 
     function closeDetailPage(skipPush = false) {
       const detailPage = document.getElementById('detail-page');
-      if (detailPage) detailPage.classList.add('hidden');
+      if (detailPage) {
+        detailPage.classList.remove('visible');
+        if (_detailHideTimeout) clearTimeout(_detailHideTimeout);
+        _detailHideTimeout = setTimeout(() => {
+          detailPage.classList.add('hidden');
+          _detailHideTimeout = null;
+        }, 180);
+      }
 
       // タブコンテンツ復元
       const tabEl = document.getElementById(`${detailPagePreviousTab}-tab`);
@@ -5091,7 +5116,7 @@
         }
       }
       const perspectiveMatches = _allFiltered.filter(m => m.myCharacter === charName);
-      if (perspectiveMatches.length === 0) return '<div class="empty-state"><p>データがありません</p></div>';
+      if (perspectiveMatches.length === 0) return buildEmptyState();
 
       const stats = calculateWinrate(perspectiveMatches, currentPerspective);
       const avgEscape = calculateAverageEscapeCount(perspectiveMatches, currentPerspective);
@@ -5141,7 +5166,7 @@
         _allFiltered = _allFiltered.filter(m => m.myCharacter === detailFilterState.mapTabChar);
       }
       const perspectiveMatches = _allFiltered.filter(m => m.map === mapName);
-      if (perspectiveMatches.length === 0) return '<div class="empty-state"><p>データがありません</p></div>';
+      if (perspectiveMatches.length === 0) return buildEmptyState();
 
       const stats = calculateWinrate(perspectiveMatches, currentPerspective);
       const totalMatches = _allFiltered.length;
@@ -5194,7 +5219,7 @@
       } else {
         perspectiveMatches = _allFiltered.filter(m => m.opponentSurvivors && m.opponentSurvivors.includes(oppName));
       }
-      if (perspectiveMatches.length === 0) return '<div class="empty-state"><p>データがありません</p></div>';
+      if (perspectiveMatches.length === 0) return buildEmptyState();
 
       const stats = calculateWinrate(perspectiveMatches, currentPerspective);
       const totalMatches = _allFiltered.length;
@@ -5326,7 +5351,7 @@
       if (allItems.length === 0) {
         return `<div class="detail-section">
           ${sortBar}
-          <div class="empty-state"><p>${minGames}試合以上のデータがありません</p></div>
+          <div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">${minGames}試合以上のデータがありません</div><div class="empty-state-sub">最低試合数を下げるか、フィルターを変更してみてください</div></div>
         </div>`;
       }
 

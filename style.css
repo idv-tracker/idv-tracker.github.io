@@ -648,9 +648,21 @@ body.dark-mode .bar-value-outside .bar-pct {
   font-size: 10px;
   color: #6b7280;
 }
+.multi-rank-trigger.active {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
 .multi-rank-trigger.open {
   border-color: #3b82f6;
   border-radius: var(--r-input) var(--r-input) 0 0;
+}
+select.filter-active {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+body.dark-mode select.filter-active {
+  border-color: #60a5fa;
+  color: #60a5fa;
 }
 .multi-rank-dropdown {
   display: none;
@@ -694,6 +706,10 @@ body.dark-mode .bar-value-outside .bar-pct {
 body.dark-mode .multi-rank-trigger {
   background: #222238;
   border-color: #3a3a55;
+  color: #d1d5db;
+}
+body.dark-mode .multi-rank-trigger.active {
+  border-color: #60a5fa;
   color: #60a5fa;
 }
 body.dark-mode .multi-rank-trigger.open {

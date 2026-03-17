@@ -2016,6 +2016,14 @@
     }
     
     // ランクフィルターの値を取得するヘルパー
+    function updateSelectStyle(el) {
+      if (!el) return;
+      el.classList.toggle('filter-active', el.value !== 'all' && el.value !== '');
+    }
+    function updateAllSelectStyles() {
+      document.querySelectorAll('select[onchange]').forEach(el => updateSelectStyle(el));
+    }
+
     function getRankFilterValue(id) {
       const wrapper = document.getElementById(id);
       if (!wrapper) return 'all';
@@ -2062,7 +2070,8 @@
         });
       }
       triggerEl.textContent = displayText;
-      
+      triggerEl.classList.toggle('active', !isAll);
+
       const dropdown = wrapper.querySelector('.multi-rank-dropdown');
       dropdown.innerHTML = '';
       
@@ -2150,6 +2159,7 @@
     
     // 全ての統計を更新
     function updateAllStats() {
+      updateAllSelectStyles();
       updateOverallStatsTab();
       updateCharacterStats();
       updateMapStats();
@@ -2248,6 +2258,7 @@
     }
     
     function updateOverallStatsTab() {
+      updateSelectStyle(document.getElementById('overall-period-filter'));
       const container = document.getElementById('overall-stats-display');
       const rankFilter = getRankFilterValue('overall-rank-filter');
       let perspectiveMatches = getFilteredMatches(rankFilter);
@@ -3185,7 +3196,8 @@
           parseFloat(calculateWinrate(characterStats[b], currentPerspective).winrate) -
           parseFloat(calculateWinrate(characterStats[a], currentPerspective).winrate));
       const bestChar = charsForTop.length > 0 ? charsForTop[0] : null;
-      const worstChar = charsForTop.length > 1 ? charsForTop[charsForTop.length - 1] : null;
+      const _worstCharRaw = charsForTop.length > 1 ? charsForTop[charsForTop.length - 1] : null;
+      const worstChar = _worstCharRaw && parseFloat(calculateWinrate(characterStats[_worstCharRaw], currentPerspective).winrate) < 100 ? _worstCharRaw : null;
       if (bestChar) {
         const hasWorst = worstChar && bestChar !== worstChar;
         topCardsHtml = `<div class="top-cards-row${hasWorst ? '' : ' top-cards-single'}">
@@ -3277,7 +3289,8 @@
           parseFloat(calculateWinrate(mapStats[b], currentPerspective).winrate) -
           parseFloat(calculateWinrate(mapStats[a], currentPerspective).winrate));
       const bestMap = mapsForTop.length > 0 ? mapsForTop[0] : null;
-      const worstMap = mapsForTop.length > 1 ? mapsForTop[mapsForTop.length - 1] : null;
+      const _worstMapRaw = mapsForTop.length > 1 ? mapsForTop[mapsForTop.length - 1] : null;
+      const worstMap = _worstMapRaw && parseFloat(calculateWinrate(mapStats[_worstMapRaw], currentPerspective).winrate) < 100 ? _worstMapRaw : null;
       if (bestMap) {
         const hasWorstMap = worstMap && bestMap !== worstMap;
         topMapsCardsHtml = `<div class="top-cards-row${hasWorstMap ? '' : ' top-cards-single'}">
@@ -3378,7 +3391,8 @@
           return sb.winrate - sa.winrate;
         });
         const bestHunter = huntersForTop.length > 0 ? huntersForTop[0] : null;
-        const worstHunter = huntersForTop.length > 1 ? huntersForTop[huntersForTop.length - 1] : null;
+        const _worstHunterRaw = huntersForTop.length > 1 ? huntersForTop[huntersForTop.length - 1] : null;
+        const worstHunter = _worstHunterRaw && parseFloat(calculateWinrate(hunterStats[_worstHunterRaw], currentPerspective).winrate) < 100 ? _worstHunterRaw : null;
         let topHunterCardsHtml = '';
         if (bestHunter) {
           const hasWorstHunter = !!worstHunter;
@@ -3509,7 +3523,8 @@
           return sb.winrate - sa.winrate;
         });
         const bestSurvivor = survivorsForTop.length > 0 ? survivorsForTop[0] : null;
-        const worstSurvivor = survivorsForTop.length > 1 ? survivorsForTop[survivorsForTop.length - 1] : null;
+        const _worstSurvivorRaw = survivorsForTop.length > 1 ? survivorsForTop[survivorsForTop.length - 1] : null;
+        const worstSurvivor = _worstSurvivorRaw && parseFloat(calculateWinrate(survivorStats[_worstSurvivorRaw], currentPerspective).winrate) < 100 ? _worstSurvivorRaw : null;
         let topSurvivorCardsHtml = '';
         if (bestSurvivor) {
           const hasWorstSurvivor = !!worstSurvivor;
@@ -4764,7 +4779,8 @@
         .map(k => ({ name: k, ...calculateWinrate(mapGroups[k], currentPerspective) }));
       if (valid.length === 0) return { best: null, worst: null };
       valid.sort((a, b) => parseFloat(b.winrate) - parseFloat(a.winrate));
-      return { best: valid[0], worst: valid.length >= 2 ? valid[valid.length - 1] : null };
+      const worstCandidate = valid[valid.length - 1];
+      return { best: valid[0], worst: valid.length >= 2 && parseFloat(worstCandidate.winrate) < 100 ? worstCandidate : null };
     }
 
     function getMapBestWorstChar(mapMatches, minGames = 3) {
@@ -4779,7 +4795,8 @@
         .map(k => ({ name: k, ...calculateWinrate(charGroups[k], currentPerspective) }));
       if (valid.length === 0) return { best: null, worst: null };
       valid.sort((a, b) => parseFloat(b.winrate) - parseFloat(a.winrate));
-      return { best: valid[0], worst: valid.length >= 2 ? valid[valid.length - 1] : null };
+      const worstCandidate = valid[valid.length - 1];
+      return { best: valid[0], worst: valid.length >= 2 && parseFloat(worstCandidate.winrate) < 100 ? worstCandidate : null };
     }
 
     function getOppBestWorstMap(oppMatches, minGames = 3) {

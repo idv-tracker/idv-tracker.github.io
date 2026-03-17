@@ -589,6 +589,12 @@ function renderPriorityCards(statsMap) {
     .sort((a, b) => b.dangerScore - a.dangerScore)
     .slice(0, 4);
 
+  const heading = document.querySelector('.priority-heading');
+  if (heading) {
+    const prioritySideLabel = currentPerspective === 'survivor' ? 'ハンター' : 'サバイバー';
+    heading.textContent = `⚠️ 脅威${prioritySideLabel}`;
+  }
+
   const container = document.getElementById('priority-cards');
   if (top3.length === 0) { container.innerHTML = ''; return; }
 
@@ -870,8 +876,8 @@ function renderDetailMap(s) {
           c.font         = 'bold 11px sans-serif';
           c.textAlign    = 'center';
           c.textBaseline = 'middle';
-          c.shadowColor  = 'rgba(0,0,0,0.4)';
-          c.shadowBlur   = 2;
+          c.shadowColor  = 'rgba(0,0,0,0.6)';
+          c.shadowBlur   = 3;
           c.fillText(data.labels[i].charAt(0), x, y);
           c.restore();
         });
@@ -933,7 +939,7 @@ function renderDetailMyChar(s) {
     <div class="mychar-table-header"><span class="mychar-name">キャラ</span><span class="mychar-count">試合数</span><span class="mychar-wr">勝率</span></div>
     ${data.map(([char, d]) => {
       const wr = (d.wins + d.losses) > 0 ? (d.wins / (d.wins + d.losses) * 100).toFixed(1) + '%' : '-';
-      return `<div class="mychar-row"><span class="mychar-name">${escapeHTML(char)}</span><span class="mychar-count">${d.appeared}試合</span><span class="mychar-wr">${wr}</span></div>`;
+      return `<div class="mychar-row"><img class="tier-row-icon" src="${getMyCharIconPath(char)}" alt="" onerror="this.style.display='none'"><span class="mychar-name">${escapeHTML(char)}</span><span class="mychar-count">${d.appeared}試合</span><span class="mychar-wr">${wr}</span></div>`;
     }).join('')}
   `;
 }
@@ -973,6 +979,7 @@ function renderDetailCopick(s) {
         const pct = s.appeared > 0 ? (count / s.appeared * 100).toFixed(1) : '-';
         return `<div class="copick-item">
           <span class="copick-rank">${i + 1}位</span>
+          <img class="tier-row-icon" src="${getCharIconPath(char)}" alt="" onerror="this.style.display='none'">
           <span class="copick-name">${escapeHTML(char)}</span>
           <span class="copick-pct">${count}/${s.appeared}試合（${pct}%）</span>
         </div>`;
@@ -984,6 +991,7 @@ function renderDetailCopick(s) {
   if (coPickChart) { coPickChart.destroy(); coPickChart = null; }
   const isDark = document.body.classList.contains('dark-mode');
   const ctx = document.getElementById('copick-bar-chart').getContext('2d');
+
   coPickChart = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -1001,11 +1009,16 @@ function renderDetailCopick(s) {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => `${ctx.raw}試合` } }
+        tooltip: {
+          callbacks: {
+            title: (items) => data[items[0].dataIndex][0],
+            label: ctx => `${ctx.raw}試合`
+          }
+        }
       },
       scales: {
         x: {
-          ticks: { color: isDark ? '#9ca3af' : '#6b7280', font: { size: 11 } },
+          ticks: { color: isDark ? '#9ca3af' : '#6b7280', font: { size: 11 }, maxRotation: 45 },
           grid: { display: false }
         },
         y: {

@@ -2,10 +2,10 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 .hidden { display: none !important; }
 
-html.dark-init body { background: #0d0d1a; }
+html.dark-mode body { background: #0d0d1a; }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   min-height: 100vh;
   color: #1f2937;
@@ -307,7 +307,7 @@ body {
 .pred-table { display: grid; grid-template-columns: 1fr 1.1fr 1fr; gap: 8px; }
 .pred-col { border-radius: 10px; padding: 12px 10px; text-align: center; }
 .pred-col.upper   { background: #eff6ff; }
-.pred-col.expected { background: #0f3460; }
+.pred-col.expected { background: #0f3460; padding: 16px 10px; }
 .pred-col.lower   { background: #fef2f2; }
 .pred-label { font-size: 11px; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.04em; }
 .pred-col.upper   .pred-label { color: #3b82f6; }
@@ -316,7 +316,7 @@ body {
 .pred-value { font-size: 26px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
 .pred-value span { font-size: 13px; font-weight: 600; margin-left: 2px; }
 .pred-col.upper   .pred-value { color: #1d4ed8; }
-.pred-col.expected .pred-value { color: white; }
+.pred-col.expected .pred-value { color: white; font-size: 30px; }
 .pred-col.lower   .pred-value { color: #dc2626; }
 .pred-winrate { font-size: 12px; margin-top: 5px; font-weight: 600; }
 .pred-col.upper   .pred-winrate { color: #3b82f6; }
@@ -332,87 +332,309 @@ body {
   background: #fff7ed; border: 1px solid #fed7aa; border-radius: 4px;
   padding: 4px 8px; font-size: 12px; color: #92400e; margin-top: 6px; line-height: 1.5;
 }
-.guard-note { font-size: 11px; color: #9ca3af; margin-top: 10px; line-height: 1.5; text-align: center; }
+.guard-note {
+  background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 0 6px 6px 0;
+  padding: 10px 14px; font-size: 13px; color: #1e40af; line-height: 1.7; margin-top: 12px;
+}
 
 /* ===== ダークモード ===== */
-body.dark-mode { color: #e5e7eb; }
-body.dark-mode .ch-card { background: #1e2235; box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
-body.dark-mode .ch-label { color: #d1d5db; }
-body.dark-mode .ch-input { background: #2d3250; border-color: #374151; color: #e5e7eb; }
-body.dark-mode .ch-input:focus { border-color: #3b82f6; }
-body.dark-mode .ch-select { background: #2d3250; border-color: #374151; color: #e5e7eb; }
-body.dark-mode .ch-select:focus { border-color: #3b82f6; }
-body.dark-mode .pt-samples-group { background: #161929; border-color: #374151; }
-body.dark-mode .samples-hint { color: #6b7280; }
-body.dark-mode .ch-help { background: #374151; color: #9ca3af; }
+html.dark-mode body { color: #e5e7eb; }
+html.dark-mode .ch-card { background: #1e2235; box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+html.dark-mode .ch-label { color: #d1d5db; }
+html.dark-mode .ch-input { background: #2d3250; border-color: #374151; color: #e5e7eb; }
+html.dark-mode .ch-input:focus { border-color: #3b82f6; }
+html.dark-mode .ch-select { background: #2d3250; border-color: #374151; color: #e5e7eb; }
+html.dark-mode .ch-select:focus { border-color: #3b82f6; }
+html.dark-mode .pt-samples-group { background: #161929; border-color: #374151; }
+html.dark-mode .samples-hint { color: #6b7280; }
+html.dark-mode .ch-help { background: #374151; color: #9ca3af; }
 
-body.dark-mode .rank-side-btn { background: #2d3250; border-color: #374151; color: #9ca3af; }
-body.dark-mode .rank-side-btn.active { background: #3b82f6; border-color: #3b82f6; color: white; }
-body.dark-mode .rank-pos-label { color: #d1d5db; }
-body.dark-mode .rank-block-divider { border-color: #374151; }
-body.dark-mode .rank-icon-btn { background: #2d3250; border-color: #374151; }
-body.dark-mode .rank-icon-btn.active { background: #1e2d4a; border-color: #3b82f6; }
-body.dark-mode .rank-icon-label { color: #9ca3af; }
-body.dark-mode .rank-icon-btn.active .rank-icon-label { color: #93c5fd; }
-body.dark-mode .sub-rank-btn { background: #2d3250; border-color: #374151; color: #d1d5db; }
-body.dark-mode .sub-rank-btn.active { background: #3b82f6; border-color: #3b82f6; color: white; }
-body.dark-mode .star-btn { color: #374151; }
-body.dark-mode .star-btn.active { color: #f59e0b; }
-body.dark-mode .stars-label { color: #9ca3af; }
-body.dark-mode .stars-num-input { background: #2d3250; border-color: #374151; color: #e5e7eb; }
-body.dark-mode .stars-num-input:focus { border-color: #3b82f6; }
-body.dark-mode .frac-pt-input { background: #2d3250; border-color: #374151; color: #e5e7eb; }
-body.dark-mode .frac-pt-input:focus { border-color: #3b82f6; }
-body.dark-mode .frac-pt-sep { color: #6b7280; }
-body.dark-mode .frac-pt-label { color: #6b7280; }
+html.dark-mode .rank-side-btn { background: #2d3250; border-color: #374151; color: #9ca3af; }
+html.dark-mode .rank-side-btn.active { background: #3b82f6; border-color: #3b82f6; color: white; }
+html.dark-mode .rank-pos-label { color: #d1d5db; }
+html.dark-mode .rank-block-divider { border-color: #374151; }
+html.dark-mode .rank-icon-btn { background: #2d3250; border-color: #374151; }
+html.dark-mode .rank-icon-btn.active { background: #1e2d4a; border-color: #3b82f6; }
+html.dark-mode .rank-icon-label { color: #9ca3af; }
+html.dark-mode .rank-icon-btn.active .rank-icon-label { color: #93c5fd; }
+html.dark-mode .sub-rank-btn { background: #2d3250; border-color: #374151; color: #d1d5db; }
+html.dark-mode .sub-rank-btn.active { background: #3b82f6; border-color: #3b82f6; color: white; }
+html.dark-mode .star-btn { color: #374151; }
+html.dark-mode .star-btn.active { color: #f59e0b; }
+html.dark-mode .stars-label { color: #9ca3af; }
+html.dark-mode .stars-num-input { background: #2d3250; border-color: #374151; color: #e5e7eb; }
+html.dark-mode .stars-num-input:focus { border-color: #3b82f6; }
+html.dark-mode .frac-pt-input { background: #2d3250; border-color: #374151; color: #e5e7eb; }
+html.dark-mode .frac-pt-input:focus { border-color: #3b82f6; }
+html.dark-mode .frac-pt-sep { color: #6b7280; }
+html.dark-mode .frac-pt-label { color: #6b7280; }
 
-body.dark-mode .cog-card { background: #1e2235; border-color: #374151; }
-body.dark-mode .cog-card.active { background: #1e2d4a; border-color: #3b82f6; }
-body.dark-mode .cog-card-name { color: #d1d5db; }
-body.dark-mode .new-card-plus { color: #6b7280; }
-body.dark-mode .cog-card.new-card.active .new-card-plus { color: #93c5fd; }
-body.dark-mode .cog-card.new-card.active .cog-card-name { color: #93c5fd; }
-body.dark-mode .cog-cards-row::-webkit-scrollbar-thumb { background: #374151; }
-body.dark-mode .save-btn { background: #3b82f6; }
+html.dark-mode .cog-card { background: #1e2235; border-color: #374151; }
+html.dark-mode .cog-card.active { background: #1e2d4a; border-color: #3b82f6; }
+html.dark-mode .cog-card-name { color: #d1d5db; }
+html.dark-mode .new-card-plus { color: #6b7280; }
+html.dark-mode .cog-card.new-card.active .new-card-plus { color: #93c5fd; }
+html.dark-mode .cog-card.new-card.active .cog-card-name { color: #93c5fd; }
+html.dark-mode .cog-cards-row::-webkit-scrollbar-thumb { background: #374151; }
+html.dark-mode .save-btn { background: #3b82f6; }
 
-body.dark-mode .result-placeholder { background: #161929; border-color: #374151; color: #6b7280; }
-body.dark-mode .result-data-info { background: #161929; }
-body.dark-mode .result-data-info strong { color: #e5e7eb; }
-body.dark-mode .result-remaining { color: #d1d5db; }
-body.dark-mode .result-remaining strong { color: #93c5fd; }
-body.dark-mode .result-exp-pt { color: #6b7280; }
-body.dark-mode .result-progress-wrap { background: #374151; }
-body.dark-mode .result-progress-info { color: #6b7280; }
-body.dark-mode .result-rank-label { color: #9ca3af; }
-body.dark-mode .result-cog-header { background: #161929; }
-body.dark-mode .result-cog-name { color: #e5e7eb; }
-body.dark-mode .result-cog-stats { color: #9ca3af; }
-body.dark-mode .result-cog-stats strong { color: #d1d5db; }
-body.dark-mode .result-error { background: #2a1a0a; border-color: #92400e; color: #fbbf24; }
-body.dark-mode .result-data-warn { background: #2a1a0a; border-color: #92400e; color: #fbbf24; }
-body.dark-mode .guard-note { color: #6b7280; }
+html.dark-mode .result-placeholder { background: #161929; border-color: #374151; color: #6b7280; }
+html.dark-mode .result-data-info { background: #161929; }
+html.dark-mode .result-data-info strong { color: #e5e7eb; }
+html.dark-mode .result-remaining { color: #d1d5db; }
+html.dark-mode .result-remaining strong { color: #93c5fd; }
+html.dark-mode .result-exp-pt { color: #6b7280; }
+html.dark-mode .result-progress-wrap { background: #374151; }
+html.dark-mode .result-progress-info { color: #6b7280; }
+html.dark-mode .result-rank-label { color: #9ca3af; }
+html.dark-mode .result-cog-header { background: #161929; }
+html.dark-mode .result-cog-name { color: #e5e7eb; }
+html.dark-mode .result-cog-stats { color: #9ca3af; }
+html.dark-mode .result-cog-stats strong { color: #d1d5db; }
+html.dark-mode .result-error { background: #2a1a0a; border-color: #92400e; color: #fbbf24; }
+html.dark-mode .result-data-warn { background: #2a1a0a; border-color: #92400e; color: #fbbf24; }
+html.dark-mode .guard-note { color: #6b7280; }
 
-body.dark-mode .pred-col.upper   { background: #1e2d4a; }
-body.dark-mode .pred-col.lower   { background: #2a1515; }
-body.dark-mode .pred-col.upper   .pred-value { color: #93c5fd; }
-body.dark-mode .pred-col.upper   .pred-label { color: #60a5fa; }
-body.dark-mode .pred-col.lower   .pred-value { color: #fca5a5; }
-body.dark-mode .pred-col.lower   .pred-label { color: #f87171; }
+html.dark-mode .pred-col.upper   { background: #1e2d4a; }
+html.dark-mode .pred-col.lower   { background: #2a1515; }
+html.dark-mode .pred-col.upper   .pred-value { color: #93c5fd; }
+html.dark-mode .pred-col.upper   .pred-label { color: #60a5fa; }
+html.dark-mode .pred-col.lower   .pred-value { color: #fca5a5; }
+html.dark-mode .pred-col.lower   .pred-label { color: #f87171; }
 
-body.dark-mode .lock-screen { background: #1e2235; }
-body.dark-mode .lock-title { color: #e5e7eb; }
-body.dark-mode .lock-message { color: #9ca3af; }
-body.dark-mode .connect-card { background: #1e2235; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
-body.dark-mode .connect-card-title { color: #e5e7eb; }
-body.dark-mode .connect-card-desc { color: #9ca3af; }
-body.dark-mode .connect-input { background: #2d3250; border-color: #374151; color: #e5e7eb; }
-body.dark-mode .connect-textarea { background: #2d3250; border-color: #374151; color: #e5e7eb; }
-body.dark-mode .connect-btn.secondary { background: #374151; color: #d1d5db; }
+html.dark-mode .lock-screen { background: #1e2235; }
+html.dark-mode .lock-title { color: #e5e7eb; }
+html.dark-mode .lock-message { color: #9ca3af; }
+html.dark-mode .connect-card { background: #1e2235; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+html.dark-mode .connect-card-title { color: #e5e7eb; }
+html.dark-mode .connect-card-desc { color: #9ca3af; }
+html.dark-mode .connect-input { background: #2d3250; border-color: #374151; color: #e5e7eb; }
+html.dark-mode .connect-textarea { background: #2d3250; border-color: #374151; color: #e5e7eb; }
+html.dark-mode .connect-btn.secondary { background: #374151; color: #d1d5db; }
 
 /* ===== レスポンシブ ===== */
 @media (max-width: 480px) {
   .ch-row2 { grid-template-columns: 1fr; }
   .pred-value { font-size: 22px; }
+  .pred-col.expected .pred-value { font-size: 24px; }
   .rank-icon-btn { width: 50px; }
   .rank-icon-btn img { width: 30px; height: 30px; }
+  .track-chart-wrap { height: 160px; }
+  .track-pt-current { font-size: 22px; }
 }
+
+/* ===== SearchableSelect ===== */
+.ss-wrap { position: relative; }
+.ss-trigger {
+  width: 100%; padding: 9px 12px; border: 1.5px solid #d1d5db; border-radius: 8px;
+  font-size: 14px; color: #9ca3af; background: white; outline: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; text-align: left;
+  transition: border-color 0.15s;
+}
+.ss-trigger.open, .ss-trigger:focus-visible { border-color: #3b82f6; }
+.ss-trigger.has-value { color: #1f2937; }
+.ss-dropdown {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
+  background: white; border: 1.5px solid #d1d5db; border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); overflow: hidden;
+}
+.ss-search-wrap { padding: 8px; border-bottom: 1px solid #f1f5f9; }
+.ss-search {
+  width: 100%; padding: 7px 10px; border: 1.5px solid #e5e7eb; border-radius: 6px;
+  font-size: 13px; color: #374151; outline: none; transition: border-color 0.15s;
+}
+.ss-search:focus { border-color: #3b82f6; }
+.ss-list { max-height: 200px; overflow-y: auto; }
+.ss-group-label {
+  padding: 5px 12px 3px; font-size: 11px; font-weight: 700; color: #9ca3af;
+  letter-spacing: 0.04em; background: #f9fafb;
+}
+.ss-option {
+  display: block; width: 100%; padding: 9px 12px; font-size: 13px; color: #374151;
+  background: none; border: none; border-bottom: 1px solid #f9fafb;
+  text-align: left; cursor: pointer; transition: background 0.1s;
+}
+.ss-option:last-child { border-bottom: none; }
+.ss-option:hover { background: #f3f4f6; }
+.ss-option.active { background: #eff6ff; color: #0f3460; font-weight: 600; }
+.ss-no-result { padding: 12px; font-size: 13px; color: #9ca3af; text-align: center; }
+
+/* ===== セクションフェードイン ===== */
+.section-fade-in { animation: sectionFadeIn 0.15s ease; }
+@keyframes sectionFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* ===== 認知ptカード 空状態 ===== */
+.cog-empty-hint {
+  display: flex; align-items: center; padding: 0 12px;
+  font-size: 12px; color: #9ca3af; line-height: 1.4; max-width: 180px;
+}
+
+/* ===== 陣営トグル注釈 ===== */
+.rank-side-note { font-size: 11px; color: #9ca3af; margin-top: -8px; margin-bottom: 12px; }
+
+/* ===== JSONボタン「または」 ===== */
+.connect-btn-or {
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 12px; color: #9ca3af; padding: 0 2px;
+}
+
+/* ===== 接続カードタイトル（SVGアイコン用） ===== */
+.connect-card-title { display: flex; align-items: center; gap: 8px; }
+
+/* ===== ロックアイコン ===== */
+.lock-icon { display: flex; justify-content: center; margin-bottom: 16px; color: #9ca3af; }
+
+/* ===== 新スタイル ダークモード ===== */
+html.dark-mode .ss-trigger { background: #2d3250; border-color: #374151; color: #6b7280; }
+html.dark-mode .ss-trigger.has-value { color: #e5e7eb; }
+html.dark-mode .ss-trigger.open { border-color: #3b82f6; }
+html.dark-mode .ss-dropdown { background: #1e2235; border-color: #374151; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+html.dark-mode .ss-search { background: #2d3250; border-color: #374151; color: #e5e7eb; }
+html.dark-mode .ss-search:focus { border-color: #3b82f6; }
+html.dark-mode .ss-group-label { background: #161929; color: #6b7280; }
+html.dark-mode .ss-option { color: #d1d5db; border-bottom-color: #2a2a3e; }
+html.dark-mode .ss-option:hover { background: #2d3250; }
+html.dark-mode .ss-option.active { background: #1e2d4a; color: #93c5fd; }
+html.dark-mode .guard-note { background: #1e2e4a; border-left-color: #3b82f6; color: #93c5fd; }
+html.dark-mode .cog-empty-hint { color: #6b7280; }
+html.dark-mode .rank-side-note { color: #6b7280; }
+html.dark-mode .connect-btn-or { color: #6b7280; }
+
+/* ===== 追跡開始ボタン ===== */
+.track-start-btn {
+  width: 100%; padding: 12px; margin-top: 10px;
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: white; border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;
+}
+.track-start-btn:hover { opacity: 0.88; }
+
+/* ===== 追跡カード ===== */
+.track-card { margin-top: 12px; }
+.track-card-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+}
+.track-card-title { font-size: 15px; font-weight: 700; color: #1f2937; }
+.track-reset-btn {
+  background: transparent; border: 1px solid #d1d5db; border-radius: 6px;
+  color: #9ca3af; font-size: 12px; padding: 4px 10px; cursor: pointer; transition: all 0.15s;
+}
+.track-reset-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+/* ===== 追跡サマリー ===== */
+.track-summary { margin-bottom: 16px; }
+.track-pt-row {
+  display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;
+}
+.track-pt-current { font-size: 28px; font-weight: 800; color: #0f3460; }
+.track-pt-sep { font-size: 14px; color: #9ca3af; }
+.track-pt-target { font-size: 16px; font-weight: 700; color: #6b7280; }
+.track-pt-remaining {
+  font-size: 13px; color: #374151; margin-bottom: 4px;
+}
+.track-pt-remaining strong { color: #0f3460; }
+.track-matches-row {
+  font-size: 12px; color: #9ca3af; margin-bottom: 10px;
+}
+.track-progress-wrap {
+  background: #e5e7eb; border-radius: 100px; height: 8px; overflow: hidden; margin-bottom: 4px;
+}
+.track-progress-bar {
+  height: 100%; background: linear-gradient(90deg, #059669, #10b981);
+  border-radius: 100px; transition: width 0.4s;
+}
+.track-progress-pct { font-size: 11px; color: #9ca3af; text-align: right; }
+.track-calib-note {
+  font-size: 12px; color: #6b7280; background: #f3f4f6;
+  border-radius: 6px; padding: 6px 10px; margin-top: 8px;
+}
+
+/* ===== 目標達成バナー ===== */
+.track-achieved {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: white; text-align: center; font-size: 15px; font-weight: 700;
+  padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;
+}
+
+/* ===== 追跡グラフ ===== */
+.track-chart-wrap {
+  position: relative; height: 200px; margin-bottom: 14px;
+}
+
+/* ===== キャリブレーションボタン ===== */
+.calib-btn {
+  width: 100%; padding: 10px; background: #eff6ff;
+  color: #1d4ed8; border: 1.5px solid #bfdbfe; border-radius: 8px;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s;
+}
+.calib-btn:hover { background: #dbeafe; }
+
+/* ===== キャリブレーション履歴 ===== */
+.calib-history { margin-top: 10px; }
+.calib-history-title { font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 6px; }
+.calib-history-item {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; color: #6b7280; padding: 4px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+.calib-history-item:last-child { border-bottom: none; }
+.calib-history-pt { font-weight: 700; color: #374151; }
+
+/* ===== モーダル ===== */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 20px;
+}
+.modal-overlay.hidden { display: none !important; }
+.modal-box {
+  background: white; border-radius: 14px; padding: 24px;
+  width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+}
+.modal-title { font-size: 17px; font-weight: 700; color: #1f2937; margin-bottom: 6px; }
+.modal-desc { font-size: 13px; color: #6b7280; line-height: 1.6; margin-bottom: 16px; }
+.required-mark { color: #ef4444; }
+.calib-samples-toggle {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; font-weight: 600; color: #3b82f6;
+  padding: 8px 0; cursor: pointer; border-bottom: 1px solid #e5e7eb; margin-bottom: 12px;
+}
+.calib-samples-hint {
+  font-size: 12px; color: #9ca3af; margin-bottom: 12px; line-height: 1.5;
+}
+#calib-samples-area { padding-top: 4px; }
+.modal-actions {
+  display: flex; gap: 8px; margin-top: 20px;
+}
+.modal-btn {
+  flex: 1; padding: 11px; border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+}
+.modal-btn.primary { background: #0f3460; color: white; }
+.modal-btn.primary:hover { opacity: 0.88; }
+.modal-btn.secondary { background: #e5e7eb; color: #374151; }
+.modal-btn.secondary:hover { background: #d1d5db; }
+
+/* ===== ダークモード: 追跡・モーダル ===== */
+html.dark-mode .track-card-title { color: #e5e7eb; }
+html.dark-mode .track-pt-current { color: #93c5fd; }
+html.dark-mode .track-pt-target { color: #9ca3af; }
+html.dark-mode .track-pt-remaining { color: #d1d5db; }
+html.dark-mode .track-pt-remaining strong { color: #93c5fd; }
+html.dark-mode .track-progress-wrap { background: #374151; }
+html.dark-mode .track-calib-note { background: #161929; color: #9ca3af; }
+html.dark-mode .track-reset-btn { border-color: #374151; color: #6b7280; }
+html.dark-mode .track-reset-btn:hover { border-color: #ef4444; color: #ef4444; }
+html.dark-mode .calib-btn { background: #1e2d4a; color: #93c5fd; border-color: #1d4ed8; }
+html.dark-mode .calib-btn:hover { background: #1e3a5f; }
+html.dark-mode .calib-history-item { border-bottom-color: #2a2a3e; }
+html.dark-mode .calib-history-pt { color: #d1d5db; }
+html.dark-mode .modal-box { background: #1e2235; }
+html.dark-mode .modal-title { color: #e5e7eb; }
+html.dark-mode .modal-desc { color: #9ca3af; }
+html.dark-mode .calib-samples-toggle { color: #60a5fa; border-bottom-color: #374151; }
+html.dark-mode .calib-samples-hint { color: #6b7280; }

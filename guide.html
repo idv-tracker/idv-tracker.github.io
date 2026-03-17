@@ -288,7 +288,7 @@
     }
     .back-to-toc:hover { color: #6b7280; }
 
-    /* ボトムナビ模擬 */
+    /* ボトムナビ模擬（旧） */
     .ui-bottom-nav {
       background: white;
       border: 1px solid #e0e0e0;
@@ -310,6 +310,97 @@
       color: #0f3460;
       border-top-color: #0f3460;
     }
+
+    /* ボトムナビ模擬（pill型・実機と同デザイン） */
+    .ui-bnav-wrap {
+      background: #f1f5f9;
+      border-radius: 12px;
+      padding: 8px;
+      margin-top: 8px;
+    }
+    .ui-bnav {
+      display: flex;
+      background: white;
+      border-radius: 22px;
+      padding: 6px;
+      gap: 2px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .ui-bnav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 4px;
+      border-radius: 16px;
+      color: #9ca3af;
+      font-size: 9px;
+      font-weight: 600;
+      gap: 3px;
+    }
+    .ui-bnav-item.active { background: #0f3460; color: white; }
+    .ui-bnav-item svg { display: block; }
+    .ui-bnav-labels {
+      display: flex;
+      justify-content: space-around;
+      font-size: 10px;
+      color: #9ca3af;
+      margin-top: 6px;
+      padding: 0 4px;
+    }
+    .ui-bnav-lbl-active { color: #0f3460; font-weight: 700; }
+
+    /* ツールボタン模擬 */
+    .ui-tool-btn-mock {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      width: 42px;
+      height: 42px;
+      color: white;
+      font-size: 9px;
+      font-weight: 600;
+      vertical-align: middle;
+    }
+
+    /* ツールシート模擬 */
+    .ui-tool-sheet {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px 0 0 12px;
+      overflow: hidden;
+      margin-top: 8px;
+      max-width: 240px;
+      margin-left: auto;
+    }
+    .ui-tool-sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    .ui-tool-sheet-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 1px solid #f9fafb;
+    }
+    .ui-tool-sheet-item:last-child { border-bottom: none; }
+    .ui-tool-sheet-divider { height: 1px; background: #e5e7eb; margin: 2px 0; }
 
     /* サブタブ模擬 */
     .ui-sub-tabs {
@@ -424,6 +515,18 @@
     html.dark-mode .ui-sub-tab.active { background: #3b82f6; color: white; }
     html.dark-mode .scroll-diagram { background: #2a2a3e; border-color: #3a3a55; color: #d1d5db; }
     html.dark-mode .scroll-result { color: #9ca3af; }
+    /* 新ナビ mock ダークモード */
+    html.dark-mode .ui-bnav-wrap { background: #1a1a2e; }
+    html.dark-mode .ui-bnav { background: #2a2a3e; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+    html.dark-mode .ui-bnav-item { color: #6b7280; }
+    html.dark-mode .ui-bnav-item.active { background: #3b82f6; color: white; }
+    html.dark-mode .ui-bnav-labels { color: #6b7280; }
+    html.dark-mode .ui-bnav-lbl-active { color: #60a5fa; }
+    html.dark-mode .ui-tool-sheet { background: #2a2a3e; border-color: #3a3a55; }
+    html.dark-mode .ui-tool-sheet-header { border-bottom-color: #3a3a55; color: #d1d5db; }
+    html.dark-mode .ui-tool-sheet-item { color: #d1d5db; border-bottom-color: #2a2a3e; }
+    html.dark-mode .ui-tool-sheet-divider { background: #3a3a55; }
+    html.dark-mode .ui-tool-btn-mock { background: rgba(59,130,246,0.2); border-color: rgba(59,130,246,0.4); color: #93c5fd; }
   </style>
 </head>
 <body>
@@ -466,7 +569,7 @@
         <!-- 設定 -->
         <div class="section" id="settings">
           <div class="section-title">設定</div>
-          <div class="section-desc">最初に設定タブで環境を整えておくと、より快適に使えます。設定タブの構成は以下の順になっています。</div>
+          <div class="section-desc">設定タブから各種設定を行えます。以下の項目が含まれています。</div>
 
           <ul class="feature-list">
             <li>
@@ -479,7 +582,7 @@
             </li>
             <li>
               <div class="feature-name">追加機能（50試合で解放）</div>
-              <div class="feature-desc">50試合記録すると使えるようになる分析ツールです。「環境分析 Tier表」と「目標達成予測」の2つが含まれます。</div>
+              <div class="feature-desc">50試合記録すると「追加機能」タブから使えるようになる分析ツールです。「環境分析 Tier表」と「目標達成予測」の2つが含まれます。</div>
             </li>
             <li>
               <div class="feature-name">クラウド同期</div>
@@ -567,6 +670,10 @@
 
           <ul class="feature-list">
             <li>
+              <div class="feature-name">フィルター（折りたたみ式）</div>
+              <div class="feature-desc">「フィルター」ボタンをクリックするとドロワーが展開されます。設定した条件はタブを移動しても保持されます。</div>
+            </li>
+            <li>
               <div class="feature-name">総合勝率 / 百戦勝率 の切り替え</div>
               <div class="feature-desc">上部のトグルボタンで表示モードを切り替えられます。「百戦勝率」モードでは直近100試合の勝率を表示し、期間フィルターは無効になります。</div>
               <div class="ui-mock" style="margin-top: 8px;">
@@ -638,8 +745,8 @@
 
           <ul class="feature-list">
             <li>
-              <div class="feature-name">フィルター</div>
-              <div class="feature-desc">期間・対戦相手・マップ・段位の4種類でデータを絞り込めます。段位フィルターは複数の段位を同時に選択できます。これは他の統計タブも同様です。</div>
+              <div class="feature-name">フィルター（折りたたみ式）</div>
+              <div class="feature-desc">フィルターボタンをクリックするとドロワーが展開されます。期間・対戦相手・マップ・段位の4種類でデータを絞り込めます。段位フィルターは複数同時選択可能です。フィルター適用中にキャラ名をクリックすると、詳細ページにも同じ期間・段位フィルターが引き継がれます。</div>
             </li>
             <li>
               <div class="feature-name">苦手キャラクター</div>
@@ -744,7 +851,7 @@
         <!-- 試合履歴 -->
         <div class="section" id="history">
           <div class="section-title">試合履歴</div>
-          <div class="section-desc">記録した試合を新しい順で一覧表示します。</div>
+          <div class="section-desc">試合履歴タブから開きます。記録した試合を新しい順で一覧表示します。</div>
 
           <ul class="feature-list">
             <li>
@@ -765,7 +872,7 @@
         <!-- 環境分析 Tier表 -->
         <div class="section" id="tier-analysis">
           <div class="section-title">環境分析 Tier表</div>
-          <div class="section-desc">自分の対戦データをもとに、対戦相手キャラクターの流行度をSSS〜Dの7段階でランク付けする専用ページです。設定タブのリンクから開けます。</div>
+          <div class="section-desc">自分の対戦データをもとに、対戦相手キャラクターの流行度をSSS〜Dの7段階でランク付けする専用ページです。追加機能タブのリンクから開けます。</div>
 
           <ul class="feature-list">
             <li>
@@ -786,7 +893,7 @@
             </li>
             <li>
               <div class="feature-name">自動連携（同期コード）</div>
-              <div class="feature-desc">設定タブで発行した同期コードを環境分析ページに入力するだけで、常に最新のデータを自動で読み込めます。</div>
+              <div class="feature-desc">設定タブまたはツールメニューから発行した同期コードを環境分析ページに入力するだけで、常に最新のデータを自動で読み込めます。</div>
             </li>
           </ul>
 
@@ -798,7 +905,7 @@
         <!-- 目標達成予測 -->
         <div class="section" id="challenge">
           <div class="section-title">目標達成予測</div>
-          <div class="section-desc">認知ポイント・段位ポイントの目標を設定すると、あなたの勝率をもとに達成に必要な試合数を予測する専用ページです。設定タブの「追加機能」から開けます（50試合記録後に解放）。</div>
+          <div class="section-desc">認知ポイント・段位ポイントの目標を設定すると、あなたの勝率をもとに達成に必要な試合数を予測する専用ページです。追加機能タブから開けます（50試合記録後に解放）。</div>
 
           <ul class="feature-list">
             <li>
@@ -839,9 +946,9 @@
             <li><a href="#m-perspective">視点切り替え</a></li>
             <li><a href="#m-scroll">スクロール操作</a></li>
             <li><a href="#m-input">入力</a></li>
-            <li><a href="#m-stats">統計</a></li>
+            <li><a href="#m-stats">統計画面（総合・キャラ・マップ・対戦）</a></li>
             <li><a href="#m-history">履歴</a></li>
-            <li><a href="#m-settings">設定</a></li>
+            <li><a href="#m-settings">ツール</a></li>
             <li><a href="#m-tier-analysis">環境分析 Tier表</a></li>
             <li><a href="#m-challenge">目標達成予測</a></li>
           </ul>
@@ -849,19 +956,37 @@
 
         <div class="highlight-box" style="margin-bottom: 28px;">
           <div class="highlight-title">はじめに</div>
-          最初にボトムナビの「設定」タブで環境を整えておくと、より快適に使えます。ダークモードの設定やクラウド同期の有効化はここから行えます。
+          最初にヘッダー右の三本線アイコン（ツール）で環境を整えておくと、より快適に使えます。ダークモードの設定やクラウド同期の有効化はここから行えます。
         </div>
 
         <!-- ナビゲーション -->
         <div class="section" id="m-nav">
           <div class="section-title">ナビゲーション</div>
-          <div class="section-desc">スマホ版では画面下部に固定されたボトムナビでメイン機能を切り替えます。上部のタブメニューは表示されません。</div>
+          <div class="section-desc">スマホ版では画面下部に固定されたボトムナビ（5タブ）でメイン画面を切り替えます。試合履歴は入力タブ上部の時計アイコンから、設定・追加機能などはヘッダー右上のツールボタンから開きます。</div>
 
-          <div class="ui-bottom-nav">
-            <div class="ui-bottom-nav-item active">入力</div>
-            <div class="ui-bottom-nav-item">統計</div>
-            <div class="ui-bottom-nav-item">履歴</div>
-            <div class="ui-bottom-nav-item">設定</div>
+          <div class="ui-bnav-wrap">
+            <div class="ui-bnav">
+              <div class="ui-bnav-item active">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                入力
+              </div>
+              <div class="ui-bnav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                総合
+              </div>
+              <div class="ui-bnav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                キャラ別
+              </div>
+              <div class="ui-bnav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+                マップ別
+              </div>
+              <div class="ui-bnav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                対戦別
+              </div>
+            </div>
           </div>
 
           <ul class="feature-list" style="margin-top: 16px;">
@@ -870,16 +995,38 @@
               <div class="feature-desc">試合結果の記録画面です。起動時はこのタブが開きます。</div>
             </li>
             <li>
-              <div class="feature-name">統計</div>
-              <div class="feature-desc">勝率・キャラ別・マップ別・対戦相手別の各統計画面です。タップするとサブタブが表示されます。</div>
+              <div class="feature-name">総合 / キャラ別 / マップ別 / 対戦別</div>
+              <div class="feature-desc">それぞれの統計画面に直接アクセスできます。タブごとに独立したフィルターが設定できます。</div>
             </li>
             <li>
-              <div class="feature-name">履歴</div>
-              <div class="feature-desc">記録した試合の一覧・編集・削除画面です。</div>
+              <div class="feature-name">履歴（入力タブ 時計アイコン）</div>
+              <div class="feature-desc">入力タブ上部の時計アイコン（履歴ボタン）をタップすると試合履歴を表示します。</div>
             </li>
             <li>
-              <div class="feature-name">設定</div>
-              <div class="feature-desc">ダークモード・クラウド同期・データ書き出し等の設定画面です。</div>
+              <div class="feature-name">ツール（ヘッダー 三本線アイコン）</div>
+              <div class="feature-desc">ヘッダー右上の三本線アイコンをタップするとツールシートが右側からスライドして開きます。設定・追加機能・ガイドへのリンクが含まれます。</div>
+              <div class="ui-tool-sheet" style="margin-top: 8px;">
+                <div class="ui-tool-sheet-header">
+                  <span>ツール</span><span style="color:#9ca3af;font-weight:400;font-size:12px;">✕</span>
+                </div>
+                <div class="ui-tool-sheet-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                  環境分析 Tier表
+                </div>
+                <div class="ui-tool-sheet-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                  目標達成予測
+                </div>
+                <div class="ui-tool-sheet-divider"></div>
+                <div class="ui-tool-sheet-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                  設定
+                </div>
+                <div class="ui-tool-sheet-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                  使い方ガイド
+                </div>
+              </div>
             </li>
           </ul>
 
@@ -978,17 +1125,10 @@
 
         <!-- 統計 -->
         <div class="section" id="m-stats">
-          <div class="section-title">統計</div>
-          <div class="section-desc">ボトムナビの「統計」をタップすると、画面上部にサブタブが表示されます。サブタブで見たい統計を切り替えてください。</div>
+          <div class="section-title">統計画面（総合・キャラ別・マップ別・対戦別）</div>
+          <div class="section-desc">ボトムナビの「総合」「キャラ別」「マップ別」「対戦別」の4つがそれぞれ独立した統計画面です。タップすると直接その統計に移動します。</div>
 
-          <div class="ui-sub-tabs">
-            <div class="ui-sub-tab active">総合勝率</div>
-            <div class="ui-sub-tab">キャラ別</div>
-            <div class="ui-sub-tab">マップ別</div>
-            <div class="ui-sub-tab">対戦相手別</div>
-          </div>
-
-          <ul class="feature-list" style="margin-top: 16px;">
+          <ul class="feature-list">
             <li>
               <div class="feature-name">総合勝率</div>
               <div class="feature-desc">勝率・勝敗数・連勝情報・グラフをまとめて確認できます。期間・段位フィルターに対応しています。</div>
@@ -1005,11 +1145,11 @@
               <div class="feature-name">対戦相手別</div>
               <div class="feature-desc">サバイバー視点ではハンター別・味方編成別、ハンター視点ではサバイバー別・ペア別の勝率を確認できます。</div>
             </li>
+            <li>
+              <div class="feature-name">フィルター（折りたたみ式）</div>
+              <div class="feature-desc">各統計画面の上部にあるフィルターボタンをタップするとフィルターが展開されます。期間・段位などを設定したまま各タブを行き来できます。フィルター適用中にキャラやマップをタップすると、詳細ページにも同じフィルターが引き継がれます。</div>
+            </li>
           </ul>
-
-          <div class="info-box">
-            サブタブは横スクロールに対応しています。画面に収まりきらない場合は左右にスワイプしてください。
-          </div>
 
           <a href="#toc-mobile" class="back-to-toc">↑ 目次に戻る</a>
         </div>
@@ -1019,7 +1159,7 @@
         <!-- 履歴 -->
         <div class="section" id="m-history">
           <div class="section-title">履歴</div>
-          <div class="section-desc">ボトムナビの「履歴」をタップすると記録した試合を新しい順で一覧表示します。</div>
+          <div class="section-desc">入力タブ上部の時計アイコン（履歴ボタン）をタップすると記録した試合を新しい順で一覧表示します。</div>
 
           <ul class="feature-list">
             <li>
@@ -1039,8 +1179,8 @@
 
         <!-- 設定 -->
         <div class="section" id="m-settings">
-          <div class="section-title">設定</div>
-          <div class="section-desc">ボトムナビの「設定」をタップして各種設定を行います。</div>
+          <div class="section-title">ツール</div>
+          <div class="section-desc">ヘッダー右上の三本線アイコン（ツール）をタップするとツールシートが右側からスライドして開きます。設定・追加機能・ガイドへのアクセスができます。</div>
 
           <ul class="feature-list">
             <li>
@@ -1073,7 +1213,7 @@
         <!-- 環境分析 Tier表 -->
         <div class="section" id="m-tier-analysis">
           <div class="section-title">環境分析 Tier表</div>
-          <div class="section-desc">自分の対戦データをもとに、対戦相手キャラクターの流行度をSSS〜Dの7段階でランク付けする専用ページです。設定タブのリンクから開けます。</div>
+          <div class="section-desc">自分の対戦データをもとに、対戦相手キャラクターの流行度をSSS〜Dの7段階でランク付けする専用ページです。ツールメニューから開けます。</div>
 
           <ul class="feature-list">
             <li>
@@ -1094,7 +1234,7 @@
             </li>
             <li>
               <div class="feature-name">自動連携（同期コード）</div>
-              <div class="feature-desc">設定タブで発行した同期コードを環境分析ページに入力するだけで、常に最新のデータを自動で読み込めます。</div>
+              <div class="feature-desc">ツールメニューの設定で発行した同期コードを環境分析ページに入力するだけで、常に最新のデータを自動で読み込めます。</div>
             </li>
           </ul>
 
@@ -1106,7 +1246,7 @@
         <!-- 目標達成予測 -->
         <div class="section" id="m-challenge">
           <div class="section-title">目標達成予測</div>
-          <div class="section-desc">認知ポイント・段位ポイントの目標を設定すると、あなたの勝率をもとに達成に必要な試合数を予測する専用ページです。設定タブの「追加機能」からタップして開けます（50試合記録後に解放）。</div>
+          <div class="section-desc">認知ポイント・段位ポイントの目標を設定すると、あなたの勝率をもとに達成に必要な試合数を予測する専用ページです。ツールメニューからタップして開けます（50試合記録後に解放）。</div>
 
           <ul class="feature-list">
             <li>

@@ -43,6 +43,10 @@
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312"
      crossorigin="anonymous"></script>
 
+  <!-- Google Fonts: Noto Sans JP -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+
   <!-- External CSS -->
   <link rel="stylesheet" href="style.css">
 
@@ -56,8 +60,19 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>第五人格トラッカー</h1>
-      <div class="subtitle">戦績管理・勝率計算</div>
+      <div class="header-bg-pattern"></div>
+      <div class="header-inner">
+        <div class="header-left">
+          <div class="header-title">第五人格トラッカー</div>
+        </div>
+        <div class="header-stats" id="header-stats"></div>
+        <button type="button" class="header-gear-btn" onclick="openToolSheet()" aria-label="ツール">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+            <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+          <span class="header-btn-label">ツール</span>
+        </button>
+      </div>
     </div>
 
     <div class="install-banner hidden" id="guide-banner">
@@ -65,7 +80,7 @@
         <span class="install-banner-text">初めての方へ — 使い方ガイド</span>
         <span class="install-banner-arrow">›</span>
       </a>
-      <button class="install-banner-close" onclick="dismissGuideBanner()" aria-label="閉じる">✕</button>
+      <button type="button" class="install-banner-close" onclick="dismissGuideBanner()" aria-label="閉じる">✕</button>
     </div>
 
     <div class="install-banner" id="install-banner">
@@ -73,52 +88,51 @@
         <span class="install-banner-text">ホーム画面に追加してアプリとして使う</span>
         <span class="install-banner-arrow">›</span>
       </a>
-      <button class="install-banner-close" onclick="dismissInstallBanner()" aria-label="閉じる">✕</button>
+      <button type="button" class="install-banner-close" onclick="dismissInstallBanner()" aria-label="閉じる">✕</button>
     </div>
 
     <div class="perspective-tabs">
-      <button class="perspective-tab active" onclick="switchPerspective('survivor', this)">サバイバー</button>
-      <button class="perspective-tab" onclick="switchPerspective('hunter', this)">ハンター</button>
+      <button type="button" class="perspective-tab active" onclick="switchPerspective('survivor', this)">サバイバー</button>
+      <button type="button" class="perspective-tab" onclick="switchPerspective('hunter', this)">ハンター</button>
     </div>
 
     <div class="main-tabs">
-      <button class="main-tab active" onclick="switchTab('input', this)">試合入力</button>
-      <button class="main-tab" onclick="switchTab('overall', this)">総合勝率</button>
-      <button class="main-tab" onclick="switchTab('character', this)">自キャラ別勝率</button>
-      <button class="main-tab" onclick="switchTab('map', this)">マップ別勝率</button>
-      <button class="main-tab" onclick="switchTab('opponent', this)">対戦相手別勝率</button>
-      <button class="main-tab" onclick="switchTab('history', this)">試合履歴</button>
-      <button class="main-tab" onclick="switchTab('settings', this)">設定</button>
-    </div>
-
-    <!-- モバイル用サブタブ（統計セクション） -->
-    <div class="sub-tabs" id="sub-tabs">
-      <button class="sub-tab active" data-tab="overall" onclick="switchSubTab('overall', this)">総合勝率</button>
-      <button class="sub-tab" data-tab="character" onclick="switchSubTab('character', this)">キャラ別</button>
-      <button class="sub-tab" data-tab="map" onclick="switchSubTab('map', this)">マップ別</button>
-      <button class="sub-tab" data-tab="opponent" onclick="switchSubTab('opponent', this)">対戦相手別</button>
+      <button type="button" class="main-tab active" onclick="switchTab('input', this)">試合入力</button>
+      <button type="button" class="main-tab" onclick="switchTab('overall', this)">総合勝率</button>
+      <button type="button" class="main-tab" onclick="switchTab('character', this)">自キャラ別勝率</button>
+      <button type="button" class="main-tab" onclick="switchTab('map', this)">マップ別勝率</button>
+      <button type="button" class="main-tab" onclick="switchTab('opponent', this)">対戦相手別勝率</button>
+      <button type="button" class="main-tab" onclick="switchTab('history', this)">試合履歴</button>
+      <button type="button" class="main-tab" onclick="switchTab('settings', this)">設定</button>
+      <button type="button" class="main-tab" onclick="switchTab('extra', this)">追加機能</button>
     </div>
 
     <div class="content">
       <!-- 試合入力タブ -->
       <div id="input-tab" class="tab-content active">
         <div id="survivor-input">
-          <button type="button" onclick="event.preventDefault(); event.stopPropagation(); clearAllPersistence('survivor'); return false;" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; margin-bottom: 15px;">保持を全て解除</button>
-
-          <div class="form-group">
-            <label class="form-label">日付 <input type="checkbox" id="persist-survivor-date" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
-            <input type="date" id="survivor-date" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+          <div class="input-top-row">
+            <button type="button" class="btn-clear-persist" onclick="clearAllPersistence('survivor')">保持を全て解除</button>
+            <button type="button" class="input-history-btn" onclick="switchTab('history')" aria-label="試合履歴">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="input-history-label">履歴</span>
+            </button>
           </div>
 
           <div class="form-group">
-            <label class="form-label">段位 <input type="checkbox" id="persist-survivor-rank" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
+            <label class="form-label">日付 <input type="checkbox" id="persist-survivor-date" class="persist-check"><span class="persist-label">保持</span></label>
+            <input type="date" id="survivor-date" class="input-date">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">段位 <input type="checkbox" id="persist-survivor-rank" class="persist-check"><span class="persist-label">保持</span></label>
             <select id="survivor-rank">
               <option value="">選択してください</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label">自分のサバイバー <input type="checkbox" id="persist-my-survivor" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
+            <label class="form-label">自分のサバイバー <input type="checkbox" id="persist-my-survivor" class="persist-check"><span class="persist-label">保持</span></label>
             <select id="my-survivor" onchange="updateSurvivorSelectOptions()">
               <option value="">選択してください</option>
             </select>
@@ -126,43 +140,37 @@
 
           <div class="form-group">
             <label class="form-label">味方サバイバー</label>
-            <div class="teammate-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <div class="teammate-grid">
               <div>
                 <select id="teammate-1" onchange="updateSurvivorSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
-                <label style="display: block; margin-top: 5px; font-size: 12px;">
-                  <input type="checkbox" id="persist-teammate-1" style="margin-right: 4px;">保持
-                </label>
+                <label class="persist-sub-label"><input type="checkbox" id="persist-teammate-1" class="persist-sub-check">保持</label>
               </div>
               <div>
                 <select id="teammate-2" onchange="updateSurvivorSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
-                <label style="display: block; margin-top: 5px; font-size: 12px;">
-                  <input type="checkbox" id="persist-teammate-2" style="margin-right: 4px;">保持
-                </label>
+                <label class="persist-sub-label"><input type="checkbox" id="persist-teammate-2" class="persist-sub-check">保持</label>
               </div>
               <div>
                 <select id="teammate-3" onchange="updateSurvivorSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
-                <label style="display: block; margin-top: 5px; font-size: 12px;">
-                  <input type="checkbox" id="persist-teammate-3" style="margin-right: 4px;">保持
-                </label>
+                <label class="persist-sub-label"><input type="checkbox" id="persist-teammate-3" class="persist-sub-check">保持</label>
               </div>
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">相手ハンター <input type="checkbox" id="persist-opponent-hunter" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
+            <label class="form-label">相手ハンター <input type="checkbox" id="persist-opponent-hunter" class="persist-check"><span class="persist-label">保持</span></label>
             <select id="opponent-hunter">
               <option value="">選択してください</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label">マップ <input type="checkbox" id="persist-survivor-map" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
+            <label class="form-label">マップ <input type="checkbox" id="persist-survivor-map" class="persist-check"><span class="persist-label">保持</span></label>
             <select id="survivor-map">
               <option value="">選択してください</option>
             </select>
@@ -171,39 +179,45 @@
           <div class="form-group">
             <label class="form-label">脱出人数</label>
             <div class="result-buttons">
-              <button class="result-button" onclick="selectEscapeCount('survivor', 0, this)">0人</button>
-              <button class="result-button" onclick="selectEscapeCount('survivor', 1, this)">1人</button>
-              <button class="result-button" onclick="selectEscapeCount('survivor', 2, this)">2人</button>
-              <button class="result-button" onclick="selectEscapeCount('survivor', 3, this)">3人</button>
-              <button class="result-button" onclick="selectEscapeCount('survivor', 4, this)">4人</button>
+              <button type="button" class="result-button" onclick="selectEscapeCount('survivor', 0, this)">0人</button>
+              <button type="button" class="result-button" onclick="selectEscapeCount('survivor', 1, this)">1人</button>
+              <button type="button" class="result-button" onclick="selectEscapeCount('survivor', 2, this)">2人</button>
+              <button type="button" class="result-button" onclick="selectEscapeCount('survivor', 3, this)">3人</button>
+              <button type="button" class="result-button" onclick="selectEscapeCount('survivor', 4, this)">4人</button>
             </div>
           </div>
 
           <div class="form-group">
             <label class="form-label">コメント（任意）</label>
-            <textarea id="survivor-comment" placeholder="メモを残せます" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; resize: vertical; min-height: 50px; max-height: 120px; font-family: inherit;"></textarea>
+            <textarea id="survivor-comment" class="input-textarea" placeholder="メモを残せます"></textarea>
           </div>
 
           <button type="button" class="submit-button" onclick="submitMatch('survivor')">試合を記録</button>
         </div>
 
-        <div id="hunter-input" style="display: none;">
-          <button type="button" onclick="event.preventDefault(); event.stopPropagation(); clearAllPersistence('hunter'); return false;" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; margin-bottom: 15px;">保持を全て解除</button>
-
-          <div class="form-group">
-            <label class="form-label">日付 <input type="checkbox" id="persist-hunter-date" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
-            <input type="date" id="hunter-date" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+        <div id="hunter-input" class="hidden">
+          <div class="input-top-row">
+            <button type="button" class="btn-clear-persist" onclick="clearAllPersistence('hunter')">保持を全て解除</button>
+            <button type="button" class="input-history-btn" onclick="switchTab('history')" aria-label="試合履歴">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="input-history-label">履歴</span>
+            </button>
           </div>
 
           <div class="form-group">
-            <label class="form-label">段位 <input type="checkbox" id="persist-hunter-rank" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
+            <label class="form-label">日付 <input type="checkbox" id="persist-hunter-date" class="persist-check"><span class="persist-label">保持</span></label>
+            <input type="date" id="hunter-date" class="input-date">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">段位 <input type="checkbox" id="persist-hunter-rank" class="persist-check"><span class="persist-label">保持</span></label>
             <select id="hunter-rank">
               <option value="">選択してください</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label">自分のハンター <input type="checkbox" id="persist-my-hunter" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
+            <label class="form-label">自分のハンター <input type="checkbox" id="persist-my-hunter" class="persist-check"><span class="persist-label">保持</span></label>
             <select id="my-hunter">
               <option value="">選択してください</option>
             </select>
@@ -211,44 +225,36 @@
 
           <div class="form-group">
             <label class="form-label">相手サバイバー</label>
-            <div class="opponent-survivor-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+            <div class="opponent-survivor-grid">
               <div>
                 <select id="opponent-survivor-1" onchange="updateHunterOpponentSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
-                <label style="display: block; margin-top: 5px; font-size: 12px;">
-                  <input type="checkbox" id="persist-opponent-survivor-1" style="margin-right: 4px;">保持
-                </label>
+                <label class="persist-sub-label"><input type="checkbox" id="persist-opponent-survivor-1" class="persist-sub-check">保持</label>
               </div>
               <div>
                 <select id="opponent-survivor-2" onchange="updateHunterOpponentSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
-                <label style="display: block; margin-top: 5px; font-size: 12px;">
-                  <input type="checkbox" id="persist-opponent-survivor-2" style="margin-right: 4px;">保持
-                </label>
+                <label class="persist-sub-label"><input type="checkbox" id="persist-opponent-survivor-2" class="persist-sub-check">保持</label>
               </div>
               <div>
                 <select id="opponent-survivor-3" onchange="updateHunterOpponentSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
-                <label style="display: block; margin-top: 5px; font-size: 12px;">
-                  <input type="checkbox" id="persist-opponent-survivor-3" style="margin-right: 4px;">保持
-                </label>
+                <label class="persist-sub-label"><input type="checkbox" id="persist-opponent-survivor-3" class="persist-sub-check">保持</label>
               </div>
               <div>
                 <select id="opponent-survivor-4" onchange="updateHunterOpponentSelectOptions()">
                   <option value="">選択してください</option>
                 </select>
-                <label style="display: block; margin-top: 5px; font-size: 12px;">
-                  <input type="checkbox" id="persist-opponent-survivor-4" style="margin-right: 4px;">保持
-                </label>
+                <label class="persist-sub-label"><input type="checkbox" id="persist-opponent-survivor-4" class="persist-sub-check">保持</label>
               </div>
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">マップ <input type="checkbox" id="persist-hunter-map" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
+            <label class="form-label">マップ <input type="checkbox" id="persist-hunter-map" class="persist-check"><span class="persist-label">保持</span></label>
             <select id="hunter-map">
               <option value="">選択してください</option>
             </select>
@@ -257,21 +263,22 @@
           <div class="form-group">
             <label class="form-label">脱出人数</label>
             <div class="result-buttons">
-              <button class="result-button" onclick="selectEscapeCount('hunter', 0, this)">0人</button>
-              <button class="result-button" onclick="selectEscapeCount('hunter', 1, this)">1人</button>
-              <button class="result-button" onclick="selectEscapeCount('hunter', 2, this)">2人</button>
-              <button class="result-button" onclick="selectEscapeCount('hunter', 3, this)">3人</button>
-              <button class="result-button" onclick="selectEscapeCount('hunter', 4, this)">4人</button>
+              <button type="button" class="result-button" onclick="selectEscapeCount('hunter', 0, this)">0人</button>
+              <button type="button" class="result-button" onclick="selectEscapeCount('hunter', 1, this)">1人</button>
+              <button type="button" class="result-button" onclick="selectEscapeCount('hunter', 2, this)">2人</button>
+              <button type="button" class="result-button" onclick="selectEscapeCount('hunter', 3, this)">3人</button>
+              <button type="button" class="result-button" onclick="selectEscapeCount('hunter', 4, this)">4人</button>
             </div>
           </div>
 
           <div class="form-group">
             <label class="form-label">コメント（任意）</label>
-            <textarea id="hunter-comment" placeholder="メモを残せます" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; resize: vertical; min-height: 50px; max-height: 120px; font-family: inherit;"></textarea>
+            <textarea id="hunter-comment" class="input-textarea" placeholder="メモを残せます"></textarea>
           </div>
 
-          <button class="submit-button" onclick="submitMatch('hunter')">試合を記録</button>
+          <button type="button" class="submit-button" onclick="submitMatch('hunter')">試合を記録</button>
         </div>
+
       </div>
 
       <!-- 総合勝率タブ -->
@@ -282,155 +289,197 @@
           <button type="button" class="overall-mode-btn" data-mode="recent100" onclick="setOverallMode('recent100')">百戦勝率</button>
         </div>
 
-        <!-- 期間フィルター -->
-        <div style="margin-bottom: 12px;">
-          <label class="filter-label">期間フィルター</label>
-          <select id="overall-period-filter" onchange="updateOverallStatsTab()" class="overall-filter-select">
-            <option value="all">全期間</option>
-            <option value="today">今日</option>
-            <option value="last7days">直近7日</option>
-            <option value="last30days">直近30日</option>
-          </select>
-        </div>
-
-        <!-- 段位フィルター -->
-        <div style="margin-bottom: 20px;">
-          <label class="filter-label">段位フィルター</label>
-          <div id="overall-rank-filter" class="multi-rank-wrapper"></div>
+        <!-- フィルター（折りたたみ） -->
+        <div class="filter-collapsible">
+          <button type="button" id="filter-toggle-btn-overall" class="filter-toggle-btn" onclick="toggleFilterDrawer('overall')" aria-expanded="false">
+            <span class="filter-toggle-label">フィルター</span>
+            <span class="filter-toggle-arrow">▼</span>
+            <span class="filter-chips-wrap" id="filter-chips-overall"></span>
+          </button>
+          <div class="filter-drawer" id="filter-drawer-overall">
+            <div class="filter-drawer-inner">
+              <div class="filter-drawer-group">
+                <label class="filter-label">期間フィルター</label>
+                <select id="overall-period-filter" onchange="updateOverallStatsTab()" class="overall-filter-select">
+                  <option value="all">全期間</option>
+                  <option value="today">今日</option>
+                  <option value="last7days">直近7日</option>
+                  <option value="last30days">直近30日</option>
+                </select>
+              </div>
+              <div class="filter-drawer-group">
+                <label class="filter-label">段位フィルター</label>
+                <div id="overall-rank-filter" class="multi-rank-wrapper"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 総合勝率表示 -->
         <div id="overall-stats-display"></div>
 
         <!-- 勝敗割合ドーナツグラフ -->
-        <div id="result-pie-section" style="margin-top: 20px;">
-          <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">勝敗内訳</h3>
+        <div id="result-pie-section" class="chart-block">
+          <h3 class="chart-section-title">勝敗内訳</h3>
           <div id="result-pie-content"></div>
         </div>
 
         <!-- 直近試合カラーブロック -->
-        <div id="recent-blocks-section" style="margin-top: 20px;">
-          <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 10px;">直近の試合</h3>
+        <div id="recent-blocks-section" class="chart-block">
+          <h3 class="chart-section-title">直近の試合</h3>
           <div id="recent-blocks-content"></div>
         </div>
 
         <!-- 勝率推移グラフ -->
-        <div style="margin-top: 30px;">
-          <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">勝率推移</h3>
+        <div class="chart-block-lg">
+          <h3 class="chart-section-title">勝率推移</h3>
           <div class="chart-container">
-            <canvas id="winrate-chart" style="max-height: 300px;"></canvas>
+            <canvas id="winrate-chart"></canvas>
           </div>
         </div>
 
         <!-- ハイライトサマリー -->
-        <div id="highlight-summary-section" style="margin-top: 20px;">
+        <div id="highlight-summary-section" class="chart-block">
           <div id="highlight-summary-content"></div>
         </div>
       </div>
 
       <!-- 自キャラ別勝率タブ -->
       <div id="character-tab" class="tab-content">
-        <div class="filter-section">
-          <div class="filter-group">
-            <label class="filter-label">期間フィルター</label>
-            <select id="character-period-filter" onchange="updateAllStats()">
-              <option value="all">全期間</option>
-              <option value="today">今日</option>
-              <option value="last7days">直近7日</option>
-              <option value="last30days">直近30日</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">対戦相手フィルター</label>
-            <select id="character-opponent-filter" onchange="updateAllStats()">
-              <option value="all">全て</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">マップフィルター</label>
-            <select id="character-map-filter" onchange="updateAllStats()">
-              <option value="all">全マップ</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">段位フィルター</label>
-            <div id="character-rank-filter" class="multi-rank-wrapper"></div>
+        <div class="filter-collapsible">
+          <button type="button" id="filter-toggle-btn-character" class="filter-toggle-btn" onclick="toggleFilterDrawer('character')" aria-expanded="false">
+            <span class="filter-toggle-label">フィルター</span>
+            <span class="filter-toggle-arrow">▼</span>
+            <span class="filter-chips-wrap" id="filter-chips-character"></span>
+          </button>
+          <div class="filter-drawer" id="filter-drawer-character">
+            <div class="filter-drawer-inner">
+              <div class="filter-section">
+                <div class="filter-group">
+                  <label class="filter-label">期間フィルター</label>
+                  <select id="character-period-filter" onchange="updateAllStats()">
+                    <option value="all">全期間</option>
+                    <option value="today">今日</option>
+                    <option value="last7days">直近7日</option>
+                    <option value="last30days">直近30日</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-label">対戦相手フィルター</label>
+                  <select id="character-opponent-filter" onchange="updateAllStats()">
+                    <option value="all">全て</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-label">マップフィルター</label>
+                  <select id="character-map-filter" onchange="updateAllStats()">
+                    <option value="all">全マップ</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-label">段位フィルター</label>
+                  <div id="character-rank-filter" class="multi-rank-wrapper"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div id="character-stats"></div>
 
         <!-- 使用キャラクター割合グラフ -->
-        <div id="char-pie-section" style="margin-top: 30px;">
-          <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">使用キャラクター割合</h3>
+        <div id="char-pie-section" class="chart-block-lg">
+          <h3 class="chart-section-title">使用キャラクター割合</h3>
           <div id="char-pie-content"></div>
         </div>
       </div>
 
       <!-- マップ別勝率タブ -->
       <div id="map-tab" class="tab-content">
-        <div class="filter-section">
-          <div class="filter-group">
-            <label class="filter-label">期間フィルター</label>
-            <select id="map-period-filter" onchange="updateAllStats()">
-              <option value="all">全期間</option>
-              <option value="today">今日</option>
-              <option value="last7days">直近7日</option>
-              <option value="last30days">直近30日</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">自キャラフィルター</label>
-            <select id="map-char-filter" onchange="updateAllStats()">
-              <option value="all">全キャラ</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">段位フィルター</label>
-            <div id="map-rank-filter" class="multi-rank-wrapper"></div>
+        <div class="filter-collapsible">
+          <button type="button" id="filter-toggle-btn-map" class="filter-toggle-btn" onclick="toggleFilterDrawer('map')" aria-expanded="false">
+            <span class="filter-toggle-label">フィルター</span>
+            <span class="filter-toggle-arrow">▼</span>
+            <span class="filter-chips-wrap" id="filter-chips-map"></span>
+          </button>
+          <div class="filter-drawer" id="filter-drawer-map">
+            <div class="filter-drawer-inner">
+              <div class="filter-section">
+                <div class="filter-group">
+                  <label class="filter-label">期間フィルター</label>
+                  <select id="map-period-filter" onchange="updateAllStats()">
+                    <option value="all">全期間</option>
+                    <option value="today">今日</option>
+                    <option value="last7days">直近7日</option>
+                    <option value="last30days">直近30日</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-label">自キャラフィルター</label>
+                  <select id="map-char-filter" onchange="updateAllStats()">
+                    <option value="all">全キャラ</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-label">段位フィルター</label>
+                  <div id="map-rank-filter" class="multi-rank-wrapper"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div id="map-stats"></div>
 
         <!-- マップ別試合数グラフ -->
-        <div id="map-pie-section" style="margin-top: 30px;">
-          <h3 class="chart-section-title" style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">マップ割合</h3>
+        <div id="map-pie-section" class="chart-block-lg">
+          <h3 class="chart-section-title">マップ割合</h3>
           <div id="map-pie-content"></div>
         </div>
       </div>
 
       <!-- 対戦相手別勝率タブ -->
       <div id="opponent-tab" class="tab-content">
-        <div class="filter-section">
-          <div class="filter-group">
-            <label class="filter-label">期間フィルター</label>
-            <select id="opponent-period-filter" onchange="updateAllStats()">
-              <option value="all">全期間</option>
-              <option value="today">今日</option>
-              <option value="last7days">直近7日</option>
-              <option value="last30days">直近30日</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">自キャラフィルター</label>
-            <select id="my-char-filter" onchange="onMyCharFilterChange()">
-              <option value="all">全キャラ</option>
-            </select>
-          </div>
-          <div class="filter-group" id="opponent-filter-group">
-            <label class="filter-label">対戦相手フィルター</label>
-            <select id="opponent-hunter-filter" onchange="updateAllStats()">
-              <option value="all">全て</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">マップフィルター</label>
-            <select id="opponent-map-filter" onchange="updateAllStats()">
-              <option value="all">全マップ</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">段位フィルター</label>
-            <div id="opponent-rank-filter" class="multi-rank-wrapper"></div>
+        <div class="filter-collapsible">
+          <button type="button" id="filter-toggle-btn-opponent" class="filter-toggle-btn" onclick="toggleFilterDrawer('opponent')" aria-expanded="false">
+            <span class="filter-toggle-label">フィルター</span>
+            <span class="filter-toggle-arrow">▼</span>
+            <span class="filter-chips-wrap" id="filter-chips-opponent"></span>
+          </button>
+          <div class="filter-drawer" id="filter-drawer-opponent">
+            <div class="filter-drawer-inner">
+              <div class="filter-section">
+                <div class="filter-group">
+                  <label class="filter-label">期間フィルター</label>
+                  <select id="opponent-period-filter" onchange="updateAllStats()">
+                    <option value="all">全期間</option>
+                    <option value="today">今日</option>
+                    <option value="last7days">直近7日</option>
+                    <option value="last30days">直近30日</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-label">自キャラフィルター</label>
+                  <select id="my-char-filter" onchange="onMyCharFilterChange()">
+                    <option value="all">全キャラ</option>
+                  </select>
+                </div>
+                <div class="filter-group" id="opponent-filter-group">
+                  <label class="filter-label">対戦相手フィルター</label>
+                  <select id="opponent-hunter-filter" onchange="updateAllStats()">
+                    <option value="all">全て</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-label">マップフィルター</label>
+                  <select id="opponent-map-filter" onchange="updateAllStats()">
+                    <option value="all">全マップ</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-label">段位フィルター</label>
+                  <div id="opponent-rank-filter" class="multi-rank-wrapper"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div id="opponent-stats"></div>
@@ -438,37 +487,48 @@
 
       <!-- 試合履歴タブ -->
       <div id="history-tab" class="tab-content">
-        <div class="filter-section">
-          <div class="filter-group">
-            <label class="filter-label">期間フィルター</label>
-            <select id="history-period-filter" onchange="updateAllStats()">
-              <option value="all">全期間</option>
-              <option value="today">今日</option>
-              <option value="last7days">直近7日</option>
-              <option value="last30days">直近30日</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">相手キャラフィルター</label>
-            <select id="history-opponent-filter" onchange="updateAllStats()">
-              <option value="all">全キャラ</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">自キャラフィルター</label>
-            <select id="history-char-filter" onchange="onHistoryCharFilterChange()">
-              <option value="all">全キャラ</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">マップフィルター</label>
-            <select id="history-map-filter" onchange="updateAllStats()">
-              <option value="all">全マップ</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">段位フィルター</label>
-            <div id="history-rank-filter" class="multi-rank-wrapper"></div>
+        <div class="filter-collapsible">
+          <button type="button" id="filter-toggle-btn-history" class="filter-toggle-btn" onclick="toggleFilterDrawer('history')" aria-expanded="false">
+            <span class="filter-toggle-label">フィルター</span>
+            <span class="filter-toggle-arrow">▼</span>
+            <span class="filter-chips-wrap" id="filter-chips-history"></span>
+          </button>
+          <div class="filter-drawer" id="filter-drawer-history">
+            <div class="filter-drawer-inner">
+              <div class="filter-section">
+                <div class="filter-group">
+                  <label class="filter-label">期間フィルター</label>
+                  <select id="history-period-filter" onchange="updateAllStats()">
+                    <option value="all">全期間</option>
+                    <option value="today">今日</option>
+                    <option value="last7days">直近7日</option>
+                    <option value="last30days">直近30日</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-label">相手キャラフィルター</label>
+                  <select id="history-opponent-filter" onchange="updateAllStats()">
+                    <option value="all">全キャラ</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-label">自キャラフィルター</label>
+                  <select id="history-char-filter" onchange="onHistoryCharFilterChange()">
+                    <option value="all">全キャラ</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-label">マップフィルター</label>
+                  <select id="history-map-filter" onchange="updateAllStats()">
+                    <option value="all">全マップ</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-label">段位フィルター</label>
+                  <div id="history-rank-filter" class="multi-rank-wrapper"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div id="match-history"></div>
@@ -489,15 +549,60 @@
           </label>
         </div>
 
-        <a href="guide.html" class="install-guide-link" style="display: block; padding: 14px 20px; background: #f8f9fa; border-radius: 8px; margin-bottom: 12px; text-decoration: none; color: #3b82f6; font-size: 14px; font-weight: 600;">
-          使い方ガイド ›
-        </a>
+        <a href="guide.html" class="settings-link-btn">使い方ガイド ›</a>
 
-        <a href="install-guide.html" class="install-guide-link" style="display: block; padding: 14px 20px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px; text-decoration: none; color: #3b82f6; font-size: 14px; font-weight: 600;">
-          ホーム画面に追加する方法 ›
-        </a>
+        <a href="install-guide.html" class="settings-link-btn">ホーム画面に追加する方法 ›</a>
 
-        <!-- 追加機能 -->
+        <!-- クラウド同期 -->
+        <div class="stats-card">
+          <h3 class="settings-section-title">クラウド同期</h3>
+          <p class="settings-section-sub">複数のデバイスでデータを同期できます。同期コードを発行し、別のデバイスで入力するだけで完了です。</p>
+          <div id="sync-ui"></div>
+        </div>
+
+        <div class="stats-card">
+          <h3 class="settings-section-title">ファイルで書き出し・読み込み</h3>
+          <p class="settings-section-sub">データをJSONファイルとして書き出し・読み込みできます。他のユーザーへのデータ共有や、クラウド同期を使わない手動バックアップとして活用できます。</p>
+
+          <!-- エクスポート -->
+          <div class="settings-import-section">
+            <h4 class="settings-h4">データをバックアップ</h4>
+            <div class="settings-export-row">
+              <button type="button" class="settings-btn settings-btn-blue" onclick="exportToClipboard()">クリップボードにコピー</button>
+              <button type="button" class="settings-btn settings-btn-green" onclick="exportToFile()">ファイルでダウンロード</button>
+            </div>
+            <p class="settings-note-sm">クリップボードにコピーした場合は、LINEやメモ帳に貼り付けて保存してください。</p>
+          </div>
+
+          <!-- インポート -->
+          <div>
+            <h4 class="settings-h4">データを復元</h4>
+            <p class="settings-note-warn">復元すると現在のデータは完全に上書きされます</p>
+
+            <!-- テキストエリアで復元 -->
+            <div class="settings-import-section">
+              <label class="settings-label">バックアップデータを貼り付け:</label>
+              <textarea id="import-textarea" class="settings-import-textarea" placeholder="ここにバックアップデータを貼り付けてください"></textarea>
+              <button type="button" class="settings-btn settings-btn-purple settings-btn-full" style="margin-top: var(--sp-2);" onclick="importFromText()">テキストから復元</button>
+            </div>
+
+            <!-- ファイルで復元 -->
+            <div>
+              <label class="settings-label">またはファイルから復元:</label>
+              <input type="file" id="import-file" accept=".json,.txt" style="display: none;" onchange="importFromFile(event)">
+              <button type="button" class="settings-btn settings-btn-indigo settings-btn-full" onclick="document.getElementById('import-file').click()">ファイルから復元</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 現在のデータ情報 -->
+        <div class="stats-card">
+          <h3 class="settings-section-title">現在のデータ情報</h3>
+          <div id="data-info" class="settings-data-info"></div>
+        </div>
+      </div>
+      <!-- 追加機能タブ（PC用） -->
+      <div id="extra-tab" class="tab-content">
         <div class="addon-section">
           <div class="addon-section-header">
             <span class="addon-section-title">追加機能</span>
@@ -507,7 +612,7 @@
           <div class="tier-link-card">
             <a href="tier.html" class="tier-link-card-header">
               <span>環境分析 対戦相手Tier表</span>
-              <span style="font-size: 13px; opacity: 0.8;">開く ›</span>
+              <span class="tier-link-card-open-label">開く ›</span>
             </a>
             <div class="tier-link-card-body">
               <p>あなたの対戦データをもとに、対戦相手キャラクターの流行度を自動でTier表化する分析ツールです。</p>
@@ -524,7 +629,7 @@
           <div class="tier-link-card" style="margin-bottom: 0;">
             <a href="challenge.html" class="tier-link-card-header">
               <span>目標達成予測</span>
-              <span style="font-size: 13px; opacity: 0.8;">開く ›</span>
+              <span class="tier-link-card-open-label">開く ›</span>
             </a>
             <div class="tier-link-card-body">
               <p>認知ポイント・段位ポイントの目標を設定すると、あなたの勝率をもとに達成に必要な試合数を予測する分析ツールです。</p>
@@ -536,86 +641,100 @@
             </div>
           </div>
         </div>
-
-        <!-- クラウド同期 -->
-        <div class="stats-card" style="margin-bottom: 20px;">
-          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 10px; color: #1f2937;">クラウド同期</h3>
-          <p style="font-size: 13px; color: #6b7280; margin-bottom: 15px; line-height: 1.6;">
-            複数のデバイスでデータを同期できます。同期コードを発行し、別のデバイスで入力するだけで完了です。
-          </p>
-          <div id="sync-ui"></div>
-        </div>
-
-        <div class="stats-card" style="margin-bottom: 20px;">
-          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 15px; color: #1f2937;">ファイルで書き出し・読み込み</h3>
-          <p style="font-size: 13px; color: #6b7280; margin-bottom: 20px; line-height: 1.6;">
-            データをJSONファイルとして書き出し・読み込みできます。他のユーザーへのデータ共有や、クラウド同期を使わない手動バックアップとして活用できます。
-          </p>
-
-          <!-- エクスポート -->
-          <div style="margin-bottom: 30px;">
-            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #374151;">データをバックアップ</h4>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <button type="button" onclick="exportToClipboard()" style="flex: 1; min-width: 200px; padding: 12px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;">
-                クリップボードにコピー
-              </button>
-              <button type="button" onclick="exportToFile()" style="flex: 1; min-width: 200px; padding: 12px 20px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;">
-                ファイルでダウンロード
-              </button>
-            </div>
-            <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-              クリップボードにコピーした場合は、LINEやメモ帳に貼り付けて保存してください。
-            </p>
-          </div>
-
-          <!-- インポート -->
-          <div>
-            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #374151;">データを復元</h4>
-            <p style="font-size: 12px; color: #dc2626; margin-bottom: 10px; font-weight: 600;">
-              復元すると現在のデータは完全に上書きされます
-            </p>
-
-            <!-- テキストエリアで復元 -->
-            <div style="margin-bottom: 15px;">
-              <label style="font-size: 13px; color: #374151; margin-bottom: 5px; display: block;">バックアップデータを貼り付け:</label>
-              <textarea id="import-textarea" placeholder="ここにバックアップデータを貼り付けてください" style="width: 100%; height: 120px; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; font-family: monospace; resize: vertical;"></textarea>
-              <button type="button" onclick="importFromText()" style="width: 100%; padding: 12px 20px; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px;">
-                テキストから復元
-              </button>
-            </div>
-
-            <!-- ファイルで復元 -->
-            <div>
-              <label style="font-size: 13px; color: #374151; margin-bottom: 5px; display: block;">またはファイルから復元:</label>
-              <input type="file" id="import-file" accept=".json,.txt" style="display: none;" onchange="importFromFile(event)">
-              <button type="button" onclick="document.getElementById('import-file').click()" style="width: 100%; padding: 12px 20px; background: #6366f1; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;">
-                ファイルから復元
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 現在のデータ情報 -->
-        <div class="stats-card">
-          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 15px; color: #1f2937;">現在のデータ情報</h3>
-          <div id="data-info" style="font-size: 13px; color: #374151; line-height: 1.8;"></div>
-        </div>
       </div>
     </div>
 
+    <!-- 詳細ページ（キャラ/マップ/対戦相手） -->
+    <div id="detail-page" class="detail-page hidden">
+      <div class="detail-page-header">
+        <button type="button" class="detail-page-back" onclick="closeDetailPage()">← 戻る</button>
+        <div class="detail-page-title">
+          <img id="detail-page-icon" class="detail-page-icon-img" src="" alt="" onerror="this.style.display='none'">
+          <span id="detail-page-name"></span>
+        </div>
+        <span id="detail-filter-badge" class="detail-filter-badge hidden"></span>
+      </div>
+      <div id="detail-page-body" class="detail-page-body"></div>
+    </div>
+
     <!-- プライバシーポリシーリンク -->
-    <div style="text-align: center; padding: 30px 20px 20px 20px;">
-      <a href="privacy.html" style="color: #94a3b8; text-decoration: none; font-size: 13px; transition: color 0.2s;" onmouseover="this.style.color='#cbd5e1'" onmouseout="this.style.color='#94a3b8'">プライバシーポリシー</a>
+    <div class="privacy-footer">
+      <a href="privacy.html" class="privacy-link">プライバシーポリシー</a>
     </div>
   </div>
 
-  <!-- モバイル用ボトムナビ -->
+  <!-- モバイル用ボトムナビ（5タブ） -->
   <nav class="bottom-nav" id="bottom-nav">
-    <button class="bottom-nav-item active" data-nav="input" onclick="switchBottomNav('input', this)">入力</button>
-    <button class="bottom-nav-item" data-nav="stats" onclick="switchBottomNav('stats', this)">統計</button>
-    <button class="bottom-nav-item" data-nav="history" onclick="switchBottomNav('history', this)">履歴</button>
-    <button class="bottom-nav-item" data-nav="settings" onclick="switchBottomNav('settings', this)">設定</button>
+    <div class="bottom-nav-pill" id="bottom-nav-pill"></div>
+    <button class="bottom-nav-item active" data-nav="input" onclick="switchBottomNav('input',this)">
+      <span class="bnav-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+      </span>
+      <span class="bnav-label">入力</span>
+    </button>
+    <button class="bottom-nav-item" data-nav="overall" onclick="switchBottomNav('overall',this)">
+      <span class="bnav-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </span>
+      <span class="bnav-label">総合</span>
+    </button>
+    <button class="bottom-nav-item" data-nav="character" onclick="switchBottomNav('character',this)">
+      <span class="bnav-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </span>
+      <span class="bnav-label">キャラ別</span>
+    </button>
+    <button class="bottom-nav-item" data-nav="map" onclick="switchBottomNav('map',this)">
+      <span class="bnav-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      </span>
+      <span class="bnav-label">マップ別</span>
+    </button>
+    <button class="bottom-nav-item" data-nav="opponent" onclick="switchBottomNav('opponent',this)">
+      <span class="bnav-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </span>
+      <span class="bnav-label">対戦別</span>
+    </button>
   </nav>
+
+  <!-- ツールシート（モバイル用） -->
+  <div class="tool-sheet-overlay" id="tool-sheet-overlay" onclick="closeToolSheet()"></div>
+  <div class="tool-sheet" id="tool-sheet">
+    <div class="tool-sheet-header">
+      <span class="tool-sheet-title">ツール</span>
+      <button type="button" class="tool-sheet-close" onclick="closeToolSheet()">✕</button>
+    </div>
+    <a href="tier.html" class="tool-sheet-item">
+      <span class="tool-sheet-item-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </span>
+      <span class="tool-sheet-item-label">環境分析 対戦相手Tier表</span>
+      <span class="tool-sheet-item-arrow">›</span>
+    </a>
+    <a href="challenge.html" class="tool-sheet-item">
+      <span class="tool-sheet-item-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      </span>
+      <span class="tool-sheet-item-label">目標達成予測</span>
+      <span class="tool-sheet-item-arrow">›</span>
+    </a>
+    <div class="tool-sheet-divider"></div>
+    <button type="button" class="tool-sheet-item" onclick="closeToolSheet(); switchTab('settings', document.querySelector('.main-tab[onclick*=\'settings\']'))">
+      <span class="tool-sheet-item-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </span>
+      <span class="tool-sheet-item-label">設定</span>
+      <span class="tool-sheet-item-arrow">›</span>
+    </button>
+    <a href="guide.html" class="tool-sheet-item">
+      <span class="tool-sheet-item-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      </span>
+      <span class="tool-sheet-item-label">使い方ガイド</span>
+      <span class="tool-sheet-item-arrow">›</span>
+    </a>
+  </div>
 
   <script src="app.js"></script>
 </body>

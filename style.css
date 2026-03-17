@@ -2236,12 +2236,18 @@ body.dark-mode .fchip:hover { background: #253355; }
   margin-bottom: 1px;
 }
 .top-card-detail-item span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   display: block;
   color: #374151;
   font-weight: 600;
+  word-break: break-all;
+}
+.top-card-detail-item span em {
+  display: block;
+  font-style: normal;
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 9px;
+  margin-top: 1px;
 }
 /* ダークモード */
 body.dark-mode .top-card { border-color: #2e2e48; }

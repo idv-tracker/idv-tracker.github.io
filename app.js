@@ -4815,8 +4815,8 @@
             </div>
           </div>
           <div class="top-card-detail-row" style="padding:4px 10px 8px;border-top:1px solid rgba(0,0,0,0.06)">
-            <div class="top-card-detail-item"><strong>得意マップ</strong><span>${best ? `${escapeHTML(best.name)} ${best.winrate}%` : '—'}</span></div>
-            <div class="top-card-detail-item"><strong>苦手マップ</strong><span>${worst ? `${escapeHTML(worst.name)} ${worst.winrate}%` : '—'}</span></div>
+            <div class="top-card-detail-item"><strong>得意マップ</strong><span>${best ? `${escapeHTML(best.name)}<em>${best.winrate}%</em>` : '—'}</span></div>
+            <div class="top-card-detail-item"><strong>苦手マップ</strong><span>${worst ? `${escapeHTML(worst.name)}<em>${worst.winrate}%</em>` : '—'}</span></div>
           </div>
         </div>`;
     }
@@ -4845,8 +4845,8 @@
             </div>
           </div>
           <div class="top-card-detail-row" style="padding:4px 10px 8px;border-top:1px solid rgba(0,0,0,0.06)">
-            <div class="top-card-detail-item"><strong>得意キャラ</strong><span>${best ? `${escapeHTML(best.name)} ${best.winrate}%` : '—'}</span></div>
-            <div class="top-card-detail-item"><strong>苦手キャラ</strong><span>${worst ? `${escapeHTML(worst.name)} ${worst.winrate}%` : '—'}</span></div>
+            <div class="top-card-detail-item"><strong>得意キャラ</strong><span>${best ? `${escapeHTML(best.name)}<em>${best.winrate}%</em>` : '—'}</span></div>
+            <div class="top-card-detail-item"><strong>苦手キャラ</strong><span>${worst ? `${escapeHTML(worst.name)}<em>${worst.winrate}%</em>` : '—'}</span></div>
           </div>
         </div>`;
     }
@@ -4880,8 +4880,8 @@
             </div>
           </div>
           <div class="top-card-detail-row" style="padding:4px 10px 8px;border-top:1px solid rgba(0,0,0,0.06)">
-            <div class="top-card-detail-item"><strong>得意マップ</strong><span>${best ? `${escapeHTML(best.name)} ${best.winrate}%` : '—'}</span></div>
-            <div class="top-card-detail-item"><strong>苦手マップ</strong><span>${worst ? `${escapeHTML(worst.name)} ${worst.winrate}%` : '—'}</span></div>
+            <div class="top-card-detail-item"><strong>得意マップ</strong><span>${best ? `${escapeHTML(best.name)}<em>${best.winrate}%</em>` : '—'}</span></div>
+            <div class="top-card-detail-item"><strong>苦手マップ</strong><span>${worst ? `${escapeHTML(worst.name)}<em>${worst.winrate}%</em>` : '—'}</span></div>
           </div>
         </div>`;
     }

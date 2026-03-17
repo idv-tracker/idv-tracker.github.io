@@ -2035,12 +2035,17 @@ body.dark-mode .header-gear-btn {
   line-height: 1;
   letter-spacing: 0.02em;
 }
+.bottom-nav-item.active .bnav-label {
+  font-weight: 700;
+  font-size: 12px;
+}
 
 /* ダークモード */
 body.dark-mode .bottom-nav {
   box-shadow: 0 4px 24px rgba(0,0,0,0.45), 0 1px 6px rgba(0,0,0,0.25);
 }
-body.dark-mode .bottom-nav-item { color: var(--t-muted); }
+body.dark-mode .bottom-nav-item         { color: var(--t-muted); }
+body.dark-mode .bottom-nav-item.active  { color: #ffffff; }
 
 /* ===== レスポンシブ ===== */
 @media (max-width: 767px) {

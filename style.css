@@ -2256,7 +2256,10 @@ body.dark-mode .top-card-detail-row { border-top-color: rgba(255,255,255,0.06); 
 
 /* ===== 詳細ページ ===== */
 .detail-page {
-  position: relative;
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  overflow-y: auto;
   background: white;
 }
 .detail-page-header {

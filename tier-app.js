@@ -1078,7 +1078,7 @@ function renderDetailHistory(charName, fm) {
       const rl    = getResultLabel(m);
       const label = { win: '勝', loss: '敗', draw: '分' }[rl];
       const date  = m.date || (m.timestamp ? m.timestamp.substring(0, 10) : '');
-      const rankIconHTML = m.rank ? `<img class="history-rank-icon" src="ranks/${m.perspective}s/${encodeURIComponent(m.rank)}.PNG" alt="${escapeHTML(m.rank)}" title="${escapeHTML(m.rank)}" onerror="this.outerHTML='${escapeHTML(m.rank)}'">` : '';
+      const rankIconHTML = m.rank ? `<img class="history-rank-icon" src="ranks/${m.perspective}s/${m.rank}.PNG" alt="${escapeHTML(m.rank)}" title="${escapeHTML(m.rank)}" onerror="this.outerHTML='${escapeHTML(m.rank)}'">` : '';
       const vsRowHTML = (() => {
         const iconImg = (src, alt) => `<img class="history-co-icon" src="${src}" alt="${escapeHTML(alt)}" title="${escapeHTML(alt)}" onerror="this.style.display='none'">`;
         if (currentPerspective === 'hunter') {

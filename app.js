@@ -32,11 +32,11 @@
       return `${folder}/${prefix}_${name}.PNG`;
     }
     function getMapIconPath(mapName) {
-      return `maps/${encodeURIComponent(mapName)}.PNG`;
+      return `maps/${mapName}.PNG`;
     }
     function getRankIconPath(rank, perspective) {
       const folder = perspective === 'survivor' ? 'survivors' : 'hunters';
-      return `ranks/${folder}/${encodeURIComponent(rank)}.PNG`;
+      return `ranks/${folder}/${rank}.PNG`;
     }
     function charIconImg(charName, type) {
       return `<img class="match-char-icon" src="${buildIconPath(charName, type)}" alt="${escapeHTML(charName)}" title="${escapeHTML(charName)}" onerror="this.style.display='none'">`;
@@ -4612,6 +4612,28 @@
           ticking = true;
         }
       }, { passive: true });
+
+      // 詳細ページ内スクロールでもボトムナビを制御
+      const detailPageEl = document.getElementById('detail-page');
+      let lastDetailScrollY = 0;
+      let detailTicking = false;
+      detailPageEl?.addEventListener('scroll', () => {
+        if (!detailTicking) {
+          window.requestAnimationFrame(() => {
+            const currentScrollY = detailPageEl.scrollTop;
+            const scrollingDown = currentScrollY > lastDetailScrollY;
+            const bottomNav = document.getElementById('bottom-nav');
+            if (scrollingDown && currentScrollY > 50) {
+              bottomNav?.classList.add('scroll-hidden');
+            } else {
+              bottomNav?.classList.remove('scroll-hidden');
+            }
+            lastDetailScrollY = currentScrollY;
+            detailTicking = false;
+          });
+          detailTicking = true;
+        }
+      }, { passive: true });
     }
 
     // ===== ヘッダー統計 =====
@@ -4992,7 +5014,10 @@
       // タブコンテンツを非表示にして詳細を表示
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       const detailPage = document.getElementById('detail-page');
-      if (detailPage) detailPage.classList.remove('hidden');
+      if (detailPage) {
+        detailPage.classList.remove('hidden');
+        detailPage.scrollTop = 0;
+      }
       window.scrollTo(0, 0);
 
       if (!skipPush) {

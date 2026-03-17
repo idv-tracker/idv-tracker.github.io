@@ -31,8 +31,11 @@
       name = ICON_NAME_MAP[name] || name;
       return `${folder}/${prefix}_${name}.PNG`;
     }
+    const MAP_ICON_OVERRIDES = {
+      '軍需工場': 'maps/gunju_kojou.PNG',
+    };
     function getMapIconPath(mapName) {
-      return `maps/${mapName}.PNG`;
+      return MAP_ICON_OVERRIDES[mapName] || `maps/${mapName}.PNG`;
     }
     function getRankIconPath(rank, perspective) {
       const folder = perspective === 'survivor' ? 'survivors' : 'hunters';

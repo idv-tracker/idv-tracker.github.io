@@ -648,23 +648,14 @@
         opponentFilterGroup.style.display = 'block';
       }
       
-      // 対戦相手ハンターフィルターを更新
-      updateOpponentHunterFilter();
-      updateCharacterOpponentFilter();
-      updateAllHistoryFilters();
-      
-      // 自キャラ別勝率のマップフィルターを更新
-      updateCharacterMapFilter();
-      
+      refreshAfterDataChange();
+
       // タブのスクロール監視を初期化
       initializeTabScrollIndicator();
-      
-      updateAllWithFilters(); // フィルターと統計を更新
 
       // 同期UI初期化
       updateSyncUI();
       initScrollBehavior();
-      updateHeaderStats();
 
       // URLパラメータから詳細ページを自動オープン
       const urlParams = new URLSearchParams(location.search);
@@ -1191,21 +1182,7 @@
         if (opponentFilterGroup) opponentFilterGroup.classList.add('hidden');
       }
       
-      // 自キャラ別勝率のマップ・対戦相手フィルターを更新（視点が変わったので）
-      updateCharacterMapFilter();
-      updateCharacterOpponentFilter();
-      
-      // 試合履歴フィルター選択肢を更新（視点が変わったので）
-      updateAllHistoryFilters();
-      
-      // 総合勝率タブが表示されている場合は更新
-      const overallTab = document.getElementById('overall-tab');
-      if (overallTab && overallTab.classList.contains('active')) {
-        updateOverallStatsTab();
-      }
-      
-      updateAllWithFilters();
-      updateHeaderStats();
+      refreshAfterDataChange({ skipOpponentHunterFilter: true });
     }
 
     // タブを切り替え
@@ -1379,25 +1356,8 @@
       
       resetForm(perspective);
       
-      // 対戦相手ハンターフィルターを更新
-      updateOpponentHunterFilter();
-      updateCharacterOpponentFilter();
-      updateAllHistoryFilters();
-      
-      // 自キャラ別勝率のマップフィルターを更新
-      updateCharacterMapFilter();
-      
-      // セレクトボックスを再構築（使用回数順に更新）
-      repopulateCharacterSelects();
-      
       alert('試合を記録しました！');
-      updateAllWithFilters();
-      
-      // 総合勝率タブが表示されている場合は更新
-      const overallTab = document.getElementById('overall-tab');
-      if (overallTab && overallTab.classList.contains('active')) {
-        updateOverallStatsTab();
-      }
+      refreshAfterDataChange({ rebuildSelects: true });
     }
     
     // フォームをリセット（保持設定に応じて）
@@ -1440,8 +1400,15 @@
     function loadData() {
       const saved = localStorage.getItem('identity5_matches');
       if (saved) {
-        matches = JSON.parse(saved);
-        
+        try {
+          matches = JSON.parse(saved);
+        } catch (_) {
+          console.error('試合データの読み込みに失敗しました。データをリセットします。');
+          matches = [];
+          localStorage.removeItem('identity5_matches');
+          return;
+        }
+
         // 既存データに日付がない場合、timestampから生成（マイグレーション）
         let migrated = false;
         matches = matches.map(match => {
@@ -1737,6 +1704,16 @@
       updateAllStats();
     }
     
+    // データ変更後の共通リフレッシュ（フィルター再構築 → 全統計更新）
+    function refreshAfterDataChange({ rebuildSelects = false, skipOpponentHunterFilter = false } = {}) {
+      if (!skipOpponentHunterFilter) updateOpponentHunterFilter();
+      updateCharacterOpponentFilter();
+      updateAllHistoryFilters();
+      updateCharacterMapFilter();
+      if (rebuildSelects) repopulateCharacterSelects();
+      updateAllWithFilters();
+    }
+
     // 勝率を計算
     function calculateWinrate(matches, perspective) {
       const totalWithDraws = matches.length; // 引き分けを含む総試合数
@@ -1799,6 +1776,37 @@
     let charPieChart = null;    // 自キャラ使用数グラフ
     let resultPieChart = null;  // 勝敗割合グラフ
     let overallMode = 'total';  // 'total' or 'recent100'
+
+    // ドーナツチャート用スライスラベルプラグインのファクトリ
+    const _charLabelFn = label => label.startsWith('「') ? label.charAt(1) : label.charAt(0);
+    function createSliceLabelPlugin(id, { fontSize = 13, labelFn } = {}) {
+      const getChar = labelFn || (label => label.charAt(0));
+      return {
+        id,
+        afterDraw(chart) {
+          const ctx = chart.ctx;
+          const meta = chart.getDatasetMeta(0);
+          const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+          ctx.save();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#fff';
+          ctx.shadowColor = 'rgba(0,0,0,0.6)';
+          ctx.shadowBlur = 3;
+          ctx.font = `bold ${fontSize}px sans-serif`;
+          meta.data.forEach((arc, index) => {
+            const value = chart.data.datasets[0].data[index];
+            if (value / total < 0.05) return;
+            const midAngle = (arc.startAngle + arc.endAngle) / 2;
+            const midRadius = (arc.outerRadius + arc.innerRadius) / 2;
+            const x = arc.x + midRadius * Math.cos(midAngle);
+            const y = arc.y + midRadius * Math.sin(midAngle);
+            ctx.fillText(getChar(chart.data.labels[index]), x, y);
+          });
+          ctx.restore();
+        }
+      };
+    }
 
     function setOverallMode(mode) {
       overallMode = mode;
@@ -1864,8 +1872,8 @@
       const matchCountText = overallMode === 'recent100' ? '' : ` (${stats.totalWithDraws}試合)`;
       
       let html = `<div class="stats-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <div style="font-size: 14px; font-weight: 600; color: #666;">${statsTitle}</div>
+        <div class="stats-card-header">
+          <div class="stats-card-title">${statsTitle}</div>
         </div>
         <div class="overall-stats-display">
           <div class="winrate-big">${winrateDecimal}%</div>
@@ -1952,32 +1960,7 @@
       const canvas = document.getElementById('map-pie-chart');
       if (!canvas || typeof Chart === 'undefined') return;
 
-      // スライス内に頭文字を描画するカスタムプラグイン
-      const sliceLabelPlugin = {
-        id: 'sliceLabel',
-        afterDraw(chart) {
-          const ctx = chart.ctx;
-          const meta = chart.getDatasetMeta(0);
-          const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-          ctx.save();
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = '#fff';
-          ctx.shadowColor = 'rgba(0,0,0,0.6)';
-          ctx.shadowBlur = 3;
-          ctx.font = 'bold 13px sans-serif';
-          meta.data.forEach((arc, index) => {
-            const value = chart.data.datasets[0].data[index];
-            if (value / total < 0.05) return; // 5%未満は非表示
-            const midAngle = (arc.startAngle + arc.endAngle) / 2;
-            const midRadius = (arc.outerRadius + arc.innerRadius) / 2;
-            const x = arc.x + midRadius * Math.cos(midAngle);
-            const y = arc.y + midRadius * Math.sin(midAngle);
-            ctx.fillText(chart.data.labels[index].charAt(0), x, y);
-          });
-          ctx.restore();
-        }
-      };
+      const sliceLabelPlugin = createSliceLabelPlugin('sliceLabel');
 
       mapPieChart = new Chart(canvas.getContext('2d'), {
         type: 'doughnut',
@@ -2080,33 +2063,7 @@
       const canvas = document.getElementById('char-pie-chart');
       if (!canvas || typeof Chart === 'undefined') return;
 
-      const sliceLabelPlugin = {
-        id: 'charSliceLabel',
-        afterDraw(chart) {
-          const ctx = chart.ctx;
-          const meta = chart.getDatasetMeta(0);
-          const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-          ctx.save();
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = '#fff';
-          ctx.shadowColor = 'rgba(0,0,0,0.6)';
-          ctx.shadowBlur = 3;
-          ctx.font = 'bold 13px sans-serif';
-          meta.data.forEach((arc, index) => {
-            const value = chart.data.datasets[0].data[index];
-            if (value / total < 0.05) return;
-            const midAngle = (arc.startAngle + arc.endAngle) / 2;
-            const midRadius = (arc.outerRadius + arc.innerRadius) / 2;
-            const x = arc.x + midRadius * Math.cos(midAngle);
-            const y = arc.y + midRadius * Math.sin(midAngle);
-            const label = chart.data.labels[index];
-            const displayChar = label.startsWith('「') ? label.charAt(1) : label.charAt(0);
-            ctx.fillText(displayChar, x, y);
-          });
-          ctx.restore();
-        }
-      };
+      const sliceLabelPlugin = createSliceLabelPlugin('charSliceLabel', { labelFn: _charLabelFn });
 
       charPieChart = new Chart(canvas.getContext('2d'), {
         type: 'doughnut',
@@ -2193,31 +2150,7 @@
       const canvas = document.getElementById('result-pie-chart');
       if (!canvas || typeof Chart === 'undefined') return;
 
-      const sliceLabelPlugin = {
-        id: 'resultSliceLabel',
-        afterDraw(chart) {
-          const ctx = chart.ctx;
-          const meta = chart.getDatasetMeta(0);
-          const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-          ctx.save();
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = '#fff';
-          ctx.shadowColor = 'rgba(0,0,0,0.6)';
-          ctx.shadowBlur = 3;
-          ctx.font = 'bold 13px sans-serif';
-          meta.data.forEach((arc, index) => {
-            const value = chart.data.datasets[0].data[index];
-            if (value / total < 0.05) return;
-            const midAngle = (arc.startAngle + arc.endAngle) / 2;
-            const midRadius = (arc.outerRadius + arc.innerRadius) / 2;
-            const x = arc.x + midRadius * Math.cos(midAngle);
-            const y = arc.y + midRadius * Math.sin(midAngle);
-            ctx.fillText(chart.data.labels[index].charAt(0), x, y);
-          });
-          ctx.restore();
-        }
-      };
+      const sliceLabelPlugin = createSliceLabelPlugin('resultSliceLabel');
 
       resultPieChart = new Chart(canvas.getContext('2d'), {
         type: 'doughnut',
@@ -3014,9 +2947,9 @@
         html += generatePagination(currentPages.opponentStats, totalHunterPages, 'changeOpponentPage');
         html += '</div>';
 
-        // ===== 味方編成別勝率（折りたたみ） =====
+        // ===== 味方別勝率（折りたたみ） =====
         const teammateToggleIcon = teammateStatsExpanded ? '▲' : '▼';
-        const teammateToggleLabel = teammateStatsExpanded ? '味方編成別勝率を閉じる' : '味方編成別勝率を見る';
+        const teammateToggleLabel = teammateStatsExpanded ? '味方別勝率を閉じる' : '味方別勝率を見る';
         html += `<button class="pair-toggle-btn" onclick="toggleTeammateStats()">
           <span class="pair-toggle-icon">${teammateToggleIcon}</span>${teammateToggleLabel}
         </button>`;
@@ -3024,7 +2957,7 @@
         if (teammateStatsExpanded) {
           html += generateSortButtons('teammate');
           html += `<div class="stats-card">
-            <div class="stats-title">味方編成別勝率</div>
+            <div class="stats-title">味方別勝率</div>
             <div class="bar-chart-horizontal">`;
 
           const sortedTeammates = sortByState(Object.keys(teammateStats), teammateStats, currentPerspective, sortState.teammate);
@@ -3309,7 +3242,7 @@
         const escapeInfo = match.escapeCount !== undefined ? `　脱出${match.escapeCount}人` : '';
 
         const rankIconHTML = match.rank
-          ? `<img class="match-rank-icon" src="${getRankIconPath(match.rank, match.perspective)}" alt="${escapeHTML(match.rank)}" title="${escapeHTML(match.rank)}" onerror="this.outerHTML='${escapeHTML(match.rank)}'">` : '';
+          ? `<img class="match-rank-icon" src="${getRankIconPath(match.rank, match.perspective)}" alt="${escapeHTML(match.rank)}" title="${escapeHTML(match.rank)}" onerror="this.textContent=this.alt">` : '';
         let vsHTML = '';
         if (match.perspective === 'survivor') {
           const mySide  = [match.myCharacter, ...(match.teammates || [])].filter(Boolean).map(s => charIconImg(s, 'survivor')).join('');
@@ -3441,22 +3374,7 @@
       
       matches = matches.filter(m => m.id !== id);
       saveData();
-      
-      // 対戦相手ハンターフィルターを更新
-      updateOpponentHunterFilter();
-      updateCharacterOpponentFilter();
-      updateAllHistoryFilters();
-      
-      // 自キャラ別勝率のマップフィルターを更新
-      updateCharacterMapFilter();
-      
-      // セレクトボックスを再構築（使用回数順に更新）
-      repopulateCharacterSelects();
-      updateAllWithFilters();
-      const overallTab = document.getElementById('overall-tab');
-      if (overallTab && overallTab.classList.contains('active')) {
-        updateOverallStatsTab();
-      }
+      refreshAfterDataChange({ rebuildSelects: true });
     }
 
     // 全データをリセット（確認ダイアログあり）
@@ -3473,21 +3391,7 @@
       characterUsageCount = { survivorUsed: {}, survivorFaced: {}, hunterUsed: {}, hunterFaced: {} };
       saveCharacterUsageCount();
       
-      // 対戦相手ハンターフィルターを更新
-      updateOpponentHunterFilter();
-      updateCharacterOpponentFilter();
-      updateAllHistoryFilters();
-      
-      // 自キャラ別勝率のマップフィルターを更新
-      updateCharacterMapFilter();
-      
-      // セレクトボックスを再構築（使用回数順に更新）
-      repopulateCharacterSelects();
-      updateAllWithFilters();
-      const overallTab = document.getElementById('overall-tab');
-      if (overallTab && overallTab.classList.contains('active')) {
-        updateOverallStatsTab();
-      }
+      refreshAfterDataChange({ rebuildSelects: true });
     }
 
     // データのエクスポート/インポート機能
@@ -3611,16 +3515,7 @@
         
         // UIを更新
         updateDataInfo();
-        repopulateCharacterSelects();
-        updateOpponentHunterFilter();
-        updateCharacterOpponentFilter();
-        updateAllHistoryFilters();
-        updateCharacterMapFilter();
-        updateAllWithFilters();
-        const overallTab = document.getElementById('overall-tab');
-        if (overallTab && overallTab.classList.contains('active')) {
-          updateOverallStatsTab();
-        }
+        refreshAfterDataChange({ rebuildSelects: true });
 
         alert(`データを復元しました！\n\n${newMatchCount}試合のデータを読み込みました。`);
         return true;
@@ -4022,14 +3917,7 @@
       localStorage.setItem('identity5_matches', JSON.stringify(matches));
       localStorage.setItem('identity5_data_modified', cloudData.lastModified || new Date().toISOString());
       saveCharacterUsageCount();
-      repopulateCharacterSelects();
-      updateOpponentHunterFilter();
-      updateCharacterOpponentFilter();
-      updateAllHistoryFilters();
-      updateCharacterMapFilter();
-      updateAllWithFilters();
-      const overallTab = document.getElementById('overall-tab');
-      if (overallTab && overallTab.classList.contains('active')) updateOverallStatsTab();
+      refreshAfterDataChange({ rebuildSelects: true });
       localStorage.setItem('identity5_last_synced', new Date().toISOString());
     }
 
@@ -4129,7 +4017,7 @@
       }
     }
 
-    // ===== 繝｢繝舌う繝ｫ繝翫ン繧ｲ繝ｼ繧ｷ繝ｧ繝ｳ =====
+    // ===== モバイルナビゲーション =====
     // navItem: 'input' | 'overall' | 'character' | 'map' | 'opponent'
     function switchBottomNav(navItem, el) {
       document.querySelectorAll('.bottom-nav-item').forEach(btn => btn.classList.remove('active'));
@@ -5021,33 +4909,7 @@
         const { pieData } = detailPieDataCache[sectionId];
         const isDark = document.body.classList.contains('dark-mode');
 
-        const sliceLabelPlugin = {
-          id: `detailSliceLabel_${sectionId}`,
-          afterDraw(chart) {
-            const ctx = chart.ctx;
-            const meta = chart.getDatasetMeta(0);
-            const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-            ctx.save();
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#fff';
-            ctx.shadowColor = 'rgba(0,0,0,0.6)';
-            ctx.shadowBlur = 3;
-            ctx.font = 'bold 12px sans-serif';
-            meta.data.forEach((arc, index) => {
-              const value = chart.data.datasets[0].data[index];
-              if (value / total < 0.05) return;
-              const midAngle = (arc.startAngle + arc.endAngle) / 2;
-              const midRadius = (arc.outerRadius + arc.innerRadius) / 2;
-              const x = arc.x + midRadius * Math.cos(midAngle);
-              const y = arc.y + midRadius * Math.sin(midAngle);
-              const label = chart.data.labels[index];
-              const displayChar = label.startsWith('「') ? label.charAt(1) : label.charAt(0);
-              ctx.fillText(displayChar, x, y);
-            });
-            ctx.restore();
-          }
-        };
+        const sliceLabelPlugin = createSliceLabelPlugin(`detailSliceLabel_${sectionId}`, { fontSize: 12, labelFn: _charLabelFn });
 
         const instance = new Chart(canvas.getContext('2d'), {
           type: 'doughnut',
@@ -5109,7 +4971,7 @@
         const escapeInfo = match.escapeCount !== undefined ? `　脱出${match.escapeCount}人` : '';
 
         const rankIconHTML = match.rank
-          ? `<img class="match-rank-icon" src="${getRankIconPath(match.rank, match.perspective)}" alt="${escapeHTML(match.rank)}" title="${escapeHTML(match.rank)}" onerror="this.outerHTML='${escapeHTML(match.rank)}'">` : '';
+          ? `<img class="match-rank-icon" src="${getRankIconPath(match.rank, match.perspective)}" alt="${escapeHTML(match.rank)}" title="${escapeHTML(match.rank)}" onerror="this.textContent=this.alt">` : '';
         let vsHTML = '';
         if (match.perspective === 'survivor') {
           const mySide  = [match.myCharacter, ...(match.teammates || [])].filter(Boolean).map(s => charIconImg(s, 'survivor')).join('');

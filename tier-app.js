@@ -1,15 +1,4 @@
-// ===== ダークモード（ちらつき防止） =====
-(function () {
-  if (localStorage.getItem('identity5_dark_mode') === 'on') {
-    document.body.classList.add('dark-mode');
-  }
-})();
-
 // ===== 定数 =====
-const SURVIVORS = ['幸運児', '医師', '弁護士', '泥棒', '庭師', 'マジシャン', '冒険家', '傭兵', '祭司', '空軍', '機械技師', 'オフェンス', '心眼', '調香師', 'カウボーイ', '踊り子', '占い師', '納棺師', '探鉱者', '呪術師', '野人', '曲芸師', '一等航海士', 'バーメイド', 'ポストマン', '墓守', '「囚人」', '昆虫学者', '画家', 'バッツマン', '玩具職人', '患者', '「心理学者」', '小説家', '「少女」', '泣きピエロ', '教授', '骨董商', '作曲家', '記者', '航空エンジニア', '応援団', '人形師', '火災調査員', '「レディ・ファウロ」', '「騎士」', '気象学者', '弓使い', '「脱出マスター」', '幻灯師', '闘牛士'];
-const HUNTERS  = ['復讐者', '道化師', '断罪狩人', 'リッパー', '結魂者', '芸者', '白黒無常', '写真家', '狂眼', '黄衣の王', '夢の魔女', '泣き虫', '魔トカゲ', '血の女王', 'ガードNo.26', '「使徒」', 'ヴァイオリニスト', '彫刻師', 'アンデッド', '破輪', '漁師', '蝋人形師', '「悪夢」', '書記官', '隠者', '夜の番人', 'オペラ歌手', '「フールズ・ゴールド」', '時空の影', '「足萎えの羊」', '「フラバルー」', '雑貨商', '「ビリヤードプレイヤー」', '「女王蜂」'];
-const RANKS    = ['1段', '2段', '3段', '4段', '5段', '6段', '7段', '最高峰'];
-
 const TIER_ORDER  = ['SSS', 'SS', 'S', 'A', 'B', 'C', 'D'];
 const TIER_THRESHOLDS = [0.05, 0.15, 0.30, 0.50, 0.70, 0.85, 1.00];
 const TIER_COLORS = {
@@ -21,7 +10,6 @@ const TIER_COLORS = {
   C:   { bg: '#9ca3af', text: '#ffffff' },
   D:   { bg: '#4b5563', text: '#ffffff' },
 };
-const MAPS = ['軍需工場', '赤の教会', '聖心病院', '湖景村', '月の河公園', 'レオの思い出', '永眠町', '中華街', '罪の森'];
 const MAP_COLOR_PALETTE = ['#3b82f6','#ef4444','#f59e0b','#10b981','#8b5cf6','#06b6d4','#f97316','#ec4899','#84cc16'];
 const MAP_COLOR_MAP = {};
 MAPS.forEach((m, i) => { MAP_COLOR_MAP[m] = MAP_COLOR_PALETTE[i]; });
@@ -29,28 +17,7 @@ function mapColor(name, fallbackIndex) {
   return MAP_COLOR_MAP[name] || MAP_COLOR_PALETTE[fallbackIndex % MAP_COLOR_PALETTE.length];
 }
 
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyD11HYRuGLn0N4_eFhXfTK5R-3QyJ4RsSo",
-  authDomain: "idvtracker.firebaseapp.com",
-  projectId: "idvtracker",
-  storageBucket: "idvtracker.firebasestorage.app",
-  messagingSenderId: "1027492627968",
-  appId: "1:1027492627968:web:ad567e2e79b3a1574bbae5"
-};
-
 // ===== アイコンパス =====
-function buildIconPath(charName, type) {
-  const folder = type === 'hunter' ? 'hunters' : 'survivors';
-  const prefix = type === 'hunter' ? 'hunter' : 'survivor';
-  let name = charName.replace(/[「」]/g, '');
-  const nameMap = {
-    'フールズ・ゴールド': 'フールズゴールド',
-    'ガードNo.26': 'ガードNO.26',
-    '闘牛士': '闘牛師',
-  };
-  name = nameMap[name] || name;
-  return `${folder}/${prefix}_${name}.PNG`;
-}
 function getCharIconPath(charName) {
   // 相手キャラのアイコン（サバイバー視点→相手はハンター、ハンター視点→相手はサバイバー）
   return buildIconPath(charName, currentPerspective === 'survivor' ? 'hunter' : 'survivor');
@@ -78,7 +45,7 @@ let lastUpdated       = null;
 
 // ===== 初期化 =====
 function init() {
-  initFirebase();
+  initFirebaseLocal();
 
   // 既存アプリの sync code を共有して自動接続
   const syncCode = localStorage.getItem('identity5_sync_code');
@@ -103,14 +70,8 @@ function init() {
 }
 
 // ===== Firebase =====
-function initFirebase() {
-  try {
-    if (typeof firebase === 'undefined') return;
-    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-    db = firebase.firestore();
-  } catch (e) {
-    console.warn('Firebase init failed:', e);
-  }
+function initFirebaseLocal() {
+  db = initFirebase();
 }
 
 async function loadFromFirebase(syncCode) {
@@ -1147,11 +1108,6 @@ function getResultLabel(m) {
     if (m.result === 'survivor_win') return 'loss';
     return 'draw';
   }
-}
-
-function escapeHTML(str) {
-  if (!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
 
 // ===== 起動 =====

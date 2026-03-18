@@ -1,36 +1,5 @@
 ﻿
-    // HTMLエスケープ（XSS対策）
-    function escapeHTML(str) {
-      if (!str) return '';
-      return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    const SURVIVORS = ['幸運児', '医師', '弁護士', '泥棒', '庭師', 'マジシャン', '冒険家', '傭兵', '祭司', '空軍', '機械技師', 'オフェンス', '心眼', '調香師', 'カウボーイ', '踊り子', '占い師', '納棺師', '探鉱者', '呪術師', '野人', '曲芸師', '一等航海士', 'バーメイド', 'ポストマン', '墓守', '「囚人」', '昆虫学者', '画家', 'バッツマン', '玩具職人', '患者', '「心理学者」', '小説家', '「少女」', '泣きピエロ', '教授', '骨董商', '作曲家', '記者', '航空エンジニア', '応援団', '人形師', '火災調査員', '「レディ・ファウロ」', '「騎士」', '気象学者', '弓使い', '「脱出マスター」', '幻灯師', '闘牛士'];
-    
-    const HUNTERS = ['復讐者', '道化師', '断罪狩人', 'リッパー', '結魂者', '芸者', '白黒無常', '写真家', '狂眼', '黄衣の王', '夢の魔女', '泣き虫', '魔トカゲ', '血の女王', 'ガードNo.26', '「使徒」', 'ヴァイオリニスト', '彫刻師', 'アンデッド', '破輪', '漁師', '蝋人形師', '「悪夢」', '書記官', '隠者', '夜の番人', 'オペラ歌手', '「フールズ・ゴールド」', '時空の影', '「足萎えの羊」', '「フラバルー」', '雑貨商', '「ビリヤードプレイヤー」', '「女王蜂」'];
-    
-    const MAPS = ['軍需工場', '赤の教会', '聖心病院', '湖景村', '月の河公園', 'レオの思い出', '永眠町', '中華街', '罪の森'];
-    
-    const RANKS = ['1段', '2段', '3段', '4段', '5段', '6段', '7段', '最高峰'];
-
-    // ===== アイコンパス =====
-    const ICON_NAME_MAP = {
-      'フールズ・ゴールド': 'フールズゴールド',
-      'ガードNo.26': 'ガードNO.26',
-      '闘牛士': '闘牛師',
-    };
-    function buildIconPath(charName, type) {
-      const folder = type === 'hunter' ? 'hunters' : 'survivors';
-      const prefix = type === 'hunter' ? 'hunter' : 'survivor';
-      let name = charName.replace(/[「」]/g, '');
-      name = ICON_NAME_MAP[name] || name;
-      return `${folder}/${prefix}_${name}.PNG`;
-    }
+    // ===== アイコンパス（app.js固有） =====
     const MAP_ICON_OVERRIDES = {
       '軍需工場': 'maps/gunju_kojou.PNG',
     };
@@ -72,434 +41,6 @@
       return `<img class="bar-icon" src="${src}" alt="" onerror="this.style.display='none'">`;
     }
 
-    // ===== ひらがな読みデータ =====
-    const SURVIVOR_READINGS = {
-      '幸運児': 'こううんじ',
-      '医師': 'いし',
-      '弁護士': 'べんごし',
-      '泥棒': 'どろぼう',
-      '庭師': 'にわし',
-      'マジシャン': 'まじしゃん',
-      '冒険家': 'ぼうけんか',
-      '傭兵': 'ようへい',
-      '祭司': 'さいし',
-      '空軍': 'くうぐん',
-      '機械技師': 'きかいぎし',
-      'オフェンス': 'おふぇんす',
-      '心眼': 'しんがん',
-      '調香師': 'ちょうこうし',
-      'カウボーイ': 'かうぼーい',
-      '踊り子': 'おどりこ',
-      '占い師': 'うらないし',
-      '納棺師': 'のうかんし',
-      '探鉱者': 'たんこうしゃ',
-      '呪術師': 'じゅじゅつし',
-      '野人': 'やじん',
-      '曲芸師': 'きょくげいし',
-      '一等航海士': 'いっとうこうかいし',
-      'バーメイド': 'ばーめいど',
-      'ポストマン': 'ぽすとまん',
-      '墓守': 'はかもり',
-      '「囚人」': 'しゅうじん',
-      '昆虫学者': 'こんちゅうがくしゃ',
-      '画家': 'がか',
-      'バッツマン': 'ばっつまん',
-      '玩具職人': 'おもちゃしょくにん',
-      '患者': 'かんじゃ',
-      '「心理学者」': 'しんりがくしゃ',
-      '小説家': 'しょうせつか',
-      '「少女」': 'しょうじょ',
-      '泣きピエロ': 'なきぴえろ',
-      '教授': 'きょうじゅ',
-      '骨董商': 'こっとうしょう',
-      '作曲家': 'さっきょくか',
-      '記者': 'きしゃ',
-      '航空エンジニア': 'こうくうえんじにあ',
-      '応援団': 'おうえんだん',
-      '人形師': 'にんぎょうし',
-      '火災調査員': 'かさいちょうさいん',
-      '「レディ・ファウロ」': 'れでぃふぁうろ',
-      '「騎士」': 'きし',
-      '気象学者': 'きしょうがくしゃ',
-      '弓使い': 'ゆみつかい',
-      '「脱出マスター」': 'だっしゅつますたー だつます',
-      '幻灯師': 'げんとうし',
-      '闘牛士': 'とうぎゅうし'
-    };
-    
-    const HUNTER_READINGS = {
-      '復讐者': 'ふくしゅうしゃ れお',
-      '道化師': 'どうけし ぴえろ',
-      '断罪狩人': 'だんざいかりゅうど しか',
-      'リッパー': 'りっぱー',
-      '結魂者': 'けっこんしゃ くも',
-      '芸者': 'げいしゃ みちこ',
-      '白黒無常': 'しろくろむじょう',
-      '写真家': 'しゃしんか じょぜふ',
-      '狂眼': 'きょうがん ばるく',
-      '黄衣の王': 'おういのおう たこ はすたー',
-      '夢の魔女': 'ゆめのまじょ',
-      '泣き虫': 'なきむし',
-      '魔トカゲ': 'まとかげ るきの',
-      '血の女王': 'ちのじょおう まりー',
-      'ガードNo.26': 'がーどにじゅうろく ぼんぼん',
-      '「使徒」': 'しと あん',
-      'ヴァイオリニスト': 'ゔぁいおりにすと あんとにお',
-      '彫刻師': 'ちょうこくし がらてあ',
-      'アンデッド': 'あんでっど',
-      '破輪': 'はりん うぃる',
-      '漁師': 'りょうし ぐれいす',
-      '蝋人形師': 'ろうにんぎょうし',
-      '「悪夢」': 'あくむ',
-      '書記官': 'しょきかん きーがん',
-      '隠者': 'いんじゃ',
-      '夜の番人': 'よるのばんにん いたか',
-      'オペラ歌手': 'おぺらかしゅ さんぐりあ',
-      '「フールズ・ゴールド」': 'ふーるずごーるど ふるご',
-      '時空の影': 'じくうのかげ あいゔぃ',
-      '「足萎えの羊」': 'あしなえのひつじ',
-      '「フラバルー」': 'ふらばるー',
-      '雑貨商': 'ざっかしょう',
-      '「ビリヤードプレイヤー」': 'びりやーどぷれいやー',
-      '「女王蜂」': 'じょおうばち'
-    };
-    
-    // カタカナ→ひらがな変換
-    function katakanaToHiragana(str) {
-      return str.replace(/[\u30A1-\u30F6]/g, ch =>
-        String.fromCharCode(ch.charCodeAt(0) - 0x60)
-      );
-    }
-    
-    // ===== 検索付きドロップダウン =====
-    class SearchableSelect {
-      constructor(selectEl) {
-        this.select = selectEl;
-        this.value = selectEl.value;
-        this.highlightIndex = -1;
-        this.isOpen = false;
-        this.options = []; // {value, label, reading}
-        this.getExcluded = null; // () => Set<value> — 除外する選択済み値
-        this.onSelected = null;  // () => void — 選択確定時にtouchend直下で呼ばれる
-        this._touchHandled = false;
-        this._userTyped = false;
-
-        this._build();
-        this._bindEvents();
-      }
-      
-      _build() {
-        // ラッパー
-        this.wrapper = document.createElement('div');
-        this.wrapper.className = 'searchable-select-wrapper';
-        this.select.parentNode.insertBefore(this.wrapper, this.select);
-        this.wrapper.appendChild(this.select);
-        
-        // テキスト入力
-        this.input = document.createElement('input');
-        this.input.type = 'text';
-        this.input.className = 'ss-input';
-        this.input.placeholder = '検索して選択...';
-        this.input.autocomplete = 'off';
-        this.wrapper.insertBefore(this.input, this.select);
-        
-        // クリアボタン
-        this.clearBtn = document.createElement('button');
-        this.clearBtn.type = 'button';
-        this.clearBtn.className = 'ss-clear';
-        this.clearBtn.innerHTML = '×';
-        this.clearBtn.tabIndex = -1;
-        this.wrapper.insertBefore(this.clearBtn, this.select);
-        
-        // ドロップダウン
-        this.dropdown = document.createElement('div');
-        this.dropdown.className = 'ss-dropdown';
-        this.wrapper.appendChild(this.dropdown);
-        
-        // 初期値を反映
-        if (this.select.value) {
-          this.input.value = this.select.value;
-          this.input.classList.add('has-value');
-          this.clearBtn.classList.add('visible');
-        }
-      }
-      
-      _bindEvents() {
-        // フォーカス時にドロップダウンを開く
-        this.input.addEventListener('focus', () => {
-          this._userTyped = false;
-          this._refreshOptions();
-          this._filterAndRender('');
-          this._open();
-        });
-
-        // 入力時にフィルター
-        this.input.addEventListener('input', () => {
-          this._userTyped = true;
-          this._filterAndRender(this.input.value);
-          if (!this.isOpen) this._open();
-        });
-        
-        // キーボード操作
-        this.input.addEventListener('keydown', (e) => {
-          if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            this._moveHighlight(1);
-          } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            this._moveHighlight(-1);
-          } else if (e.key === 'Enter') {
-            e.preventDefault();
-            this._selectHighlighted();
-          } else if (e.key === 'Escape') {
-            this._close();
-            this.input.blur();
-          }
-        });
-        
-        // クリアボタン
-        this.clearBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.setValue('');
-          this.input.focus();
-        });
-        
-        // 外側クリックで閉じる
-        document.addEventListener('click', (e) => {
-          if (!this.wrapper.contains(e.target)) {
-            this._close();
-            // 未確定なら元に戻す
-            if (this.value) {
-              this.input.value = this.value;
-            } else {
-              this.input.value = '';
-            }
-          }
-        });
-      }
-      
-      _refreshOptions() {
-        this.options = [];
-        const opts = this.select.querySelectorAll('option');
-        opts.forEach(opt => {
-          if (opt.value === '') return; // placeholder skip
-          const label = opt.textContent;
-          const isSurvivor = SURVIVORS.includes(label);
-          const reading = isSurvivor ? (SURVIVOR_READINGS[label] || '') : (HUNTER_READINGS[label] || '');
-          this.options.push({ value: opt.value, label, reading });
-        });
-      }
-      
-      _filterAndRender(query) {
-        const q = katakanaToHiragana(query.toLowerCase().trim());
-        this.dropdown.innerHTML = '';
-        this.highlightIndex = -1;
-        
-        const excluded = new Set(this.getExcluded ? this.getExcluded() : []);
-        if (this.value) excluded.add(this.value); // 自己除外
-
-        // 長音符（ー）を除去するヘルパー
-        const removeChoon = s => s.replace(/ー/g, '');
-        // スキップマッチ: patternの各文字がtextに順番に含まれるか
-        const skipMatch = (text, pattern) => {
-          let pi = 0;
-          for (let i = 0; i < text.length && pi < pattern.length; i++) {
-            if (text[i] === pattern[pi]) pi++;
-          }
-          return pi === pattern.length;
-        };
-
-        let filtered;
-        if (!q) {
-          filtered = this.options.filter(opt => !excluded.has(opt.value));
-        } else {
-          const qNoChoon = removeChoon(q);
-          const scored = this.options
-            .filter(opt => {
-              if (excluded.has(opt.value)) return false;
-              const label = opt.label.toLowerCase();
-              const reading = opt.reading;
-              return label.includes(q) || reading.includes(q) ||
-                     removeChoon(label).includes(qNoChoon) || removeChoon(reading).includes(qNoChoon) ||
-                     skipMatch(label, q) || skipMatch(reading, q);
-            })
-            .map(opt => {
-              const label = opt.label.toLowerCase();
-              const reading = opt.reading;
-              // スコア: 0=連続一致 / 1=長音符無視一致 / 2=スキップマッチ
-              let score;
-              if (label.includes(q) || reading.includes(q)) {
-                score = 0;
-              } else if (removeChoon(label).includes(qNoChoon) || removeChoon(reading).includes(qNoChoon)) {
-                score = 1;
-              } else {
-                score = 2;
-              }
-              return { opt, score };
-            });
-
-          // スコア優先、同スコート内では先頭一致を上位に
-          scored.sort((a, b) => {
-            if (a.score !== b.score) return a.score - b.score;
-            const aPrefix = a.opt.label.toLowerCase().startsWith(q) || a.opt.reading.startsWith(q);
-            const bPrefix = b.opt.label.toLowerCase().startsWith(q) || b.opt.reading.startsWith(q);
-            if (aPrefix && !bPrefix) return -1;
-            if (!aPrefix && bPrefix) return 1;
-            return 0;
-          });
-
-          filtered = scored.map(({ opt }) => opt);
-
-          // 該当なし & 3文字以上 → あいまい検索フォールバック（50%以上一致）
-          if (filtered.length === 0 && q.length >= 3) {
-            const fuzzyScore = (text, pattern) => {
-              let pi = 0;
-              for (let i = 0; i < text.length && pi < pattern.length; i++) {
-                if (text[i] === pattern[pi]) pi++;
-              }
-              return pi / pattern.length;
-            };
-            const bestScore = opt => Math.max(
-              fuzzyScore(opt.label.toLowerCase(), q),
-              fuzzyScore(opt.reading, q),
-              fuzzyScore(removeChoon(opt.label.toLowerCase()), qNoChoon),
-              fuzzyScore(removeChoon(opt.reading), qNoChoon)
-            );
-            filtered = this.options
-              .filter(opt => !excluded.has(opt.value) && bestScore(opt) >= 0.5)
-              .sort((a, b) => bestScore(b) - bestScore(a));
-          }
-        }
-
-        if (filtered.length === 0) {
-          const noResult = document.createElement('div');
-          noResult.className = 'ss-no-result';
-          noResult.textContent = '該当なし';
-          this.dropdown.appendChild(noResult);
-          this._filteredOptions = [];
-          return;
-        }
-        
-        this._filteredOptions = filtered;
-        
-        filtered.forEach((opt, idx) => {
-          const div = document.createElement('div');
-          div.className = 'ss-option';
-          div.dataset.index = idx;
-          
-          let html = opt.label;
-          div.innerHTML = html;
-          
-          div.addEventListener('mousedown', (e) => {
-            e.preventDefault(); // prevent blur (desktop)
-          });
-          div.addEventListener('click', (e) => {
-            e.stopPropagation();
-            // touchendで処理済みの場合はスキップ（二重選択防止）
-            if (this._touchHandled) { this._touchHandled = false; return; }
-            this._selectOption(opt);
-          });
-          div.addEventListener('touchstart', (e) => {
-            this._touchStartX = e.touches[0].clientX;
-            this._touchStartY = e.touches[0].clientY;
-          }, { passive: true });
-          div.addEventListener('touchend', (e) => {
-            // touchstart.preventDefault()を使わない
-            // → iOSがtouchstart時点でIMEを自然に確定させる
-            // → SS2にfocus()したとき IMEが初期状態でカーソルが正常表示される
-            const dx = e.changedTouches[0].clientX - (this._touchStartX || 0);
-            const dy = e.changedTouches[0].clientY - (this._touchStartY || 0);
-            if (Math.sqrt(dx * dx + dy * dy) > 10) return; // スクロール中は選択しない
-            this._touchHandled = true;
-            this._selectOption(opt);
-            setTimeout(() => { this._touchHandled = false; }, 50);
-          }, { passive: true });
-          
-          this.dropdown.appendChild(div);
-        });
-      }
-      
-      _open() {
-        this.isOpen = true;
-        this.dropdown.classList.add('open');
-        this.input.style.borderRadius = '6px 6px 0 0';
-      }
-      
-      _close() {
-        this.isOpen = false;
-        this.dropdown.classList.remove('open');
-        this.input.style.borderRadius = '6px';
-        this.highlightIndex = -1;
-      }
-      
-      _moveHighlight(dir) {
-        if (!this._filteredOptions || this._filteredOptions.length === 0) return;
-        const items = this.dropdown.querySelectorAll('.ss-option');
-        if (items.length === 0) return;
-        
-        // 前のハイライトを除去
-        if (this.highlightIndex >= 0 && this.highlightIndex < items.length) {
-          items[this.highlightIndex].classList.remove('highlighted');
-        }
-        
-        this.highlightIndex += dir;
-        if (this.highlightIndex < 0) this.highlightIndex = items.length - 1;
-        if (this.highlightIndex >= items.length) this.highlightIndex = 0;
-        
-        items[this.highlightIndex].classList.add('highlighted');
-        items[this.highlightIndex].scrollIntoView({ block: 'nearest' });
-      }
-      
-      _selectHighlighted() {
-        if (this.highlightIndex >= 0 && this._filteredOptions && this.highlightIndex < this._filteredOptions.length) {
-          this._selectOption(this._filteredOptions[this.highlightIndex]);
-        }
-      }
-      
-      _selectOption(opt) {
-        this.setValue(opt.value);
-        this._close();
-
-        this.input.blur();
-        if (this.onSelected) this.onSelected();
-
-        this.select.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-      
-      // 外部から値を設定
-      setValue(val) {
-        this.value = val;
-        this.select.value = val;
-        
-        if (val) {
-          this.input.value = val;
-          this.input.classList.add('has-value');
-          this.clearBtn.classList.add('visible');
-        } else {
-          this.input.value = '';
-          this.input.classList.remove('has-value');
-          this.clearBtn.classList.remove('visible');
-        }
-        updatePlaceholderStyle(this.select);
-      }
-      
-      // selectの値と同期（外部でselectが変更された場合）
-      syncFromSelect() {
-        const val = this.select.value;
-        this.value = val;
-        if (val) {
-          this.input.value = val;
-          this.input.classList.add('has-value');
-          this.clearBtn.classList.add('visible');
-        } else {
-          this.input.value = '';
-          this.input.classList.remove('has-value');
-          this.clearBtn.classList.remove('visible');
-        }
-      }
-    }
-    
     // SearchableSelectインスタンスを管理
     const searchableSelects = {};
     
@@ -1066,7 +607,7 @@
     // 初期化
     function init() {
       // Firebase初期化
-      initFirebase();
+      initFirebaseLocal();
 
       // ダークモード復元
       loadDarkMode();
@@ -2165,15 +1706,20 @@
     }
     
     // 全ての統計を更新
+    let _updateAllStatsRAF = 0;
     function updateAllStats() {
-      updateAllSelectStyles();
-      updateOverallStatsTab();
-      updateCharacterStats();
-      updateMapStats();
-      updateOpponentStats();
-      updateMatchHistory();
-      updateHeaderStats();
-      ['overall', 'character', 'map', 'opponent', 'history'].forEach(id => renderFilterChips(id));
+      if (_updateAllStatsRAF) return;
+      _updateAllStatsRAF = requestAnimationFrame(() => {
+        _updateAllStatsRAF = 0;
+        updateAllSelectStyles();
+        updateOverallStatsTab();
+        updateCharacterStats();
+        updateMapStats();
+        updateOpponentStats();
+        updateMatchHistory();
+        updateHeaderStats();
+        ['overall', 'character', 'map', 'opponent', 'history'].forEach(id => renderFilterChips(id));
+      });
     }
     
     // フィルター変更時にページをリセット
@@ -4170,10 +3716,12 @@
       // 既にPWAとして動作中、または閉じた場合は非表示
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const dismissed = localStorage.getItem('identity5_install_banner_dismissed') === 'true';
+      // PCでは非表示（タッチ非対応 かつ 画面幅が広い）
+      const isPC = !('ontouchstart' in window) && window.innerWidth >= 1024;
       // ガイドバナーが表示中は非表示
       const guideEl = document.getElementById('guide-banner');
       const guideVisible = guideEl && !guideEl.classList.contains('hidden');
-      if (isStandalone || dismissed || guideVisible) {
+      if (isStandalone || dismissed || guideVisible || isPC) {
         banner.classList.add('hidden');
       }
     }
@@ -4328,25 +3876,10 @@
 
     // ===== ☁️ クラウド同期 =====
 
-    const FIREBASE_CONFIG = {
-      apiKey: "AIzaSyD11HYRuGLn0N4_eFhXfTK5R-3QyJ4RsSo",
-      authDomain: "idvtracker.firebaseapp.com",
-      projectId: "idvtracker",
-      storageBucket: "idvtracker.firebasestorage.app",
-      messagingSenderId: "1027492627968",
-      appId: "1:1027492627968:web:ad567e2e79b3a1574bbae5"
-    };
-
     let db = null;
 
-    function initFirebase() {
-      try {
-        if (typeof firebase === 'undefined') return;
-        firebase.initializeApp(FIREBASE_CONFIG);
-        db = firebase.firestore();
-      } catch (e) {
-        console.warn('Firebase init failed:', e);
-      }
+    function initFirebaseLocal() {
+      db = initFirebase();
     }
 
     function generateUUID() {
@@ -4754,17 +4287,66 @@
         chips.push(`<button class="fchip" onclick="event.stopPropagation();resetPeriodFilterChip('${tabId}')">${escapeHTML(label)} ×</button>`);
       }
 
-      // 段位チップ
+      // 段位チップ（単一選択時は具体的な段位名を表示）
       const rankWrapperId = `${tabId === 'overall' ? 'overall' : tabId}-rank-filter`;
       const rankWrapper = document.getElementById(rankWrapperId);
       if (rankWrapper) {
         const sel = rankWrapper.dataset.selected ? JSON.parse(rankWrapper.dataset.selected) : ['all'];
         if (!sel.includes('all') && sel.length > 0) {
-          chips.push(`<button class="fchip" onclick="event.stopPropagation();resetRankFilterChip('${rankWrapperId}')">${sel.length}段位選択 ×</button>`);
+          const rankLabel = sel.length === 1 ? sel[0] : sel.length + '段位選択';
+          chips.push(`<button class="fchip" onclick="event.stopPropagation();resetRankFilterChip('${rankWrapperId}')">${escapeHTML(rankLabel)} ×</button>`);
         }
       }
 
+      // タブ固有の追加フィルターチップ
+      const extraFilters = getTabExtraFilters(tabId);
+      extraFilters.forEach(({ id, label }) => {
+        const sel = document.getElementById(id);
+        if (sel && sel.value !== 'all') {
+          const selectedText = sel.options[sel.selectedIndex]?.text || sel.value;
+          chips.push(`<button class="fchip" onclick="event.stopPropagation();resetSelectFilter('${id}')">${escapeHTML(selectedText)} ×</button>`);
+        }
+      });
+
       el.innerHTML = chips.join('');
+    }
+
+    function getTabExtraFilters(tabId) {
+      switch (tabId) {
+        case 'character':
+          return [
+            { id: 'character-opponent-filter', label: '対戦相手' },
+            { id: 'character-map-filter', label: 'マップ' }
+          ];
+        case 'map':
+          return [
+            { id: 'map-char-filter', label: '自キャラ' }
+          ];
+        case 'opponent':
+          return [
+            { id: 'my-char-filter', label: '自キャラ' },
+            { id: 'opponent-hunter-filter', label: '対戦相手' },
+            { id: 'opponent-map-filter', label: 'マップ' }
+          ];
+        case 'history':
+          return [
+            { id: 'history-opponent-filter', label: '相手キャラ' },
+            { id: 'history-char-filter', label: '自キャラ' },
+            { id: 'history-map-filter', label: 'マップ' }
+          ];
+        default:
+          return [];
+      }
+    }
+
+    function resetSelectFilter(selectId) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      sel.value = 'all';
+      // 特殊なonchangeハンドラがあるフィルターは手動トリガー
+      if (selectId === 'my-char-filter') { onMyCharFilterChange(); return; }
+      if (selectId === 'history-char-filter') { onHistoryCharFilterChange(); return; }
+      updateAllStats();
     }
 
     function resetPeriodFilterChip(tabId) {
@@ -5006,15 +4588,28 @@
       // フィルターバッジ更新
       const _badge = document.getElementById('detail-filter-badge');
       if (_badge) {
-        const _hasExtra = detailFilterState.charTabMap !== 'all' || detailFilterState.charTabOpponent !== 'all'
-          || detailFilterState.mapTabChar !== 'all'
-          || detailFilterState.oppTabMyChar !== 'all' || detailFilterState.oppTabHunter !== 'all' || detailFilterState.oppTabMap !== 'all';
+        const _extraParts = [];
+        const _getSelText = (id) => { const el = document.getElementById(id); return el && el.value !== 'all' ? (el.options[el.selectedIndex]?.text || el.value) : null; };
+        if (_tab === 'character') {
+          const v1 = _getSelText('character-opponent-filter'); if (v1) _extraParts.push(v1);
+          const v2 = _getSelText('character-map-filter'); if (v2) _extraParts.push(v2);
+        } else if (_tab === 'map') {
+          const v1 = _getSelText('map-char-filter'); if (v1) _extraParts.push(v1);
+        } else if (_tab === 'opponent') {
+          const v1 = _getSelText('my-char-filter'); if (v1) _extraParts.push(v1);
+          const v2 = _getSelText('opponent-hunter-filter'); if (v2) _extraParts.push(v2);
+          const v3 = _getSelText('opponent-map-filter'); if (v3) _extraParts.push(v3);
+        }
+        const _hasExtra = _extraParts.length > 0;
         const _hasFilter = detailFilterState.period !== 'all' || detailFilterState.rank !== 'all' || _hasExtra;
         if (_hasFilter) {
           const _parts = [];
           if (detailFilterState.period !== 'all') _parts.push(_periodEl ? _periodEl.options[_periodEl.selectedIndex].text : detailFilterState.period);
-          if (detailFilterState.rank !== 'all') _parts.push('段位絞り込み中');
-          if (_hasExtra) _parts.push('追加フィルター適用中');
+          if (detailFilterState.rank !== 'all') {
+            const _rankSel = (() => { const w = document.getElementById(_tab + '-rank-filter'); return w && w.dataset.selected ? JSON.parse(w.dataset.selected) : ['all']; })();
+            _parts.push(!_rankSel.includes('all') && _rankSel.length === 1 ? _rankSel[0] : '段位絞り込み中');
+          }
+          _parts.push(..._extraParts);
           _badge.textContent = _parts.join(' / ');
           _badge.classList.remove('hidden');
         } else {

@@ -110,14 +110,13 @@
 
       <!-- ===== 段位セクション ===== -->
       <div id="rank-section">
+
+        <div class="rank-side-toggle">
+          <button type="button" id="rank-side-survivors" class="rank-side-btn" onclick="setRankIconSide('survivors')">サバイバー</button>
+          <button type="button" id="rank-side-hunters"   class="rank-side-btn active" onclick="setRankIconSide('hunters')">ハンター</button>
+        </div>
+
         <div class="ch-card">
-
-          <div class="rank-side-toggle">
-            <button type="button" id="rank-side-survivors" class="rank-side-btn" onclick="setRankIconSide('survivors')">サバイバー</button>
-            <button type="button" id="rank-side-hunters"   class="rank-side-btn active" onclick="setRankIconSide('hunters')">ハンター</button>
-          </div>
-          <div class="rank-side-note">アイコン表示の切り替えのみ・計算には影響しません</div>
-
           <div class="rank-pos-block">
             <div class="rank-pos-label">現在の段位</div>
             <div id="rank-cur-icons"     class="rank-icon-row"></div>
@@ -162,7 +161,10 @@
           <div class="ch-card track-card">
             <div class="track-card-header">
               <div class="track-card-title">段位pt 追跡中</div>
-              <button type="button" class="track-reset-btn" onclick="resetRankGoal()">ゴールをリセット</button>
+              <div class="track-btn-group">
+                <button type="button" class="track-edit-btn" onclick="editRankGoal()">編集</button>
+                <button type="button" class="track-reset-btn" onclick="resetRankGoal()">リセット</button>
+              </div>
             </div>
             <div id="rank-track-summary" class="track-summary"></div>
             <div class="track-chart-wrap">
@@ -182,18 +184,9 @@
         <div class="ch-card">
           <div class="ch-field">
             <label class="ch-label">キャラクター</label>
-            <div id="cog-char-ss" class="ss-wrap">
-              <button type="button" class="ss-trigger" id="cog-char-trigger" onclick="toggleCogCharDropdown()">
-                <span id="cog-char-display">選択してください</span>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              <div id="cog-char-dd" class="ss-dropdown hidden">
-                <div class="ss-search-wrap">
-                  <input type="text" class="ss-search" id="cog-char-search" placeholder="名前で検索（ひらがな可）..." oninput="filterCogChar(this.value)" autocomplete="off">
-                </div>
-                <div class="ss-list" id="cog-char-list"></div>
-              </div>
-            </div>
+            <select id="cog-char-select" class="ch-select">
+              <option value="">選択してください</option>
+            </select>
           </div>
 
           <div class="ch-row2">
@@ -228,7 +221,6 @@
 
           <div id="cog-result" class="ch-result"></div>
           <button type="button" id="cog-track-btn" class="track-start-btn hidden" onclick="startCogGoal()">この目標を追跡する</button>
-          <button type="button" id="cog-save-btn" class="save-btn hidden" onclick="onSaveCogCard()">このキャラを保存する</button>
         </div>
 
         <!-- 認知追跡ビュー -->
@@ -236,7 +228,10 @@
           <div class="ch-card track-card">
             <div class="track-card-header">
               <div class="track-card-title" id="cog-track-title">認知pt 追跡中</div>
-              <button type="button" class="track-reset-btn" onclick="resetCogGoal()">ゴールをリセット</button>
+              <div class="track-btn-group">
+                <button type="button" class="track-edit-btn" onclick="editCogGoal()">編集</button>
+                <button type="button" class="track-reset-btn" onclick="resetCogGoal()">リセット</button>
+              </div>
             </div>
             <div id="cog-track-summary" class="track-summary"></div>
             <div class="track-chart-wrap">
@@ -285,6 +280,7 @@
     </div>
   </div>
 
+  <script src="shared.js"></script>
   <script src="challenge-app.js"></script>
 </body>
 </html>

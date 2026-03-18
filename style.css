@@ -1480,8 +1480,15 @@ body.dark-mode .map-pie-wrapper {
   opacity: 0.4;
   cursor: not-allowed;
 }
+body.dark-mode .overall-mode-toggle {
+  border-color: #5a5a7a;
+}
 body.dark-mode .overall-mode-btn {
   background: var(--s-base);
+  box-shadow: 1px 0 0 #5a5a7a;
+}
+body.dark-mode .overall-mode-btn:last-child {
+  box-shadow: none;
 }
 /* ===== 直近試合カラーブロック ===== */
 .recent-blocks-wrapper {
@@ -2095,9 +2102,8 @@ body.dark-mode .bottom-nav-item.active  { color: #ffffff; }
 .filter-toggle-btn.open .filter-toggle-arrow { transform: rotate(180deg); }
 .filter-chips-wrap {
   display: flex;
-  gap: 5px;
-  flex-wrap: nowrap;
-  overflow: hidden;
+  gap: 4px;
+  flex-wrap: wrap;
   flex: 1;
   min-width: 0;
 }

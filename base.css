@@ -1,0 +1,108 @@
+/* ===== base.css — 全ページ共通トークン・リセット ===== */
+
+/* リセット */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+.hidden { display: none !important; }
+
+/* フォント */
+body {
+  font-family: 'Noto Sans JP', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+}
+
+/* ===== デザイントークン ===== */
+:root {
+  /* Primary colors */
+  --c-primary:       #0f3460;
+  --c-primary-mid:   #3b82f6;
+  --c-primary-light: #60a5fa;
+
+  /* Surface layers */
+  --s-base:      #ffffff;
+  --s-raised:    #f0f2f5;
+  --s-raised-rgb: 240, 242, 245;
+  --s-overlay:   #f1f5f9;
+  --s-card:      #ffffff;
+  --s-input:     #ffffff;
+  --s-subtle:    #f9fafb;
+  --s-muted:     #f3f4f6;
+
+  /* Borders */
+  --b-subtle:  #e5e7eb;
+  --b-default: #dee2e6;
+  --b-strong:  #cbd5e1;
+
+  /* Text */
+  --t-primary:   #1f2937;
+  --t-secondary: #374151;
+  --t-muted:     #6b7280;
+  --t-faint:     #9ca3af;
+
+  /* Status colors */
+  --win-bg:  #fbbf24;  --win-fg:  #1f2937;
+  --lose-bg: #ef4444;  --lose-fg: #ffffff;
+  --draw-bg: #9ca3af;  --draw-fg: #1f2937;
+
+  /* Interactive */
+  --c-primary-bg: #eff6ff;
+
+  /* Spacing (8px grid) */
+  --sp-1: 4px;  --sp-2: 8px;   --sp-3: 12px;
+  --sp-4: 16px; --sp-5: 20px;  --sp-6: 24px;
+  --sp-8: 32px; --sp-10: 40px; --sp-12: 48px;
+
+  /* Typography */
+  --fs-xs:   11px;
+  --fs-sm:   12px;
+  --fs-base: 14px;
+  --fs-md:   16px;
+  --fs-lg:   18px;
+  --fs-2xl:  48px;
+
+  /* Border radius */
+  --r-sm:   4px;
+  --r-input: 6px;
+  --r-md:   8px;
+  --r-lg:   12px;
+  --r-xl:   20px;
+  --r-pill: 28px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.2);
+
+  /* z-index */
+  --z-dropdown: 100;
+  --z-sticky:   150;
+  --z-nav:      200;
+
+  /* Animation */
+  --transition-hover: 0.15s;
+  --transition-move:  0.3s;
+}
+
+/* ===== ダークモードトークン ===== */
+body.dark-mode {
+  --c-primary:       #3b82f6;
+  --c-primary-light: #60a5fa;
+  --s-base:      #1a1a2e;
+  --s-raised:    #28283e;
+  --s-raised-rgb: 40, 40, 62;
+  --s-overlay:   #2e2e4a;
+  --s-card:      #1e2235;
+  --s-input:     #2d3250;
+  --s-subtle:    #161929;
+  --s-muted:     #161929;
+  --b-subtle:  #2e2e48;
+  --b-default: #3a3a55;
+  --b-strong:  #3a3a55;
+  --t-primary:   #d1d5db;
+  --t-secondary: #adb5bd;
+  --t-muted:     #9ca3af;
+  --t-faint:     #7878a0;
+  --win-bg:  #fbbf24;  --win-fg:  #1f2937;
+  --lose-bg: #ef4444;  --lose-fg: #ffffff;
+  --draw-bg: #9ca3af;  --draw-fg: #1f2937;
+  --c-primary-bg: #1e2d4a;
+}

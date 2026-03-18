@@ -1,0 +1,204 @@
+/* ===== sync-guide-style.css — トークン参照版 ===== */
+/* リセット・フォント・トークンは base.css で定義 */
+
+body {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  padding: 20px;
+}
+.container {
+  max-width: 680px;
+  margin: 0 auto;
+  background: var(--s-base);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.header {
+  background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+  color: white;
+  padding: 25px;
+  text-align: center;
+}
+.header h1 { font-size: 22px; font-weight: 700; margin-bottom: 5px; }
+.header .subtitle { font-size: 13px; opacity: 0.8; }
+.content { padding: 25px; }
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--t-muted);
+  text-decoration: none;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+.back-link:hover { color: var(--t-secondary); }
+
+/* セクション */
+.section { margin-bottom: 30px; }
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--c-primary);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--b-subtle);
+}
+.section-desc {
+  font-size: 14px;
+  color: var(--t-muted);
+  line-height: 1.7;
+  margin-bottom: 15px;
+}
+
+/* ステップ */
+.step {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+}
+.step-num {
+  width: 32px;
+  height: 32px;
+  background: var(--c-primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.step-body { flex: 1; }
+.step-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--t-primary);
+  margin-bottom: 4px;
+}
+.step-desc {
+  font-size: 13px;
+  color: var(--t-muted);
+  line-height: 1.6;
+}
+
+/* スクリーンUI模擬 */
+.ui-mock {
+  background: #f8f9fa;
+  border: 1px solid var(--b-subtle);
+  border-radius: 8px;
+  padding: 12px 15px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--t-secondary);
+}
+.ui-mock .ui-btn {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.ui-btn-blue { background: var(--c-primary-mid); color: white; }
+.ui-btn-purple { background: #8b5cf6; color: white; }
+.ui-mock .ui-label {
+  font-size: 11px;
+  color: var(--t-faint);
+  margin-bottom: 3px;
+}
+.ui-mock .ui-code {
+  font-family: monospace;
+  font-size: 11px;
+  background: var(--s-subtle);
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 5px 8px;
+  color: var(--t-muted);
+  word-break: break-all;
+}
+
+/* ポイントボックス */
+.info-box {
+  background: var(--c-primary-bg);
+  border-left: 3px solid var(--c-primary-mid);
+  padding: 12px 15px;
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+  color: #1e40af;
+  line-height: 1.6;
+  margin: 12px 0;
+}
+.warn-box {
+  background: #fff7ed;
+  border-left: 3px solid #f59e0b;
+  padding: 12px 15px;
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+  color: #92400e;
+  line-height: 1.6;
+  margin: 12px 0;
+}
+
+/* FAQ */
+.faq-item { margin-bottom: 16px; }
+.faq-q {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--t-primary);
+  margin-bottom: 5px;
+}
+.faq-q::before { content: 'Q. '; color: var(--c-primary-mid); }
+.faq-a {
+  font-size: 13px;
+  color: var(--t-muted);
+  line-height: 1.6;
+  padding-left: 20px;
+}
+
+/* 区切り */
+.divider {
+  border: none;
+  border-top: 1px solid var(--b-subtle);
+  margin: 25px 0;
+}
+
+/* フッター */
+.footer {
+  text-align: center;
+  padding: 20px;
+  border-top: 1px solid var(--b-subtle);
+}
+.footer a {
+  display: inline-block;
+  padding: 12px 30px;
+  background: linear-gradient(135deg, #0f3460 0%, #533483 100%);
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ===== ダークモード ===== */
+body.dark-mode {
+  background: linear-gradient(135deg, #0d0d1a 0%, #0a0f1e 100%);
+}
+body.dark-mode .container { background: #1e1e2e; }
+body.dark-mode .step-num { background: var(--c-primary-mid); }
+body.dark-mode .ui-mock { background: #2a2a3e; border-color: #3a3a55; }
+body.dark-mode .ui-mock .ui-code { background: #1e1e2e; border-color: #3a3a55; }
+body.dark-mode .info-box { background: var(--c-primary-bg); color: #93c5fd; }
+body.dark-mode .warn-box { background: #2a2010; border-left-color: #f59e0b; color: #d4a574; }
+body.dark-mode .faq-q::before { color: #60a5fa; }
+body.dark-mode .header { color: white; }
+
+/* レスポンシブ */
+@media (max-width: 480px) {
+  body { padding: 8px; }
+  .container { border-radius: 0; box-shadow: none; }
+  .header { padding: 20px 16px; }
+  .content { padding: 16px; }
+  .step { gap: 10px; }
+}

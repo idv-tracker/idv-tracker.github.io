@@ -48,17 +48,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
 
   <!-- External CSS -->
+  <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="style.css">
 
-  <!-- Chart.js CDN (安定版v3) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 
   <!-- Firebase SDK (クラウド同期用) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <div class="container">
+  <main class="container">
     <div class="header">
       <div class="header-bg-pattern"></div>
       <div class="header-inner">
@@ -735,6 +736,8 @@
       <span class="tool-sheet-item-arrow">›</span>
     </a>
   </div>
+
+  </main>
 
   <script src="shared.js"></script>
   <script src="app.js"></script>

@@ -1,11 +1,24 @@
-const CACHE_NAME = 'idv-tracker-v5';
+const CACHE_NAME = 'idv-tracker-v6';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
+  './challenge.html',
+  './tier.html',
   './sync-guide.html',
   './guide.html',
-  './install-guide.html'
+  './install-guide.html',
+  './base.css',
+  './style.css',
+  './tier-style.css',
+  './challenge-style.css',
+  './guide-style.css',
+  './install-guide-style.css',
+  './sync-guide-style.css',
+  './app.js',
+  './shared.js',
+  './tier-app.js',
+  './challenge-app.js'
 ];
 
 // インストール時にキャッシュ

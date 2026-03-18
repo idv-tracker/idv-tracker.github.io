@@ -1334,6 +1334,11 @@ function buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp, w
     </div>`;
   }
 
+  // 3カラム非表示時のフォールバック: estMatchesだけでも表示
+  if (!achieved && estMatches !== null && !(wr && (estUpper !== null || estLower !== null))) {
+    html += `<div class="track-est-fallback">推定あと <strong>${estMatches}試合</strong></div>`;
+  }
+
   html += `
     <div class="track-matches-row">${goal.createdDate} スタート · ${totalSinceGoal}試合経過　${wr ? `（勝ち率 ${(wr.winRate * 100).toFixed(1)}%）` : ''}</div>
     <div class="track-progress-wrap">

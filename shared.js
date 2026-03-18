@@ -406,3 +406,95 @@ class SearchableSelect {
     }
   }
 }
+
+// ===== ConnectModule（接続ロジック共通化） =====
+// tier-app.js / challenge-app.js の接続・切断・キャッシュ処理を集約
+function createConnectModule({ onConnected, onNoData, cacheKey = 'tier_local_data' }) {
+  let db = null;
+  function ensureDb() { if (!db) db = initFirebase(); return db; }
+
+  async function loadFromFirebase(syncCode) {
+    if (!ensureDb()) { _fallbackToCache(); return; }
+    try {
+      const snap = await db.collection('idv_tracker').doc(syncCode).get();
+      if (snap.exists) {
+        const data = snap.data();
+        const m  = data.matches || [];
+        const lu = data.lastModified || null;
+        localStorage.setItem(cacheKey, JSON.stringify({ matches: m, lastUpdated: lu }));
+        onConnected(m, lu);
+      } else {
+        _fallbackToCache();
+      }
+    } catch (_) {
+      _fallbackToCache();
+    }
+  }
+
+  function _fallbackToCache() {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        onConnected(parsed.matches || [], parsed.lastUpdated || null);
+        return;
+      } catch (_) {}
+    }
+    onNoData();
+  }
+
+  function connectWithSyncCode() {
+    const code = document.getElementById('sync-code-input').value.trim();
+    if (!code) { alert('同期コードを入力してください'); return; }
+    localStorage.setItem('identity5_sync_code', code);
+    loadFromFirebase(code);
+  }
+
+  function connectWithJSON() {
+    const text = document.getElementById('json-input').value.trim();
+    if (!text) { alert('データを貼り付けてください'); return; }
+    importJSONText(text);
+  }
+
+  function connectWithJSONFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      document.getElementById('json-input').value = e.target.result;
+      connectWithJSON();
+    };
+    reader.readAsText(file);
+  }
+
+  function importJSONText(text) {
+    try {
+      const data = JSON.parse(text);
+      if (!data.matches || !Array.isArray(data.matches)) {
+        alert('データの形式が正しくありません');
+        return;
+      }
+      const lu = new Date().toISOString();
+      localStorage.setItem(cacheKey, JSON.stringify({ matches: data.matches, lastUpdated: lu }));
+      onConnected(data.matches, lu);
+    } catch (_) {
+      alert('JSONの解析に失敗しました');
+    }
+  }
+
+  function disconnect() {
+    if (!confirm('接続を解除しますか？\n（データは削除されません）')) return false;
+    localStorage.removeItem('identity5_sync_code');
+    localStorage.removeItem(cacheKey);
+    return true;
+  }
+
+  // 起動時の接続試行: syncCode → cache → onNoData
+  function startup() {
+    const syncCode = localStorage.getItem('identity5_sync_code');
+    if (syncCode) { loadFromFirebase(syncCode); return; }
+    _fallbackToCache();
+  }
+
+  return { startup, connectWithSyncCode, connectWithJSON, connectWithJSONFile, importJSONText, disconnect };
+}

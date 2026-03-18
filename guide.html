@@ -13,7 +13,6 @@
       document.body.classList.add('dark-mode');
     }
   </script>
-  </script>
   <div class="container">
     <div class="header">
       <h1>使い方ガイド</h1>
@@ -769,6 +768,21 @@
 
   <script>
     localStorage.setItem('identity5_guide_visited', 'true');
+
+    // デバイス幅に応じてデフォルトビューを設定
+    (function() {
+      var defaultView = window.innerWidth >= 768 ? 'pc' : 'mobile';
+      var pcGuide = document.getElementById('guide-pc');
+      var mobileGuide = document.getElementById('guide-mobile');
+      var btnPc = document.getElementById('btn-pc');
+      var btnMobile = document.getElementById('btn-mobile');
+      if (defaultView === 'pc') {
+        pcGuide.style.display = '';
+        mobileGuide.style.display = 'none';
+        btnPc.classList.add('active');
+        btnMobile.classList.remove('active');
+      }
+    })();
 
     function switchView(view) {
       var pcGuide = document.getElementById('guide-pc');

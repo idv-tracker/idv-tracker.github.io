@@ -82,6 +82,27 @@ body {
   --transition-move:  0.3s;
 }
 
+/* ===== PC背景装飾（グロー + ドットパターン） ===== */
+@media (min-width: 768px) {
+  body {
+    position: relative;
+    z-index: 0;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse 600px 400px at 8% 15%, rgba(99, 102, 241, 0.15), transparent),
+      radial-gradient(ellipse 500px 500px at 88% 75%, rgba(59, 130, 246, 0.12), transparent),
+      radial-gradient(ellipse 300px 300px at 50% 50%, rgba(139, 92, 246, 0.06), transparent),
+      radial-gradient(circle 1px, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 24px 24px;
+  }
+}
+
 /* ===== ダークモードトークン ===== */
 body.dark-mode {
   --c-primary:       #3b82f6;
@@ -105,4 +126,16 @@ body.dark-mode {
   --lose-bg: #ef4444;  --lose-fg: #ffffff;
   --draw-bg: #9ca3af;  --draw-fg: #1f2937;
   --c-primary-bg: #1e2d4a;
+}
+
+/* ダークモード時のグロー微調整 */
+@media (min-width: 768px) {
+  body.dark-mode::before {
+    background:
+      radial-gradient(ellipse 600px 400px at 8% 15%, rgba(99, 102, 241, 0.10), transparent),
+      radial-gradient(ellipse 500px 500px at 88% 75%, rgba(59, 130, 246, 0.08), transparent),
+      radial-gradient(ellipse 300px 300px at 50% 50%, rgba(139, 92, 246, 0.05), transparent),
+      radial-gradient(circle 1px, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 24px 24px;
+  }
 }

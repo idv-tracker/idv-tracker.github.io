@@ -34,7 +34,6 @@ let rankFilter        = [];           // 選択中の段位（空 = 全て）
 let currentDetailChar = null;
 let detailPage        = 1;
 let detailResultFilter = 'all'; // 'all' | 'win' | 'loss' | 'draw'
-let db                = null;
 let mapChart          = null;
 let coPickChart       = null;
 let mapSortOrder      = 'count';
@@ -43,121 +42,22 @@ let myCharSortOrder   = 'count';
 let myCharSortDir     = 'desc';
 let lastUpdated       = null;
 
-// ===== 初期化 =====
-function init() {
-  initFirebaseLocal();
+// ===== 接続モジュール =====
+const _conn = createConnectModule({
+  onConnected(m, lu) { matches = m; lastUpdated = lu; showTierPage(); },
+  onNoData()         { showConnectPage(); }
+});
 
-  // 既存アプリの sync code を共有して自動接続
-  const syncCode = localStorage.getItem('identity5_sync_code');
-  if (syncCode) {
-    loadFromFirebase(syncCode);
-    return;
-  }
+function init() { _conn.startup(); }
 
-  // ローカルキャッシュ（JSON インポート用）
-  const cached = localStorage.getItem('tier_local_data');
-  if (cached) {
-    try {
-      const parsed = JSON.parse(cached);
-      matches     = parsed.matches || [];
-      lastUpdated = parsed.lastUpdated || null;
-      showTierPage();
-      return;
-    } catch (_) {}
-  }
-
-  showConnectPage();
-}
-
-// ===== Firebase =====
-function initFirebaseLocal() {
-  db = initFirebase();
-}
-
-async function loadFromFirebase(syncCode) {
-  if (!db) {
-    // Firebase 未使用でも cache があれば使う
-    fallbackToCache();
-    return;
-  }
-  try {
-    const snap = await db.collection('idv_tracker').doc(syncCode).get();
-    if (snap.exists) {
-      const data = snap.data();
-      matches     = data.matches || [];
-      lastUpdated = data.lastModified || null;
-      localStorage.setItem('tier_local_data', JSON.stringify({ matches, lastUpdated }));
-      showTierPage();
-    } else {
-      fallbackToCache();
-    }
-  } catch (_) {
-    fallbackToCache();
-  }
-}
-
-function fallbackToCache() {
-  const cached = localStorage.getItem('tier_local_data');
-  if (cached) {
-    try {
-      const parsed = JSON.parse(cached);
-      matches     = parsed.matches || [];
-      lastUpdated = parsed.lastUpdated || null;
-      showTierPage();
-      return;
-    } catch (_) {}
-  }
-  showConnectPage();
-}
-
-// ===== 接続UI =====
-async function connectWithSyncCode() {
-  const code = document.getElementById('sync-code-input').value.trim();
-  if (!code) { alert('同期コードを入力してください'); return; }
-  localStorage.setItem('identity5_sync_code', code);
-  await loadFromFirebase(code);
-}
-
-function connectWithJSON() {
-  const text = document.getElementById('json-input').value.trim();
-  if (!text) { alert('データを貼り付けてください'); return; }
-  importJSONText(text);
-}
-
-function connectWithJSONFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    document.getElementById('json-input').value = e.target.result;
-    connectWithJSON();
-  };
-  reader.readAsText(file);
-}
-
-function importJSONText(text) {
-  try {
-    const data = JSON.parse(text);
-    if (!data.matches || !Array.isArray(data.matches)) {
-      alert('データの形式が正しくありません');
-      return;
-    }
-    matches     = data.matches;
-    lastUpdated = new Date().toISOString();
-    localStorage.setItem('tier_local_data', JSON.stringify({ matches, lastUpdated }));
-    showTierPage();
-  } catch (_) {
-    alert('JSONの解析に失敗しました');
-  }
-}
-
+// HTML onclick から呼ばれるグローバル関数
+function connectWithSyncCode()      { _conn.connectWithSyncCode(); }
+function connectWithJSON()           { _conn.connectWithJSON(); }
+function connectWithJSONFile(event)  { _conn.connectWithJSONFile(event); }
 function showDisconnectMenu() {
-  if (!confirm('接続を解除しますか？\n（データは削除されません）')) return;
-  localStorage.removeItem('identity5_sync_code');
-  localStorage.removeItem('tier_local_data');
-  matches     = [];
-  lastUpdated = null;
-  showConnectPage();
+  if (_conn.disconnect()) {
+    matches = []; lastUpdated = null; showConnectPage();
+  }
 }
 
 // ===== 画面切替 =====
@@ -550,7 +450,7 @@ function renderPriorityCards(statsMap) {
     .sort((a, b) => b.dangerScore - a.dangerScore)
     .slice(0, 4);
 
-  const heading = document.querySelector('.priority-heading');
+  const heading = document.getElementById('priority-heading');
   if (heading) {
     const prioritySideLabel = currentPerspective === 'survivor' ? 'ハンター' : 'サバイバー';
     heading.textContent = `⚠️ 脅威${prioritySideLabel}`;
@@ -704,7 +604,6 @@ function renderDetailSummary(s) {
   const wr  = s.winRate !== null ? s.winRate.toFixed(1) + '%' : '-';
   const pr  = s.pickRate.toFixed(1) + '%';
   const ds  = s.appeared > 0 ? Math.round(s.dangerScore).toLocaleString() : '-';
-  const wrRaw = s.winRate !== null ? s.winRate.toFixed(1) + '%' : '-';
   document.getElementById('detail-summary').innerHTML = `
     <div class="detail-section-title">サマリー</div>
     <div class="summary-grid">
@@ -1039,7 +938,7 @@ function renderDetailHistory(charName, fm) {
       const rl    = getResultLabel(m);
       const label = { win: '勝', loss: '敗', draw: '分' }[rl];
       const date  = m.date || (m.timestamp ? m.timestamp.substring(0, 10) : '');
-      const rankIconHTML = m.rank ? `<img class="history-rank-icon" src="ranks/${m.perspective}s/${m.rank}.PNG" alt="${escapeHTML(m.rank)}" title="${escapeHTML(m.rank)}" onerror="this.outerHTML='${escapeHTML(m.rank)}'">` : '';
+      const rankIconHTML = m.rank ? `<img class="history-rank-icon" src="ranks/${m.perspective}s/${m.rank}.PNG" alt="${escapeHTML(m.rank)}" title="${escapeHTML(m.rank)}" onerror="this.textContent=this.alt">` : '';
       const vsRowHTML = (() => {
         const iconImg = (src, alt) => `<img class="history-co-icon" src="${src}" alt="${escapeHTML(alt)}" title="${escapeHTML(alt)}" onerror="this.style.display='none'">`;
         if (currentPerspective === 'hunter') {

@@ -2277,6 +2277,8 @@ body.dark-mode .top-card-detail-row { border-top-color: rgba(255,255,255,0.06); 
   inset: 0;
   z-index: calc(var(--z-nav) - 1);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   background: var(--s-base);
   opacity: 0;
   transform: translateY(12px);
@@ -2298,6 +2300,9 @@ body.dark-mode .top-card-detail-row { border-top-color: rgba(255,255,255,0.06); 
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
 }
 .detail-page-back {
   background: none;
@@ -2350,6 +2355,12 @@ body.dark-mode .detail-filter-badge {
 }
 .detail-page-body {
   padding: 16px;
+  padding-bottom: 16px;
+}
+@media (max-width: 767px) {
+  .detail-page-body {
+    padding-bottom: calc(20px + 58px + 20px + env(safe-area-inset-bottom));
+  }
 }
 .detail-section {
   margin-bottom: 20px;

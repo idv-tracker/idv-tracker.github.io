@@ -57,6 +57,205 @@ const HUNTERS  = ['復讐者', '道化師', '断罪狩人', 'リッパー', '結
 
 const RANK_NAMES = ['1段', '2段', '3段', '4段', '5段', '6段', '7段', '最高峰'];
 
+// ===== キャラよみがな =====
+const SURVIVOR_READINGS = {
+  '幸運児':'こううんじ','医師':'いし','弁護士':'べんごし','泥棒':'どろぼう','庭師':'にわし',
+  'マジシャン':'まじしゃん','冒険家':'ぼうけんか','傭兵':'ようへい','祭司':'さいし','空軍':'くうぐん',
+  '機械技師':'きかいぎし','オフェンス':'おふぇんす','心眼':'しんがん','調香師':'ちょうこうし',
+  'カウボーイ':'かうぼーい','踊り子':'おどりこ','占い師':'うらないし','納棺師':'のうかんし',
+  '探鉱者':'たんこうしゃ','呪術師':'じゅじゅつし','野人':'やじん','曲芸師':'きょくげいし',
+  '一等航海士':'いっとうこうかいし','バーメイド':'ばーめいど','ポストマン':'ぽすとまん',
+  '墓守':'はかもり','「囚人」':'しゅうじん','昆虫学者':'こんちゅうがくしゃ','画家':'がか',
+  'バッツマン':'ばっつまん','玩具職人':'おもちゃしょくにん','患者':'かんじゃ',
+  '「心理学者」':'しんりがくしゃ','小説家':'しょうせつか','「少女」':'しょうじょ',
+  '泣きピエロ':'なきぴえろ','教授':'きょうじゅ','骨董商':'こっとうしょう','作曲家':'さっきょくか',
+  '記者':'きしゃ','航空エンジニア':'こうくうえんじにあ','応援団':'おうえんだん',
+  '人形師':'にんぎょうし','火災調査員':'かさいちょうさいん','「レディ・ファウロ」':'れでぃふぁうろ',
+  '「騎士」':'きし','気象学者':'きしょうがくしゃ','弓使い':'ゆみつかい',
+  '「脱出マスター」':'だっしゅつますたー だつます','幻灯師':'げんとうし','闘牛士':'とうぎゅうし'
+};
+const HUNTER_READINGS = {
+  '復讐者':'ふくしゅうしゃ れお','道化師':'どうけし ぴえろ','断罪狩人':'だんざいかりゅうど しか',
+  'リッパー':'りっぱー','結魂者':'けっこんしゃ くも','芸者':'げいしゃ みちこ',
+  '白黒無常':'しろくろむじょう','写真家':'しゃしんか じょぜふ','狂眼':'きょうがん ばるく',
+  '黄衣の王':'おういのおう たこ はすたー','夢の魔女':'ゆめのまじょ','泣き虫':'なきむし',
+  '魔トカゲ':'まとかげ るきの','血の女王':'ちのじょおう まりー','ガードNo.26':'がーどにじゅうろく ぼんぼん',
+  '「使徒」':'しと あん','ヴァイオリニスト':'ゔぁいおりにすと あんとにお','彫刻師':'ちょうこくし がらてあ',
+  'アンデッド':'あんでっど','破輪':'はりん うぃる','漁師':'りょうし ぐれいす',
+  '蝋人形師':'ろうにんぎょうし','「悪夢」':'あくむ','書記官':'しょきかん きーがん',
+  '隠者':'いんじゃ','夜の番人':'よるのばんにん いたか','オペラ歌手':'おぺらかしゅ さんぐりあ',
+  '「フールズ・ゴールド」':'ふーるずごーるど ふるご','時空の影':'じくうのかげ あいゔぃ',
+  '「足萎えの羊」':'あしなえのひつじ','「フラバルー」':'ふらばるー','雑貨商':'ざっかしょう',
+  '「ビリヤードプレイヤー」':'びりやーどぷれいやー','「女王蜂」':'じょおうばち'
+};
+
+function katakanaToHiragana(str) {
+  return str.replace(/[\u30A1-\u30F6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+}
+
+// ===== SearchableSelect =====
+class SearchableSelect {
+  constructor(selectEl, onChange) {
+    this.select = selectEl;
+    this.value = selectEl.value;
+    this.highlightIndex = -1;
+    this.isOpen = false;
+    this.options = [];
+    this._filteredOptions = [];
+    this._touchHandled = false;
+    this.onChange = onChange || null;
+    this._build();
+    this._bindEvents();
+  }
+  _build() {
+    this.wrapper = document.createElement('div');
+    this.wrapper.className = 'searchable-select-wrapper';
+    this.select.parentNode.insertBefore(this.wrapper, this.select);
+    this.wrapper.appendChild(this.select);
+    this.input = document.createElement('input');
+    this.input.type = 'text';
+    this.input.className = 'ss-input';
+    this.input.placeholder = '検索して選択...';
+    this.input.autocomplete = 'off';
+    this.wrapper.insertBefore(this.input, this.select);
+    this.clearBtn = document.createElement('button');
+    this.clearBtn.type = 'button';
+    this.clearBtn.className = 'ss-clear';
+    this.clearBtn.innerHTML = '×';
+    this.clearBtn.tabIndex = -1;
+    this.wrapper.insertBefore(this.clearBtn, this.select);
+    this.dropdown = document.createElement('div');
+    this.dropdown.className = 'ss-dropdown';
+    this.wrapper.appendChild(this.dropdown);
+    if (this.select.value) {
+      this.input.value = this.select.value;
+      this.input.classList.add('has-value');
+      this.clearBtn.classList.add('visible');
+    }
+  }
+  _bindEvents() {
+    this.input.addEventListener('focus', () => {
+      this._refreshOptions();
+      this._filterAndRender('');
+      this._open();
+    });
+    this.input.addEventListener('input', () => {
+      this._filterAndRender(this.input.value);
+      if (!this.isOpen) this._open();
+    });
+    this.input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); this._moveHighlight(1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); this._moveHighlight(-1); }
+      else if (e.key === 'Enter') { e.preventDefault(); this._selectHighlighted(); }
+      else if (e.key === 'Escape') { this._close(); this.input.blur(); }
+    });
+    this.clearBtn.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      this.setValue(''); this.input.focus();
+    });
+    document.addEventListener('click', (e) => {
+      if (!this.wrapper.contains(e.target)) {
+        this._close();
+        this.input.value = this.value || '';
+      }
+    });
+  }
+  _refreshOptions() {
+    this.options = [];
+    this.select.querySelectorAll('option').forEach(opt => {
+      if (!opt.value) return;
+      const label = opt.textContent;
+      const isSurvivor = SURVIVORS.includes(label);
+      const reading = isSurvivor ? (SURVIVOR_READINGS[label] || '') : (HUNTER_READINGS[label] || '');
+      this.options.push({ value: opt.value, label, reading });
+    });
+  }
+  _filterAndRender(query) {
+    const q = katakanaToHiragana(query.toLowerCase().trim());
+    this.dropdown.innerHTML = '';
+    this.highlightIndex = -1;
+    const removeChoon = s => s.replace(/ー/g, '');
+    const skipMatch = (text, pattern) => {
+      let pi = 0;
+      for (let i = 0; i < text.length && pi < pattern.length; i++) { if (text[i] === pattern[pi]) pi++; }
+      return pi === pattern.length;
+    };
+    let filtered;
+    if (!q) {
+      filtered = this.options;
+    } else {
+      const qNoChoon = removeChoon(q);
+      const scored = this.options
+        .filter(opt => {
+          const label = opt.label.toLowerCase(); const r = opt.reading;
+          return label.includes(q) || r.includes(q) ||
+                 removeChoon(label).includes(qNoChoon) || removeChoon(r).includes(qNoChoon) ||
+                 skipMatch(label, q) || skipMatch(r, q);
+        })
+        .map(opt => {
+          const label = opt.label.toLowerCase(); const r = opt.reading;
+          const score = (label.includes(q) || r.includes(q)) ? 0
+            : (removeChoon(label).includes(qNoChoon) || removeChoon(r).includes(qNoChoon)) ? 1 : 2;
+          return { opt, score };
+        });
+      scored.sort((a, b) => {
+        if (a.score !== b.score) return a.score - b.score;
+        const aP = a.opt.label.toLowerCase().startsWith(q) || a.opt.reading.startsWith(q);
+        const bP = b.opt.label.toLowerCase().startsWith(q) || b.opt.reading.startsWith(q);
+        return (aP && !bP) ? -1 : (!aP && bP) ? 1 : 0;
+      });
+      filtered = scored.map(({ opt }) => opt);
+      if (filtered.length === 0 && q.length >= 3) {
+        const fuzzy = (text, pat) => { let pi = 0; for (let i = 0; i < text.length && pi < pat.length; i++) { if (text[i] === pat[pi]) pi++; } return pi / pat.length; };
+        const best = opt => Math.max(fuzzy(opt.label.toLowerCase(), q), fuzzy(opt.reading, q), fuzzy(removeChoon(opt.label.toLowerCase()), qNoChoon), fuzzy(removeChoon(opt.reading), qNoChoon));
+        filtered = this.options.filter(opt => best(opt) >= 0.5).sort((a, b) => best(b) - best(a));
+      }
+    }
+    if (filtered.length === 0) {
+      const d = document.createElement('div'); d.className = 'ss-no-result'; d.textContent = '該当なし';
+      this.dropdown.appendChild(d); this._filteredOptions = []; return;
+    }
+    this._filteredOptions = filtered;
+    filtered.forEach((opt, idx) => {
+      const div = document.createElement('div');
+      div.className = 'ss-option'; div.dataset.index = idx; div.textContent = opt.label;
+      div.addEventListener('mousedown', e => e.preventDefault());
+      div.addEventListener('click', e => { e.stopPropagation(); if (this._touchHandled) { this._touchHandled = false; return; } this._selectOption(opt); });
+      div.addEventListener('touchstart', e => { this._touchStartX = e.touches[0].clientX; this._touchStartY = e.touches[0].clientY; }, { passive: true });
+      div.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - (this._touchStartX || 0);
+        const dy = e.changedTouches[0].clientY - (this._touchStartY || 0);
+        if (Math.sqrt(dx*dx+dy*dy) > 10) return;
+        this._touchHandled = true; this._selectOption(opt); setTimeout(() => { this._touchHandled = false; }, 50);
+      }, { passive: true });
+      this.dropdown.appendChild(div);
+    });
+  }
+  _open() { this.isOpen = true; this.dropdown.classList.add('open'); this.input.style.borderRadius = '6px 6px 0 0'; }
+  _close() { this.isOpen = false; this.dropdown.classList.remove('open'); this.input.style.borderRadius = '6px'; this.highlightIndex = -1; }
+  _moveHighlight(dir) {
+    const items = this.dropdown.querySelectorAll('.ss-option');
+    if (!items.length) return;
+    if (this.highlightIndex >= 0 && this.highlightIndex < items.length) items[this.highlightIndex].classList.remove('highlighted');
+    this.highlightIndex = (this.highlightIndex + dir + items.length) % items.length;
+    items[this.highlightIndex].classList.add('highlighted');
+    items[this.highlightIndex].scrollIntoView({ block: 'nearest' });
+  }
+  _selectHighlighted() {
+    if (this.highlightIndex >= 0 && this._filteredOptions && this.highlightIndex < this._filteredOptions.length)
+      this._selectOption(this._filteredOptions[this.highlightIndex]);
+  }
+  _selectOption(opt) {
+    this.setValue(opt.value); this._close(); this.input.blur();
+    if (this.onChange) this.onChange(opt.value);
+  }
+  setValue(val) {
+    this.value = val; this.select.value = val;
+    if (val) { this.input.value = val; this.input.classList.add('has-value'); this.clearBtn.classList.add('visible'); }
+    else { this.input.value = ''; this.input.classList.remove('has-value'); this.clearBtn.classList.remove('visible'); }
+  }
+}
+
 // 段位設定
 const RANK_CONFIG = {
   '1段': { subRanks: ['III', 'II', 'I'],              starsPerSubRank: 5, ptPerStar: 20 },
@@ -275,7 +474,6 @@ function renderMainPage() {
 
   lock.classList.add('hidden');
   content.classList.remove('hidden');
-  document.getElementById('cog-save-btn').classList.remove('hidden');
   // トグル初期状態を反映
   document.getElementById('rank-side-survivors').classList.toggle('active', rankIconSide === 'survivors');
   document.getElementById('rank-side-hunters').classList.toggle('active', rankIconSide === 'hunters');
@@ -309,7 +507,7 @@ function renderMainPage() {
 
 // ===== タブ切替 =====
 function switchTab(tab) {
-  closeCogCharDropdown();
+  if (cogCharSS && cogCharSS.isOpen) cogCharSS._close();
   document.getElementById('tab-rank').classList.toggle('active', tab === 'rank');
   document.getElementById('tab-cog').classList.toggle('active', tab === 'cog');
   const rankSec = document.getElementById('rank-section');
@@ -322,96 +520,27 @@ function switchTab(tab) {
   setTimeout(() => showEl.classList.remove('section-fade-in'), 200);
 }
 
-// ===== SearchableSelect（認知pt キャラ選択） =====
-let ssOpen          = false;
-let ssSelectedValue = '';
+// ===== キャラ選択 SearchableSelect =====
+let cogCharSS = null;
 
-function getCogCharValue() { return ssSelectedValue; }
+function getCogCharValue() {
+  return cogCharSS ? cogCharSS.value : '';
+}
 
 function setCogCharValue(val) {
-  ssSelectedValue = val;
-  const display = document.getElementById('cog-char-display');
-  const trigger = document.getElementById('cog-char-trigger');
-  if (!display) return;
-  if (val) {
-    display.textContent = val;
-    trigger && trigger.classList.add('has-value');
-  } else {
-    display.textContent = '選択してください';
-    trigger && trigger.classList.remove('has-value');
-  }
+  if (cogCharSS) cogCharSS.setValue(val);
 }
 
 function initCogCharSelect() {
-  const container = document.getElementById('cog-char-ss');
-  if (!container) return;
-  document.addEventListener('click', (e) => {
-    if (!container.contains(e.target)) closeCogCharDropdown();
+  const selectEl = document.getElementById('cog-char-select');
+  if (!selectEl) return;
+  // optionを生成
+  [...SURVIVORS.map(c => ({ c, g: 'サバイバー' })), ...HUNTERS.map(c => ({ c, g: 'ハンター' }))].forEach(({ c }) => {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = c;
+    selectEl.appendChild(opt);
   });
-}
-
-function toggleCogCharDropdown() {
-  ssOpen ? closeCogCharDropdown() : openCogCharDropdown();
-}
-
-function openCogCharDropdown() {
-  ssOpen = true;
-  const trigger = document.getElementById('cog-char-trigger');
-  const dd      = document.getElementById('cog-char-dd');
-  const input   = document.getElementById('cog-char-search');
-  if (trigger) trigger.classList.add('open');
-  if (dd)      dd.classList.remove('hidden');
-  filterCogChar('');
-  if (input)   { input.value = ''; input.focus(); }
-}
-
-function closeCogCharDropdown() {
-  ssOpen = false;
-  const trigger = document.getElementById('cog-char-trigger');
-  const dd      = document.getElementById('cog-char-dd');
-  if (trigger) trigger.classList.remove('open');
-  if (dd)      dd.classList.add('hidden');
-}
-
-function ssNormalize(s) {
-  // カタカナ → ひらがな変換してから小文字化
-  return s.replace(/[\u30a1-\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60)).toLowerCase();
-}
-
-function filterCogChar(query) {
-  const list = document.getElementById('cog-char-list');
-  if (!list) return;
-  const q = ssNormalize(query.trim());
-  const allChars = [
-    ...SURVIVORS.map(c => ({ name: c, group: 'サバイバー' })),
-    ...HUNTERS.map(c  => ({ name: c, group: 'ハンター'   })),
-  ];
-  const filtered = q
-    ? allChars.filter(c => ssNormalize(c.name).includes(q))
-    : allChars;
-
-  if (filtered.length === 0) {
-    list.innerHTML = '<div class="ss-no-result">該当なし</div>';
-    return;
-  }
-
-  let html = '';
-  let lastGroup = null;
-  filtered.forEach(item => {
-    if (!q && item.group !== lastGroup) {
-      html += `<div class="ss-group-label">${item.group}</div>`;
-      lastGroup = item.group;
-    }
-    const active = item.name === ssSelectedValue ? ' active' : '';
-    html += `<button type="button" class="ss-option${active}" onclick="selectCogChar('${item.name.replace(/'/g, "\\'")}')">${item.name}</button>`;
-  });
-  list.innerHTML = html;
-}
-
-function selectCogChar(name) {
-  setCogCharValue(name);
-  closeCogCharDropdown();
-  onCogInput();
+  cogCharSS = new SearchableSelect(selectEl, () => { onCogInput(); });
 }
 
 // ===== 段位アイコン描画 =====
@@ -751,7 +880,7 @@ function renderCogCardsRow() {
 
   // 空状態ヒント
   if (cogCards.length === 0) {
-    html += `<div class="cog-empty-hint">保存するとここにカードが表示されます</div>`;
+    html += `<div class="cog-empty-hint">キャラクターを選択するとカードが自動保存されます</div>`;
   }
 
   row.innerHTML = html;
@@ -828,6 +957,38 @@ function onSaveCogCard() {
   renderCogCardsRow();
 }
 
+// キャラ名が入力済みなら自動的にカードを保存（手動保存ボタン不要）
+function autoSaveCogCard() {
+  const charName = getCogCharValue();
+  if (!charName) return;
+
+  const card = {
+    charName,
+    currentPt:   document.getElementById('cog-current').value,
+    targetPt:    document.getElementById('cog-target').value,
+    winSamples:  document.getElementById('cog-win-samples').value,
+    drawSamples: document.getElementById('cog-draw-samples').value,
+    lossSamples: document.getElementById('cog-loss-samples').value,
+  };
+
+  if (activeCogCardIdx >= 0) {
+    cogCards[activeCogCardIdx] = card;
+  } else {
+    // 既存カードと同じキャラがあればそちらを更新
+    const existingIdx = cogCards.findIndex(c => c.charName === charName);
+    if (existingIdx >= 0) {
+      cogCards[existingIdx] = card;
+      activeCogCardIdx = existingIdx;
+    } else {
+      cogCards.push(card);
+      activeCogCardIdx = cogCards.length - 1;
+    }
+  }
+
+  saveCogCards();
+  renderCogCardsRow();
+}
+
 // ===== 認知pt セクション =====
 function onCogInput() {
   showCogTrackBtn(false);
@@ -835,6 +996,7 @@ function onCogInput() {
   updateAvgDisplay('cog-draw-samples', 'cog-draw-avg');
   updateAvgDisplay('cog-loss-samples', 'cog-loss-avg');
   saveCogInputs();
+  autoSaveCogCard();
 
   const resultEl  = document.getElementById('cog-result');
   const charName  = getCogCharValue();
@@ -1440,6 +1602,7 @@ function startCogGoal() {
     calibrations: [],
   };
   saveCogGoal(charName, goal);
+  onSaveCogCard(); // 追跡開始と同時に自動保存
   showCogTrack(goal);
 }
 

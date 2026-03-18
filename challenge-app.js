@@ -75,7 +75,6 @@ const RANK_START_PT = (function () {
 
 // ===== 状態 =====
 let matches    = [];
-let db         = null;
 let lastUpdated = null;
 
 // 段位選択状態
@@ -91,121 +90,30 @@ let activeCogCardIdx  = -1; // -1 = 新規
 // 段位アイコン陣営
 let rankIconSide = localStorage.getItem('identity5_challenge_rank_side') || 'hunters';
 
-// ===== 初期化 =====
+// ===== 接続モジュール =====
+const _conn = createConnectModule({
+  onConnected(m, lu) { matches = m; lastUpdated = lu; showMainPage(); },
+  onNoData()         { showConnectPage(); }
+});
+
 function init() {
-  initFirebaseLocal();
   initScrollBehavior();
   initCogCharSelect();
   renderRankIcons('cur');
   renderRankIcons('tgt');
   loadCogCards();
   loadSavedInputs();
-
-  const syncCode = localStorage.getItem('identity5_sync_code');
-  if (syncCode) {
-    loadFromFirebase(syncCode);
-    return;
-  }
-
-  const cached = localStorage.getItem('tier_local_data');
-  if (cached) {
-    try {
-      const parsed = JSON.parse(cached);
-      matches      = parsed.matches || [];
-      lastUpdated  = parsed.lastUpdated || null;
-      showMainPage();
-      return;
-    } catch (_) {}
-  }
-
-  showConnectPage();
+  _conn.startup();
 }
 
-// ===== Firebase =====
-function initFirebaseLocal() {
-  db = initFirebase();
-}
-
-async function loadFromFirebase(syncCode) {
-  if (!db) { fallbackToCache(); return; }
-  try {
-    const snap = await db.collection('idv_tracker').doc(syncCode).get();
-    if (snap.exists) {
-      const data  = snap.data();
-      matches      = data.matches || [];
-      lastUpdated  = data.lastModified || null;
-      localStorage.setItem('tier_local_data', JSON.stringify({ matches, lastUpdated }));
-      showMainPage();
-    } else {
-      fallbackToCache();
-    }
-  } catch (_) {
-    fallbackToCache();
-  }
-}
-
-function fallbackToCache() {
-  const cached = localStorage.getItem('tier_local_data');
-  if (cached) {
-    try {
-      const parsed = JSON.parse(cached);
-      matches      = parsed.matches || [];
-      lastUpdated  = parsed.lastUpdated || null;
-      showMainPage();
-      return;
-    } catch (_) {}
-  }
-  showConnectPage();
-}
-
-// ===== 接続UI =====
-async function connectWithSyncCode() {
-  const code = document.getElementById('sync-code-input').value.trim();
-  if (!code) { alert('同期コードを入力してください'); return; }
-  localStorage.setItem('identity5_sync_code', code);
-  await loadFromFirebase(code);
-}
-
-function connectWithJSON() {
-  const text = document.getElementById('json-input').value.trim();
-  if (!text) { alert('データを貼り付けてください'); return; }
-  importJSONText(text);
-}
-
-function connectWithJSONFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    document.getElementById('json-input').value = e.target.result;
-    connectWithJSON();
-  };
-  reader.readAsText(file);
-}
-
-function importJSONText(text) {
-  try {
-    const data = JSON.parse(text);
-    if (!data.matches || !Array.isArray(data.matches)) {
-      alert('データの形式が正しくありません');
-      return;
-    }
-    matches      = data.matches;
-    lastUpdated  = new Date().toISOString();
-    localStorage.setItem('tier_local_data', JSON.stringify({ matches, lastUpdated }));
-    showMainPage();
-  } catch (_) {
-    alert('JSONの解析に失敗しました');
-  }
-}
-
+// HTML onclick から呼ばれるグローバル関数
+function connectWithSyncCode()      { _conn.connectWithSyncCode(); }
+function connectWithJSON()           { _conn.connectWithJSON(); }
+function connectWithJSONFile(event)  { _conn.connectWithJSONFile(event); }
 function showDisconnectMenu() {
-  if (!confirm('接続を解除しますか？\n（データは削除されません）')) return;
-  localStorage.removeItem('identity5_sync_code');
-  localStorage.removeItem('tier_local_data');
-  matches      = [];
-  lastUpdated  = null;
-  showConnectPage();
+  if (_conn.disconnect()) {
+    matches = []; lastUpdated = null; showConnectPage();
+  }
 }
 
 // ===== 画面切替 =====
@@ -817,7 +725,7 @@ function onCogInput() {
 
   const wr = getCharWinrate(charName);
   if (!wr) {
-    resultEl.innerHTML = `<div class="result-error">⚠️ このキャラクターの対戦データがありません<br><span style="font-size:12px;color:#6b7280;">トラッカーに${charName}での試合を記録してください</span></div>`;
+    resultEl.innerHTML = `<div class="result-error">⚠️ このキャラクターの対戦データがありません<br><span style="font-size:12px;color:#6b7280;">トラッカーに${escapeHTML(charName)}での試合を記録してください</span></div>`;
     return;
   }
 
@@ -843,7 +751,7 @@ function onCogInput() {
   let html = '';
 
   html += `<div class="result-data-info">
-    <strong>${charName}</strong> — 直近${wr.total}試合 / 勝ち率 <strong>${(wr.winRate * 100).toFixed(1)}%</strong>
+    <strong>${escapeHTML(charName)}</strong> — 直近${wr.total}試合 / 勝ち率 <strong>${(wr.winRate * 100).toFixed(1)}%</strong>
     　勝: ${wr.wins} / 分: ${wr.draws} / 負: ${wr.losses}`;
   if (wr.total < 10) {
     html += `<div class="result-data-warn">⚠️ データが${wr.total}試合と少ないため精度が低い場合があります</div>`;
@@ -1182,7 +1090,7 @@ function renderTrackChart(canvasId, goal, totalSinceGoal, wr) {
     }
   });
 
-  // 将来予測ライン
+  // 将来予測ライン（期待値・上振れ・下振れ）
   const currentPredicted = predictedLine[predictedLine.length - 1].y;
   const lastSeg = segments[segments.length - 1];
   const lastExp = wr
@@ -1195,9 +1103,35 @@ function renderTrackChart(canvasId, goal, totalSinceGoal, wr) {
     futureLine.push({ x: totalSinceGoal + remainingMatches, y: goal.targetPt });
   }
 
-  const maxX = futureLine[futureLine.length - 1].x;
+  // 上振れ・下振れ将来予測帯（各ラインが独自の終点を持つ）
+  const futureUpper = [{ x: totalSinceGoal, y: currentPredicted }];
+  const futureLower = [{ x: totalSinceGoal, y: currentPredicted }];
+  if (wr && currentPredicted < goal.targetPt) {
+    const upperWr = Math.min(1, wr.winRate + 0.05);
+    const lowerWr = Math.max(0, wr.winRate - 0.05);
+    const upperLossRate = Math.max(0, 1 - upperWr - wr.drawRate);
+    const lowerLossRate = Math.max(0, 1 - lowerWr - wr.drawRate);
+    const upperExp = upperWr * lastSeg.winAvg + wr.drawRate * (lastSeg.drawAvg || 0) + upperLossRate * lastSeg.lossAvg;
+    const lowerExp = lowerWr * lastSeg.winAvg + wr.drawRate * (lastSeg.drawAvg || 0) + lowerLossRate * lastSeg.lossAvg;
+    const remainPt = goal.targetPt - currentPredicted;
+    // 上振れ: 早く目標到達
+    if (upperExp > 0) {
+      const upperMatches = Math.max(1, Math.ceil(remainPt / upperExp));
+      futureUpper.push({ x: totalSinceGoal + upperMatches, y: goal.targetPt });
+    }
+    // 下振れ: 遅く目標到達
+    if (lowerExp > 0) {
+      const lowerMatches = Math.max(1, Math.ceil(remainPt / lowerExp));
+      futureLower.push({ x: totalSinceGoal + lowerMatches, y: goal.targetPt });
+    }
+  }
+
+  // x軸は下振れライン（最も遅い到達）に合わせる
+  const expectedMaxX = futureLine.length > 1 ? futureLine[1].x : totalSinceGoal + 1;
+  const lowerMaxX = futureLower.length > 1 ? futureLower[1].x : expectedMaxX;
+  const maxX = Math.max(expectedMaxX, lowerMaxX);
   const minY = Math.min(goal.startPt, goal.targetPt * 0.95) * 0.98;
-  const maxY = goal.targetPt * 1.02;
+  const maxY = goal.targetPt * 1.05;
 
   const isDark = document.body.classList.contains('dark-mode');
   const gridColor  = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
@@ -1238,6 +1172,29 @@ function renderTrackChart(canvasId, goal, totalSinceGoal, wr) {
           fill: false,
           tension: 0,
           order: 2,
+        },
+        {
+          label: '上振れ',
+          data: futureUpper,
+          borderColor: 'rgba(16,185,129,0.3)',
+          borderWidth: 1,
+          borderDash: [3, 3],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+          order: 5,
+        },
+        {
+          label: '下振れ',
+          data: futureLower,
+          borderColor: 'rgba(239,68,68,0.3)',
+          borderWidth: 1,
+          borderDash: [3, 3],
+          pointRadius: 0,
+          fill: '-1',
+          backgroundColor: 'rgba(59,130,246,0.06)',
+          tension: 0,
+          order: 6,
         },
         {
           label: '実測値',
@@ -1299,7 +1256,7 @@ function renderTrackChart(canvasId, goal, totalSinceGoal, wr) {
 }
 
 // --- サマリーHTML生成 ---
-function buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp) {
+function buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp, winAvg, drawAvg, lossAvg) {
   const achieved     = predictedPt >= goal.targetPt;
   const remaining    = Math.max(0, goal.targetPt - predictedPt);
   const range        = goal.targetPt - goal.startPt;
@@ -1307,6 +1264,19 @@ function buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp) {
   const estMatches   = (!achieved && lastExp > 0) ? Math.ceil(remaining / lastExp) : null;
   const lastCalib    = goal.calibrations.length > 0 ? goal.calibrations[goal.calibrations.length - 1] : null;
   const calibCount   = goal.calibrations.length;
+
+  // 上振れ・下振れ試合数
+  let estUpper = null;
+  let estLower = null;
+  if (!achieved && wr && remaining > 0) {
+    const upperWr = Math.min(1, wr.winRate + 0.05);
+    const lowerWr = Math.max(0, wr.winRate - 0.05);
+    const lossRate = r => Math.max(0, 1 - r - wr.drawRate);
+    const upperExp = upperWr * winAvg + wr.drawRate * drawAvg + lossRate(upperWr) * lossAvg;
+    const lowerExp = lowerWr * winAvg + wr.drawRate * drawAvg + lossRate(lowerWr) * lossAvg;
+    if (upperExp > 0) estUpper = Math.ceil(remaining / upperExp);
+    if (lowerExp > 0) estLower = Math.ceil(remaining / lowerExp);
+  }
 
   let html = '';
 
@@ -1336,9 +1306,35 @@ function buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp) {
     <div class="track-pt-remaining">
       ${achieved
         ? `<strong style="color:#059669">目標を達成しました！</strong>`
-        : `残り <strong>${Math.round(remaining).toLocaleString()}pt</strong>${estMatches !== null ? `　推定あと <strong>${estMatches}試合</strong>` : ''}`
+        : `残り <strong>${Math.round(remaining).toLocaleString()}pt</strong>`
       }
-    </div>
+    </div>`;
+
+  // 上振れ・期待値・下振れ 3カラム表示
+  if (!achieved && wr && (estUpper !== null || estLower !== null)) {
+    const fmtPct = r => (r * 100).toFixed(1) + '%';
+    const upperWrPct = fmtPct(Math.min(1, wr.winRate + 0.05));
+    const lowerWrPct = fmtPct(Math.max(0, wr.winRate - 0.05));
+    const expWrPct   = fmtPct(wr.winRate);
+    function tCol(val, type, wrPctStr) {
+      const label = type === 'upper' ? '上振れ' : type === 'expected' ? '期待値' : '下振れ';
+      const valHtml = val !== null
+        ? `${val}<span>試合</span>`
+        : `<span style="font-size:11px">—</span>`;
+      return `<div class="pred-col ${type}">
+        <div class="pred-label">${label}</div>
+        <div class="pred-value">${valHtml}</div>
+        <div class="pred-winrate">${wrPctStr}</div>
+      </div>`;
+    }
+    html += `<div class="pred-table track-pred-table">
+      ${tCol(estUpper, 'upper', '勝ち率 ' + upperWrPct)}
+      ${tCol(estMatches, 'expected', '勝ち率 ' + expWrPct)}
+      ${tCol(estLower, 'lower', '勝ち率 ' + lowerWrPct)}
+    </div>`;
+  }
+
+  html += `
     <div class="track-matches-row">${goal.createdDate} スタート · ${totalSinceGoal}試合経過　${wr ? `（勝ち率 ${(wr.winRate * 100).toFixed(1)}%）` : ''}</div>
     <div class="track-progress-wrap">
       <div class="track-progress-bar" style="width:${progress.toFixed(1)}%"></div>
@@ -1439,7 +1435,7 @@ function showRankTrack(goal) {
   const predictedPt = calcCurrentPredictedPt(goal, totalSinceGoal, wr);
 
   document.getElementById('rank-track-summary').innerHTML =
-    buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp);
+    buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp, winAvg, drawAvg, lossAvg);
 
   setTimeout(() => renderTrackChart('rank-track-chart', goal, totalSinceGoal, wr), 0);
 }
@@ -1464,7 +1460,7 @@ function showCogTrack(goal) {
   const predictedPt = calcCurrentPredictedPt(goal, totalSinceGoal, wr);
 
   document.getElementById('cog-track-summary').innerHTML =
-    buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp);
+    buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp, winAvg, drawAvg, lossAvg);
 
   // calibTarget を現在の認知ゴールのキャラに合わせる
   document.querySelector('#cog-track .calib-btn').onclick = () => openCalibModal('cog', goal.char);
@@ -1562,43 +1558,6 @@ function editCogGoal() {
   onCogInput();
 }
 
-// startRankGoal/startCogGoalで編集モードのキャリブレーション引き継ぎ
-const _origStartRankGoal = startRankGoal;
-startRankGoal = function() {
-  _origStartRankGoal();
-  if (editingRankGoal) {
-    const goal = loadRankGoal();
-    if (goal) {
-      goal.calibrations = editingRankGoal.calibrations || [];
-      goal.createdDate = editingRankGoal.createdDate;
-      goal.startMatchIndex = editingRankGoal.startMatchIndex;
-      saveRankGoal(goal);
-      showRankTrack(goal);
-    }
-    editingRankGoal = null;
-  }
-};
-
-const _origStartCogGoal = startCogGoal;
-startCogGoal = function() {
-  // 編集時は旧キャラのゴールを削除
-  if (editingCogGoal && editingCogGoal.char !== getCogCharValue()) {
-    deleteCogGoal(editingCogGoal.char);
-  }
-  _origStartCogGoal();
-  if (editingCogGoal) {
-    const charName = getCogCharValue();
-    const goal = loadCogGoal(charName);
-    if (goal) {
-      goal.calibrations = editingCogGoal.calibrations || [];
-      goal.createdDate = editingCogGoal.createdDate;
-      goal.startMatchIndex = editingCogGoal.startMatchIndex;
-      saveCogGoal(charName, goal);
-      showCogTrack(goal);
-    }
-    editingCogGoal = null;
-  }
-};
 
 // --- キャリブレーションモーダル ---
 function openCalibModal(type, char) {

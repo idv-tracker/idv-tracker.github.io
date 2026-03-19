@@ -46,6 +46,7 @@
             <li><a href="#history">試合履歴</a></li>
             <li><a href="#tier-analysis">環境分析 Tier表</a></li>
             <li><a href="#challenge">目標達成予測</a></li>
+            <li><a href="#predict">ハンター予測</a></li>
           </ul>
         </div>
 
@@ -65,7 +66,7 @@
             </li>
             <li>
               <div class="feature-name">追加機能（50試合で解放）</div>
-              <div class="feature-desc">50試合記録すると「追加機能」タブから使えるようになる分析ツールです。「環境分析 Tier表」と「目標達成予測」の2つが含まれます。</div>
+              <div class="feature-desc">記録試合数に応じて「追加機能」タブから使えるようになる分析ツールです。「環境分析 Tier表」「目標達成予測」「ハンター予測」の3つが含まれます。</div>
             </li>
             <li>
               <div class="feature-name">クラウド同期</div>
@@ -420,6 +421,31 @@
           <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
         </div>
 
+        <hr class="divider">
+
+        <!-- ハンター予測 -->
+        <div class="section" id="predict">
+          <div class="section-title">ハンター予測</div>
+          <div class="section-desc">BANキャラとマップの情報から、対戦相手のハンターを過去データに基づいて予測する専用ページです。追加機能タブから開けます（サバイバー視点100試合記録後に解放）。</div>
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">入力</div>
+              <div class="feature-desc">マップ（必須）とBANキャラ1〜3体（1体以上必須）を選択して「予測する」を押すと、過去の対戦データから相手ハンターの出現確率を算出します。</div>
+            </li>
+            <li>
+              <div class="feature-name">得意キャラ表示</div>
+              <div class="feature-desc">各予測ハンターに対して、自分が5試合以上使ったキャラの中から勝率の高い上位3キャラを「得意キャラ」として表示します。</div>
+            </li>
+            <li>
+              <div class="feature-name">試合入力への遷移</div>
+              <div class="feature-desc">予測結果のハンターアイコンをクリックすると、マップ・BAN・相手ハンターがプリフィルされた状態でトラッカーの試合入力画面に遷移します。</div>
+            </li>
+          </ul>
+
+          <a href="#toc" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
       </div><!-- /#guide-pc -->
 
       <!-- ===== スマホ ガイド ===== -->
@@ -438,6 +464,7 @@
             <li><a href="#m-settings">ツール</a></li>
             <li><a href="#m-tier-analysis">環境分析 Tier表</a></li>
             <li><a href="#m-challenge">目標達成予測</a></li>
+            <li><a href="#m-predict">ハンター予測</a></li>
           </ul>
         </div>
 
@@ -684,7 +711,7 @@
             </li>
             <li>
               <div class="feature-name">追加機能（50試合で解放）</div>
-              <div class="feature-desc">50試合記録すると使えるようになる分析ツールです。「環境分析 Tier表」と「目標達成予測」の2つが含まれます。<a href="#m-tier-analysis" class="feature-link">Tier表を見る ›</a> <a href="#m-challenge" class="feature-link">目標達成予測を見る ›</a></div>
+              <div class="feature-desc">記録試合数に応じて使えるようになる分析ツールです。「環境分析 Tier表」「目標達成予測」「ハンター予測」の3つが含まれます。<a href="#m-tier-analysis" class="feature-link">Tier表を見る ›</a> <a href="#m-challenge" class="feature-link">目標達成予測を見る ›</a> <a href="#m-predict" class="feature-link">ハンター予測を見る ›</a></div>
             </li>
             <li>
               <div class="feature-name">クラウド同期</div>
@@ -759,6 +786,31 @@
             <li>
               <div class="feature-name">参照データ</div>
               <div class="feature-desc">段位予測は全体の直近50試合、認知予測はそのキャラの直近50試合（不足分は全体直近で補充）を使用します。</div>
+            </li>
+          </ul>
+
+          <a href="#toc-mobile" class="back-to-toc">↑ 目次に戻る</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- ハンター予測 -->
+        <div class="section" id="m-predict">
+          <div class="section-title">ハンター予測</div>
+          <div class="section-desc">BANキャラとマップの情報から、対戦相手のハンターを過去データに基づいて予測する専用ページです。ツールメニューからタップして開けます（サバイバー視点100試合記録後に解放）。</div>
+
+          <ul class="feature-list">
+            <li>
+              <div class="feature-name">入力</div>
+              <div class="feature-desc">マップ（必須）とBANキャラ1〜3体（1体以上必須）を選択して「予測する」をタップすると、過去の対戦データから相手ハンターの出現確率を算出します。</div>
+            </li>
+            <li>
+              <div class="feature-name">得意キャラ表示</div>
+              <div class="feature-desc">各予測ハンターに対して、自分が5試合以上使ったキャラの中から勝率の高い上位3キャラを「得意キャラ」として表示します。</div>
+            </li>
+            <li>
+              <div class="feature-name">試合入力への遷移</div>
+              <div class="feature-desc">予測結果のハンターアイコンをタップすると、マップ・BAN・相手ハンターがプリフィルされた状態でトラッカーの試合入力画面に遷移します。</div>
             </li>
           </ul>
 

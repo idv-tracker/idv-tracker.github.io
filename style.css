@@ -215,6 +215,15 @@ select:focus {
   transform: translateY(0);
 }
 
+.predict-back-link {
+  display: block; text-align: center; margin-top: 12px;
+  color: var(--t-muted); font-size: 13px; text-decoration: none;
+  padding: 8px; border-radius: 8px; transition: color 0.15s;
+}
+.predict-back-link:hover { color: var(--c-primary-mid); }
+body.dark-mode .predict-back-link { color: var(--t-muted); }
+body.dark-mode .predict-back-link:hover { color: var(--c-primary-light); }
+
 .filter-section {
   background: var(--s-raised);
   padding: 15px;
@@ -756,6 +765,10 @@ body.dark-mode .multi-rank-item.all-item {
 .searchable-select-wrapper {
   position: relative;
   width: 100%;
+  z-index: 1;
+}
+.searchable-select-wrapper.ss-active {
+  z-index: var(--z-dropdown);
 }
 
 .searchable-select-wrapper select {
@@ -1816,6 +1829,10 @@ body.dark-mode .addon-section-note  { color: var(--t-muted); }
 .tier-link-card-features strong { color: var(--t-secondary); }
 body.dark-mode .tier-link-card-header { color: var(--c-primary-light); }
 body.dark-mode .tier-link-card-features strong { color: var(--t-primary); }
+.tier-link-card-unlock {
+  margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--b-subtle);
+  font-size: 11px; color: var(--t-faint);
+}
 
 /* ===== ヘッダー再設計 ===== */
 .header {

@@ -219,6 +219,7 @@
           </div>
 
           <button type="button" class="submit-button" onclick="submitMatch('survivor')">試合を記録</button>
+          <a href="predict.html" id="predict-back-link" class="predict-back-link hidden">← ハンター予測に戻る</a>
         </div>
 
         <div id="hunter-input" class="hidden">
@@ -636,7 +637,7 @@
         <div class="addon-section">
           <div class="addon-section-header">
             <span class="addon-section-title">追加機能</span>
-            <span class="addon-section-note">50試合記録すると使えます</span>
+            <span class="addon-section-note">記録試合数に応じて解放されます</span>
           </div>
 
           <div class="tier-link-card">
@@ -653,10 +654,11 @@
                 <div><strong>詳細データ</strong> — マップ分布・自キャラ別勝率・試合履歴をキャラ別に確認</div>
                 <div><strong>自動連携</strong> — 同期コードを設定していれば追加操作なしで最新データを読み込み</div>
               </div>
+              <div class="tier-link-card-unlock">解放条件: 50試合以上</div>
             </div>
           </div>
 
-          <div class="tier-link-card" style="margin-bottom: 0;">
+          <div class="tier-link-card">
             <a href="challenge.html" class="tier-link-card-header">
               <span>目標達成予測</span>
               <span class="tier-link-card-open-label">開く ›</span>
@@ -668,6 +670,23 @@
                 <div><strong>段位pt予測</strong> — 全体勝率と段位の仕組みから必要試合数を計算</div>
                 <div><strong>上振れ・期待値・下振れ</strong> — 勝率±5%の3パターンで表示</div>
               </div>
+              <div class="tier-link-card-unlock">解放条件: 50試合以上</div>
+            </div>
+          </div>
+
+          <div class="tier-link-card" style="margin-bottom: 0;">
+            <a href="predict.html" class="tier-link-card-header">
+              <span>ハンター予測</span>
+              <span class="tier-link-card-open-label">開く ›</span>
+            </a>
+            <div class="tier-link-card-body">
+              <p>BANキャラとマップの情報から、対戦相手のハンターを過去データに基づいて予測するツールです。</p>
+              <div class="tier-link-card-features">
+                <div><strong>BAN構成分析</strong> — BANされたキャラから出現傾向を算出</div>
+                <div><strong>マップ傾向</strong> — マップ別のハンター出現率を加味</div>
+                <div><strong>得意キャラ表示</strong> — 各ハンターに対する勝率の高いキャラを表示</div>
+              </div>
+              <div class="tier-link-card-unlock">解放条件: サバイバー視点100試合以上</div>
             </div>
           </div>
         </div>
@@ -735,6 +754,21 @@
       <span class="tool-sheet-title">ツール</span>
       <button type="button" class="tool-sheet-close" onclick="closeToolSheet()">✕</button>
     </div>
+    <button type="button" class="tool-sheet-item" onclick="closeToolSheet(); switchTab('settings', document.querySelector('.main-tab[onclick*=\'settings\']'))">
+      <span class="tool-sheet-item-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </span>
+      <span class="tool-sheet-item-label">設定</span>
+      <span class="tool-sheet-item-arrow">›</span>
+    </button>
+    <a href="guide.html" class="tool-sheet-item">
+      <span class="tool-sheet-item-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      </span>
+      <span class="tool-sheet-item-label">使い方ガイド</span>
+      <span class="tool-sheet-item-arrow">›</span>
+    </a>
+    <div class="tool-sheet-divider"></div>
     <a href="tier.html" class="tool-sheet-item">
       <span class="tool-sheet-item-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -749,19 +783,11 @@
       <span class="tool-sheet-item-label">目標達成予測</span>
       <span class="tool-sheet-item-arrow">›</span>
     </a>
-    <div class="tool-sheet-divider"></div>
-    <button type="button" class="tool-sheet-item" onclick="closeToolSheet(); switchTab('settings', document.querySelector('.main-tab[onclick*=\'settings\']'))">
+    <a href="predict.html" class="tool-sheet-item">
       <span class="tool-sheet-item-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       </span>
-      <span class="tool-sheet-item-label">設定</span>
-      <span class="tool-sheet-item-arrow">›</span>
-    </button>
-    <a href="guide.html" class="tool-sheet-item">
-      <span class="tool-sheet-item-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-      </span>
-      <span class="tool-sheet-item-label">使い方ガイド</span>
+      <span class="tool-sheet-item-label">ハンター予測</span>
       <span class="tool-sheet-item-arrow">›</span>
     </a>
   </div>

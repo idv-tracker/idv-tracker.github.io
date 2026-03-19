@@ -364,12 +364,14 @@ class SearchableSelect {
   _open() {
     this.isOpen = true;
     this.dropdown.classList.add('open');
+    this.wrapper.classList.add('ss-active');
     this.input.style.borderRadius = '6px 6px 0 0';
   }
 
   _close() {
     this.isOpen = false;
     this.dropdown.classList.remove('open');
+    this.wrapper.classList.remove('ss-active');
     this.input.style.borderRadius = '6px';
     this.highlightIndex = -1;
   }

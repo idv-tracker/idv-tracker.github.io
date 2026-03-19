@@ -719,12 +719,44 @@
       updateSyncUI();
       initScrollBehavior();
 
-      // URLパラメータから詳細ページを自動オープン
+      // URLパラメータ処理
       const urlParams = new URLSearchParams(location.search);
       if (urlParams.has('detail') && urlParams.has('name')) {
         openDetailPage(urlParams.get('detail'), decodeURIComponent(urlParams.get('name')), true);
       }
 
+      // ハンター予測からの遷移: フォームにプリフィル
+      if (urlParams.get('from') === 'predict') {
+        // サバイバー視点に切替
+        switchPerspective('survivor', document.querySelector('.perspective-tab'));
+        switchTab('input', document.querySelector('.main-tab[data-tab="input"]'));
+
+        if (urlParams.has('map')) {
+          setSearchableSelectValue('survivor-map', urlParams.get('map'));
+        }
+        if (urlParams.has('hunter')) {
+          setSearchableSelectValue('opponent-hunter', urlParams.get('hunter'));
+        }
+        ['ban1', 'ban2', 'ban3'].forEach((key, i) => {
+          if (urlParams.has(key)) {
+            setSearchableSelectValue(`ban-char-${i + 1}`, urlParams.get(key));
+          }
+        });
+
+        // URLパラメータをクリア（リロード時の再適用防止）
+        history.replaceState(null, '', location.pathname);
+      }
+
+      // ハンター予測リンク: サバイバー100試合以上で表示
+      updatePredictBackLink();
+
+    }
+
+    function updatePredictBackLink() {
+      const link = document.getElementById('predict-back-link');
+      if (!link) return;
+      const surCount = matches.filter(m => m.perspective === 'survivor').length;
+      link.classList.toggle('hidden', surCount < 100);
     }
 
     // セレクトボックスにオプションを追加
@@ -1843,6 +1875,7 @@
       updateCharacterMapFilter();
       if (rebuildSelects) repopulateCharacterSelects();
       updateAllWithFilters();
+      updatePredictBackLink();
     }
 
     // 勝率を計算
@@ -3777,25 +3810,24 @@
       const order = perspective === 'survivor' ? SURVIVOR_FOCUS_ORDER : HUNTER_FOCUS_ORDER;
       const idx = order.indexOf(currentId);
       if (idx === -1 || idx >= order.length - 1) return;
-      const nextId = order[idx + 1];
+
+      // 次のフィールドが既に値を持っていたらスキップ
+      let nextIdx = idx + 1;
+      while (nextIdx < order.length) {
+        const nId = order[nextIdx];
+        const nSs = searchableSelects[nId];
+        const nVal = nSs ? nSs.value : (document.getElementById(nId)?.value || '');
+        if (!nVal) break;
+        nextIdx++;
+      }
+      if (nextIdx >= order.length) return;
+
+      const nextId = order[nextIdx];
       const ss = searchableSelects[nextId];
       if (ss) {
-        const prevSS = searchableSelects[currentId];
-        const userTyped = prevSS && prevSS._userTyped;
         ss.input.value = '';
-        if (_isTouchDevice && (!prevSS || userTyped)) {
-          // 前フィールドで検索した場合: キーボードを開かずドロップダウンだけ表示
-          // setTimeout で document の click ハンドラが先に処理されてから開く
-          setTimeout(() => {
-            ss._refreshOptions();
-            ss._filterAndRender('');
-            ss._open();
-            ss.dropdown.scrollIntoView({ block: 'nearest' });
-          }, 0);
-        } else {
-          // setTimeout で document の click ハンドラ（閉じる処理）より後に focus を呼ぶ
-          setTimeout(() => ss.input.focus(), 0);
-        }
+        // setTimeout で document の click ハンドラ（閉じる処理）より後に focus を呼ぶ
+        setTimeout(() => ss.input.focus(), 0);
       } else {
         const el = document.getElementById(nextId);
         if (el) el.focus();

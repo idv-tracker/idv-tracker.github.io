@@ -755,8 +755,8 @@
     function updatePredictBackLink() {
       const link = document.getElementById('predict-back-link');
       if (!link) return;
-      const surCount = matches.filter(m => m.perspective === 'survivor').length;
-      link.classList.toggle('hidden', surCount < 100);
+      const banCount = matches.filter(m => m.perspective === 'survivor' && (m.bannedCharacters || []).some(b => b)).length;
+      link.classList.toggle('hidden', banCount < 100);
     }
 
     // セレクトボックスにオプションを追加

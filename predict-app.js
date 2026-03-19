@@ -198,10 +198,11 @@ function getHunterBans() {
 // ===== メインページ描画 =====
 function renderMainPage() {
   const surMatches = matches.filter(m => m.perspective === 'survivor');
-  const total = surMatches.length;
+  const banMatches = surMatches.filter(m => (m.bannedCharacters || []).some(b => b));
+  const total = banMatches.length;
 
   document.getElementById('stats-header').innerHTML =
-    `<span>サバイバー視点 <strong>${total}</strong> 試合</span>` +
+    `<span>BAN入力済み <strong>${total}</strong> 試合</span>` +
     (lastUpdated ? `<span class="last-updated">最終更新: ${formatDate(lastUpdated)}</span>` : '');
 
   const lock = document.getElementById('lock-screen');

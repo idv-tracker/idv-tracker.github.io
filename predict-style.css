@@ -54,7 +54,6 @@ body {
 .pr-header {
   background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
   color: white; padding: 16px 20px 12px;
-  position: sticky; top: 0; z-index: 10;
 }
 .pr-header-top {
   display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;

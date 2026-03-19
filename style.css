@@ -796,9 +796,9 @@ body.dark-mode .multi-rank-item.all-item {
   height: 44px;
   border: none;
   background: transparent;
-  color: var(--t-muted);
+  color: var(--t-faint);
   border-radius: 50%;
-  font-size: 14px;
+  font-size: 11px;
   line-height: 1;
   cursor: pointer;
   display: none;

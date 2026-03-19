@@ -79,8 +79,9 @@ let lastUpdated = null;
 
 // 段位選択状態
 const rankSel = {
-  cur: { rank: '', subRank: '', stars: 0, fracPt: 0 },
-  tgt: { rank: '', subRank: '', stars: 0 },
+  cur:   { rank: '', subRank: '', stars: 0, fracPt: 0 },
+  tgt:   { rank: '', subRank: '', stars: 0 },
+  calib: { rank: '', subRank: '', stars: 0, fracPt: 0 },
 };
 
 // 認知ptカード
@@ -93,7 +94,8 @@ let rankIconSide = localStorage.getItem('identity5_challenge_rank_side') || 'hun
 // ===== 接続モジュール =====
 const _conn = createConnectModule({
   onConnected(m, lu) { matches = m; lastUpdated = lu; showMainPage(); },
-  onNoData()         { showConnectPage(); }
+  onNoData()         { showConnectPage(); },
+  onGoalsLoaded(goals) { importGoalsFromCloud(goals); },
 });
 
 function init() {
@@ -273,10 +275,11 @@ function onRankIconClick(type, rank) {
   rankSel[type].rank    = rank;
   rankSel[type].subRank = '';
   rankSel[type].stars   = 0;
+  if (type === 'calib') rankSel[type].fracPt = 0;
   renderRankIcons(type);
   renderSubRankBtns(type);
   renderStars(type);
-  onRankInput();
+  if (type !== 'calib') onRankInput();
 }
 
 // ===== サブ段位ボタン =====
@@ -302,7 +305,7 @@ function onSubRankBtnClick(type, subRank) {
   rankSel[type].stars   = 0;
   renderSubRankBtns(type);
   renderStars(type);
-  onRankInput();
+  if (type !== 'calib') onRankInput();
 }
 
 // ===== 星ボタン / 星数入力 =====
@@ -316,6 +319,8 @@ function renderStars(type) {
     return;
   }
 
+  const showFrac = type === 'cur' || type === 'calib';
+
   // 最高峰: 数値入力（25〜）
   if (rank === '最高峰') {
     area.classList.remove('hidden');
@@ -324,7 +329,7 @@ function renderStars(type) {
       `<span class="stars-label">星数</span>` +
       `<input type="number" class="stars-num-input" id="rank-${type}-stars-inf"` +
       ` min="25" value="${val}" oninput="onStarsInfChange('${type}')">` +
-      (type === 'cur' ? buildFracPtHtml(cfg.ptPerStar) : '');
+      (showFrac ? buildFracPtHtml(cfg.ptPerStar, type) : '');
     return;
   }
 
@@ -337,7 +342,7 @@ function renderStars(type) {
       `<span class="stars-label">星</span>` +
       `<input type="number" class="stars-num-input" id="rank-${type}-stars-inf"` +
       ` min="0" max="${max}" value="${val}" oninput="onStarsInfChange('${type}')">` +
-      (type === 'cur' ? buildFracPtHtml(cfg.ptPerStar) : '');
+      (showFrac ? buildFracPtHtml(cfg.ptPerStar, type) : '');
     return;
   }
 
@@ -355,24 +360,25 @@ function renderStars(type) {
     const filled = curStars >= i ? ' active' : '';
     html += `<button type="button" class="star-btn${filled}" onclick="onStarClick('${type}', ${i})">★</button>`;
   }
-  if (type === 'cur') html += buildFracPtHtml(cfg.ptPerStar);
+  if (showFrac) html += buildFracPtHtml(cfg.ptPerStar, type);
   area.innerHTML = html;
 }
 
-function buildFracPtHtml(ptPerStar) {
+function buildFracPtHtml(ptPerStar, type) {
+  type = type || 'cur';
   const max    = ptPerStar - 1;
-  const curVal = rankSel.cur.fracPt || 0;
+  const curVal = rankSel[type].fracPt || 0;
   return `<span class="frac-pt-sep">＋</span>` +
-    `<input type="number" class="frac-pt-input" id="rank-cur-frac-pt"` +
+    `<input type="number" class="frac-pt-input" id="rank-${type}-frac-pt"` +
     ` min="0" max="${max}" value="${curVal}"` +
-    ` placeholder="0" title="端数pt（星の途中で獲得済みのpt）" oninput="onFracPtChange()">` +
+    ` placeholder="0" title="端数pt（星の途中で獲得済みのpt）" oninput="onFracPtChange('${type}')">` +
     `<span class="frac-pt-label">端数pt <span class="ch-help" title="現在の星と次の星の間に途中で積んでいるpt（0〜${max}）。ゲーム内で残りptを確認して入力すると精度が上がります">?</span></span>`;
 }
 
 function onStarClick(type, n) {
   rankSel[type].stars = rankSel[type].stars === n ? n - 1 : n;
   renderStars(type);
-  onRankInput();
+  if (type !== 'calib') onRankInput();
 }
 
 function onStarsInfChange(type) {
@@ -380,16 +386,17 @@ function onStarsInfChange(type) {
   if (!el) return;
   const min = rankSel[type].rank === '最高峰' ? 25 : 0;
   rankSel[type].stars = Math.max(min, parseInt(el.value) || min);
-  onRankInput();
+  if (type !== 'calib') onRankInput();
 }
 
-function onFracPtChange() {
-  const el = document.getElementById('rank-cur-frac-pt');
+function onFracPtChange(type) {
+  type = type || 'cur';
+  const el = document.getElementById(`rank-${type}-frac-pt`);
   if (!el) return;
-  const cfg    = RANK_CONFIG[rankSel.cur.rank];
+  const cfg    = RANK_CONFIG[rankSel[type].rank];
   const maxVal = cfg ? cfg.ptPerStar - 1 : 99;
-  rankSel.cur.fracPt = Math.min(maxVal, Math.max(0, parseInt(el.value) || 0));
-  onRankInput();
+  rankSel[type].fracPt = Math.min(maxVal, Math.max(0, parseInt(el.value) || 0));
+  if (type !== 'calib') onRankInput();
 }
 
 // ===== ptサンプル解析 =====
@@ -427,14 +434,18 @@ function sortedByRecent(ms) {
   });
 }
 
-// 全試合の直近n件
-function getRecentMatches(n = 50) {
-  return sortedByRecent(matches).slice(0, n);
+// 指定 perspective の直近n件
+function getRecentMatches(n = 50, perspective) {
+  const pool = perspective
+    ? matches.filter(m => m.perspective === perspective)
+    : matches;
+  return sortedByRecent(pool).slice(0, n);
 }
 
-// キャラの直近n件 → 不足分を全体直近から補充
+// キャラの直近n件 → 不足分を同 perspective の全体直近から補充
 function getCharCombinedMatches(charName, n = 50) {
-  const sorted     = sortedByRecent(matches);
+  const perspective = SURVIVORS.includes(charName) ? 'survivor' : 'hunter';
+  const sorted     = sortedByRecent(matches.filter(m => m.perspective === perspective));
   const charRecent = sorted.filter(m => m.myCharacter === charName).slice(0, n);
   if (charRecent.length >= n) return charRecent;
   const charIds = new Set(charRecent.map(m => m.id));
@@ -462,8 +473,10 @@ function getCharWinrate(charName) {
   return calcWinStats(getCharCombinedMatches(charName));
 }
 
+// 段位用: 現在選択中の陣営に絞った勝率
 function getOverallWinrate() {
-  return calcWinStats(getRecentMatches(50));
+  const perspective = rankIconSide === 'survivors' ? 'survivor' : 'hunter';
+  return calcWinStats(getRecentMatches(50, perspective));
 }
 
 // ===== 段位ポジション → 累積pt =====
@@ -750,8 +763,9 @@ function onCogInput() {
 
   let html = '';
 
+  const cogSideLabel = SURVIVORS.includes(charName) ? 'サバイバー' : 'ハンター';
   html += `<div class="result-data-info">
-    <strong>${escapeHTML(charName)}</strong> — 直近${wr.total}試合 / 勝ち率 <strong>${(wr.winRate * 100).toFixed(1)}%</strong>
+    <strong>${escapeHTML(charName)}</strong>（${cogSideLabel}） — 直近${wr.total}試合 / 勝ち率 <strong>${(wr.winRate * 100).toFixed(1)}%</strong>
     　勝: ${wr.wins} / 分: ${wr.draws} / 負: ${wr.losses}`;
   if (wr.total < 10) {
     html += `<div class="result-data-warn">⚠️ データが${wr.total}試合と少ないため精度が低い場合があります</div>`;
@@ -852,8 +866,9 @@ function onRankInput() {
 
   let html = '';
 
+  const sideLabel = rankIconSide === 'survivors' ? 'サバイバー' : 'ハンター';
   html += `<div class="result-data-info">
-    直近${wr.total}試合 / 勝ち率 <strong>${(wr.winRate * 100).toFixed(1)}%</strong>
+    ${sideLabel}直近${wr.total}試合 / 勝ち率 <strong>${(wr.winRate * 100).toFixed(1)}%</strong>
     　勝: ${wr.wins} / 分: ${wr.draws} / 負: ${wr.losses}
   </div>`;
 
@@ -995,27 +1010,81 @@ function loadRankGoal() {
 }
 function saveRankGoal(goal) {
   localStorage.setItem(rankGoalKey(), JSON.stringify(goal));
+  syncGoalsToCloud();
 }
 function deleteRankGoal() {
   localStorage.removeItem(rankGoalKey());
+  syncGoalsToCloud();
 }
 function loadCogGoal(charName) {
   try { return JSON.parse(localStorage.getItem('identity5_cog_goal_' + charName) || 'null'); } catch (_) { return null; }
 }
 function saveCogGoal(charName, goal) {
   localStorage.setItem('identity5_cog_goal_' + charName, JSON.stringify(goal));
+  syncGoalsToCloud();
 }
 function deleteCogGoal(charName) {
   localStorage.removeItem('identity5_cog_goal_' + charName);
+  syncGoalsToCloud();
+}
+
+// --- クラウド同期: ゴールデータ ---
+function collectGoalsForSync() {
+  const goals = { rankGoals: {}, cogGoals: {} };
+  // 段位ゴール (survivors / hunters)
+  for (const side of ['survivors', 'hunters']) {
+    const data = localStorage.getItem('identity5_rank_goal_' + side);
+    if (data) try { goals.rankGoals[side] = JSON.parse(data); } catch (_) {}
+  }
+  // 認知ゴール
+  const prefix = 'identity5_cog_goal_';
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(prefix)) {
+      const charName = key.slice(prefix.length);
+      if (charName) try { goals.cogGoals[charName] = JSON.parse(localStorage.getItem(key)); } catch (_) {}
+    }
+  }
+  return goals;
+}
+
+function syncGoalsToCloud() {
+  const ref = _conn.getDocRef();
+  if (!ref) return; // 未接続 or Firebase不可
+  const goals = collectGoalsForSync();
+  ref.set({ goals }, { merge: true }).catch(e => console.warn('Goal sync failed:', e));
+}
+
+function importGoalsFromCloud(goals) {
+  if (!goals) return;
+  // 段位ゴール
+  if (goals.rankGoals) {
+    for (const [side, goal] of Object.entries(goals.rankGoals)) {
+      const key = 'identity5_rank_goal_' + side;
+      if (!localStorage.getItem(key) && goal) {
+        localStorage.setItem(key, JSON.stringify(goal));
+      }
+    }
+  }
+  // 認知ゴール
+  if (goals.cogGoals) {
+    for (const [charName, goal] of Object.entries(goals.cogGoals)) {
+      const key = 'identity5_cog_goal_' + charName;
+      if (!localStorage.getItem(key) && goal) {
+        localStorage.setItem(key, JSON.stringify(goal));
+      }
+    }
+  }
 }
 
 // --- 試合数カウント ---
 function countPerspectiveMatches() {
-  // 段位ptは全試合を対象（perspective不問）
-  return matches.length;
+  const perspective = rankIconSide === 'survivors' ? 'survivor' : 'hunter';
+  return matches.filter(m => m.perspective === perspective).length;
 }
 function countCharMatches(charName) {
-  return matches.filter(m => m.myCharacter === charName).length;
+  const perspective = SURVIVORS.includes(charName) ? 'survivor' : 'hunter';
+  return matches.filter(m => m.perspective === perspective && m.myCharacter === charName).length;
 }
 
 // --- ゴール後の試合数を取得 ---
@@ -1256,7 +1325,7 @@ function renderTrackChart(canvasId, goal, totalSinceGoal, wr) {
 }
 
 // --- サマリーHTML生成 ---
-function buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp, winAvg, drawAvg, lossAvg) {
+function buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp, winAvg, drawAvg, lossAvg, perspectiveLabel) {
   const achieved     = predictedPt >= goal.targetPt;
   const remaining    = Math.max(0, goal.targetPt - predictedPt);
   const range        = goal.targetPt - goal.startPt;
@@ -1340,7 +1409,7 @@ function buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp, w
   }
 
   html += `
-    <div class="track-matches-row">${goal.createdDate} スタート · ${totalSinceGoal}試合経過　${wr ? `（勝ち率 ${(wr.winRate * 100).toFixed(1)}%）` : ''}</div>
+    <div class="track-matches-row">${goal.createdDate} スタート · ${perspectiveLabel || ''}${totalSinceGoal}試合経過　${wr ? `（勝ち率 ${(wr.winRate * 100).toFixed(1)}%）` : ''}</div>
     <div class="track-progress-wrap">
       <div class="track-progress-bar" style="width:${progress.toFixed(1)}%"></div>
     </div>
@@ -1439,8 +1508,9 @@ function showRankTrack(goal) {
   const lastExp = wr ? wr.winRate * winAvg + wr.drawRate * drawAvg + wr.lossRate * lossAvg : 0;
   const predictedPt = calcCurrentPredictedPt(goal, totalSinceGoal, wr);
 
+  const pLabel = (rankIconSide === 'survivors' ? 'サバイバー' : 'ハンター') + ' ';
   document.getElementById('rank-track-summary').innerHTML =
-    buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp, winAvg, drawAvg, lossAvg);
+    buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp, winAvg, drawAvg, lossAvg, pLabel);
 
   setTimeout(() => renderTrackChart('rank-track-chart', goal, totalSinceGoal, wr), 0);
 }
@@ -1464,8 +1534,9 @@ function showCogTrack(goal) {
   const lastExp = wr ? wr.winRate * winAvg + wr.drawRate * drawAvg + wr.lossRate * lossAvg : 0;
   const predictedPt = calcCurrentPredictedPt(goal, totalSinceGoal, wr);
 
+  const cogPLabel = (SURVIVORS.includes(goal.char) ? 'サバイバー' : 'ハンター') + ' ';
   document.getElementById('cog-track-summary').innerHTML =
-    buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp, winAvg, drawAvg, lossAvg);
+    buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp, winAvg, drawAvg, lossAvg, cogPLabel);
 
   // calibTarget を現在の認知ゴールのキャラに合わせる
   document.querySelector('#cog-track .calib-btn').onclick = () => openCalibModal('cog', goal.char);
@@ -1574,7 +1645,34 @@ function openCalibModal(type, char) {
   const drawAvg = (lastCalib && lastCalib.drawAvg != null) ? lastCalib.drawAvg : goal?.drawAvg;
   const lossAvg = (lastCalib && lastCalib.lossAvg != null) ? lastCalib.lossAvg : goal?.lossAvg;
 
-  document.getElementById('calib-actual-pt').value    = '';
+  // 段位/認知で入力UIを切り替え
+  const rankArea = document.getElementById('calib-rank-area');
+  const ptArea   = document.getElementById('calib-pt-area');
+  if (type === 'rank') {
+    rankArea.classList.remove('hidden');
+    ptArea.classList.add('hidden');
+    // キャリブレーション用ランク選択を初期化（現在の予測値から逆算）
+    rankSel.calib = { rank: '', subRank: '', stars: 0, fracPt: 0 };
+    if (goal) {
+      const totalSince = getMatchesSinceGoalStart(goal, 'rank', null);
+      const wr = getOverallWinrate();
+      const predicted = calcCurrentPredictedPt(goal, totalSince, wr);
+      const pos = ptToPosition(predicted);
+      if (pos) {
+        rankSel.calib.rank    = pos.rank;
+        rankSel.calib.subRank = pos.subRank;
+        rankSel.calib.stars   = pos.stars;
+      }
+    }
+    renderRankIcons('calib');
+    renderSubRankBtns('calib');
+    renderStars('calib');
+  } else {
+    rankArea.classList.add('hidden');
+    ptArea.classList.remove('hidden');
+    document.getElementById('calib-actual-pt').value = '';
+  }
+
   document.getElementById('calib-win-samples').value  = winAvg  != null ? String(winAvg)  : '';
   document.getElementById('calib-draw-samples').value = drawAvg != null ? String(drawAvg) : '';
   document.getElementById('calib-loss-samples').value = lossAvg != null ? String(lossAvg) : '';
@@ -1597,8 +1695,19 @@ function toggleCalibSamples() {
 
 function saveCalibration() {
   if (!calibTarget) return;
-  const actualPt = parseFloat(document.getElementById('calib-actual-pt').value);
-  if (isNaN(actualPt)) { alert('実際のptを入力してください'); return; }
+
+  let actualPt;
+  if (calibTarget.type === 'rank') {
+    const { rank, subRank, stars, fracPt } = rankSel.calib;
+    if (!rank) { alert('現在の段位を選択してください'); return; }
+    const cfg = RANK_CONFIG[rank];
+    if (cfg && cfg.subRanks && !subRank) { alert('サブ段位を選択してください'); return; }
+    actualPt = positionToPt(rank, subRank, stars) + (fracPt || 0);
+    if (actualPt === null) { alert('段位の設定が正しくありません'); return; }
+  } else {
+    actualPt = parseFloat(document.getElementById('calib-actual-pt').value);
+    if (isNaN(actualPt)) { alert('実際のptを入力してください'); return; }
+  }
 
   const winS  = parsePtSamples(document.getElementById('calib-win-samples').value);
   const drawS = parsePtSamples(document.getElementById('calib-draw-samples').value);

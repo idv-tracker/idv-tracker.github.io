@@ -1,29 +1,9 @@
-/* ===== リセット ===== */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-.hidden { display: none !important; }
-
-/* ===== デザイントークン ===== */
-:root {
-  --transition-hover: 0.15s;
-  --transition-move:  0.3s;
-  --r-sm:    4px;
-  --r-input: 6px;
-  --r-md:    8px;
-  --r-lg:   12px;
-  --r-xl:   20px;
-  --r-pill: 28px;
-  --z-dropdown: 100;
-  --z-sticky:   150;
-  --z-nav:      200;
-}
-
-html.dark-init body { background: #0d0d1a; }
+/* ===== tier-style.css — トークン参照版 ===== */
+/* リセット・フォント・トークンは base.css で定義 */
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  min-height: 100vh;
-  color: #1f2937;
+  color: var(--t-primary);
 }
 
 /* ===== ページ切替 ===== */
@@ -63,7 +43,7 @@ body {
   line-height: 1.7;
 }
 .connect-card {
-  background: white;
+  background: var(--s-card);
   border-radius: var(--r-lg);
   padding: 24px;
   margin-bottom: 16px;
@@ -72,12 +52,12 @@ body {
 .connect-card-title {
   font-size: 16px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--t-primary);
   margin-bottom: 8px;
 }
 .connect-card-desc {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--t-muted);
   line-height: 1.6;
   margin-bottom: 14px;
 }
@@ -88,12 +68,12 @@ body {
   border-radius: var(--r-md);
   font-size: 13px;
   font-family: monospace;
-  color: #374151;
-  background: white;
+  color: var(--t-secondary);
+  background: var(--s-input);
   margin-bottom: 10px;
   outline: none;
 }
-.connect-input:focus { border-color: #3b82f6; }
+.connect-input:focus { border-color: var(--c-primary-mid); }
 .connect-textarea {
   width: 100%;
   height: 100px;
@@ -102,12 +82,12 @@ body {
   border-radius: var(--r-md);
   font-size: 12px;
   font-family: monospace;
-  color: #374151;
+  color: var(--t-secondary);
   resize: vertical;
   margin-bottom: 10px;
   outline: none;
 }
-.connect-textarea:focus { border-color: #3b82f6; }
+.connect-textarea:focus { border-color: var(--c-primary-mid); }
 .connect-btn {
   padding: 12px 20px;
   border: none;
@@ -118,8 +98,8 @@ body {
   transition: opacity var(--transition-hover);
 }
 .connect-btn:hover { opacity: 0.85; }
-.connect-btn.primary { background: #0f3460; color: white; width: 100%; }
-.connect-btn.secondary { background: #e5e7eb; color: #374151; }
+.connect-btn.primary { background: var(--c-primary); color: white; width: 100%; }
+.connect-btn.secondary { background: var(--b-subtle); color: var(--t-secondary); }
 .connect-btn-row {
   display: flex;
   gap: 8px;
@@ -203,7 +183,7 @@ body {
 }
 .ptab.active {
   background: white;
-  color: #0f3460;
+  color: var(--c-primary);
 }
 .stats-header {
   display: flex;
@@ -221,24 +201,24 @@ body {
 .lock-screen {
   padding: 60px 20px;
   text-align: center;
-  background: white;
+  background: var(--s-base);
 }
 .lock-inner { max-width: 360px; margin: 0 auto; }
 .lock-icon { font-size: 48px; margin-bottom: 16px; }
 .lock-title {
   font-size: 20px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--t-primary);
   margin-bottom: 8px;
 }
 .lock-message {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--t-muted);
   margin-bottom: 20px;
   line-height: 1.6;
 }
 .lock-progress-wrap {
-  background: #e5e7eb;
+  background: var(--b-subtle);
   border-radius: 100px;
   height: 10px;
   overflow: hidden;
@@ -252,12 +232,12 @@ body {
 }
 .lock-progress-text {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--t-faint);
 }
 
 /* ===== Tier表コンテンツ ===== */
 .tier-content {
-  background: white;
+  background: var(--s-base);
   padding: 20px;
   max-width: 900px;
   margin: 0 auto;
@@ -300,17 +280,13 @@ body {
   color: #10b981;
   flex-shrink: 0;
 }
-body.dark-mode .rising-card { background: linear-gradient(135deg, #0a2318, #0d2e20); border-color: #065f46; }
-body.dark-mode .rising-card-name { color: #6ee7b7; }
-body.dark-mode .rising-card-sub { color: #34d399; }
-body.dark-mode .rising-card-badge { color: #34d399; }
 
 /* ===== 要対策 ===== */
 .priority-section { margin-bottom: 20px; }
 .priority-heading {
   font-size: 15px;
   font-weight: 700;
-  color: #374151;
+  color: var(--t-secondary);
   margin-bottom: 10px;
 }
 .priority-cards {
@@ -346,17 +322,17 @@ body.dark-mode .rising-card-badge { color: #34d399; }
 .priority-name {
   font-size: 15px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--t-primary);
 }
 .priority-score {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--t-muted);
 }
 
 /* ===== Tier表説明テキスト ===== */
 .tier-desc-text {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--t-faint);
   margin-bottom: 8px;
 }
 
@@ -364,22 +340,22 @@ body.dark-mode .rising-card-badge { color: #34d399; }
 .filter-bar { margin-bottom: 8px; }
 .filter-toggle-btn {
   padding: 8px 16px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: var(--s-overlay);
+  border: 1px solid var(--b-subtle);
   border-radius: var(--r-md);
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--t-secondary);
   cursor: pointer;
 }
 .filter-toggle-btn.active {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #1d4ed8;
+  background: var(--c-primary-bg);
+  border-color: var(--c-primary-light);
+  color: var(--c-primary-mid);
 }
 .filter-badge {
   display: inline-block;
-  background: #3b82f6;
+  background: var(--c-primary-mid);
   color: white;
   font-size: 11px;
   font-weight: 700;
@@ -389,8 +365,8 @@ body.dark-mode .rising-card-badge { color: #34d399; }
 }
 .filter-badge.hidden { display: none; }
 .filter-drawer {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--s-subtle);
+  border: 1px solid var(--b-subtle);
   border-radius: var(--r-md);
   padding: 14px;
   margin-bottom: 16px;
@@ -404,8 +380,8 @@ body.dark-mode .rising-card-badge { color: #34d399; }
   border: 1.5px solid #d1d5db;
   border-radius: var(--r-input);
   font-size: 14px;
-  background: white;
-  color: #374151;
+  background: var(--s-input);
+  color: var(--t-secondary);
   cursor: pointer;
   text-align: left;
   position: relative;
@@ -420,18 +396,18 @@ body.dark-mode .rising-card-badge { color: #34d399; }
   top: 50%;
   transform: translateY(-50%);
   font-size: 11px;
-  color: #6b7280;
+  color: var(--t-muted);
 }
-.multi-rank-trigger.open { border-color: #3b82f6; border-radius: var(--r-input) var(--r-input) 0 0; }
+.multi-rank-trigger.open { border-color: var(--c-primary-mid); border-radius: var(--r-input) var(--r-input) 0 0; }
 .multi-rank-dropdown {
   display: none;
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 1.5px solid #3b82f6;
-  border-top: 1px solid #e5e7eb;
+  background: var(--s-input);
+  border: 1.5px solid var(--c-primary-mid);
+  border-top: 1px solid var(--b-subtle);
   border-radius: 0 0 var(--r-input) var(--r-input);
   z-index: var(--z-dropdown);
   max-height: 240px;
@@ -445,20 +421,20 @@ body.dark-mode .rising-card-badge { color: #34d399; }
   cursor: pointer;
   gap: 8px;
   font-size: 14px;
-  border-bottom: 1px solid #f0f0f0;
-  color: #374151;
+  border-bottom: 1px solid var(--s-overlay);
+  color: var(--t-secondary);
 }
 .multi-rank-item:last-child { border-bottom: none; }
-.multi-rank-item:hover { background: #f0f7ff; }
-.multi-rank-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: #3b82f6; }
-.multi-rank-item.all-item { border-bottom: 2px solid #e5e7eb; font-weight: 600; color: #6b7280; }
+.multi-rank-item:hover { background: var(--c-primary-bg); }
+.multi-rank-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--c-primary-mid); }
+.multi-rank-item.all-item { border-bottom: 2px solid var(--b-subtle); font-weight: 600; color: var(--t-muted); }
 
 /* ===== Tier表 ===== */
 .tier-table { margin-bottom: 16px; }
-.tier-rows { display: flex; flex-direction: column; border: 1px solid #e5e7eb; border-radius: var(--r-md); overflow: hidden; }
+.tier-rows { display: flex; flex-direction: column; border: 1px solid var(--b-subtle); border-radius: var(--r-md); overflow: hidden; }
 .tier-row {
   display: flex;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--b-subtle);
   min-height: 48px;
 }
 .tier-row:last-child { border-bottom: none; }
@@ -478,7 +454,7 @@ body.dark-mode .rising-card-badge { color: #34d399; }
   gap: 6px;
   padding: 8px 10px;
   align-items: center;
-  background: white;
+  background: var(--s-base);
 }
 .tier-char-btn {
   display: inline-flex;
@@ -518,7 +494,7 @@ body.dark-mode .rising-card-badge { color: #34d399; }
 .no-encounter-section { margin-top: 20px; }
 .no-encounter-label {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--t-faint);
   text-align: center;
   margin-bottom: 10px;
 }
@@ -603,18 +579,18 @@ body.dark-mode .rising-card-badge { color: #34d399; }
   display: flex;
   flex-direction: column;
   gap: 14px;
-  background: white;
+  background: var(--s-base);
 }
 .detail-card {
-  background: #f8fafc;
+  background: var(--s-subtle);
   border-radius: 10px;
   padding: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--b-subtle);
 }
 .detail-section-title {
   font-size: 14px;
   font-weight: 700;
-  color: #6b7280;
+  color: var(--t-muted);
   margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -629,31 +605,31 @@ body.dark-mode .rising-card-badge { color: #34d399; }
 }
 @media (max-width: 480px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
 .summary-item {
-  background: white;
+  background: var(--s-card);
   border-radius: var(--r-md);
   padding: 12px 8px;
   text-align: center;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--b-subtle);
 }
 .summary-value {
   font-size: 22px;
   font-weight: 700;
-  color: #0f3460;
+  color: var(--c-primary);
   margin-bottom: 4px;
 }
 .summary-label {
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--t-faint);
   font-weight: 600;
 }
 .danger-breakdown {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--t-faint);
   text-align: center;
   padding: 8px;
-  background: white;
+  background: var(--s-card);
   border-radius: var(--r-input);
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--b-subtle);
 }
 
 /* ===== トレンド ===== */
@@ -663,16 +639,16 @@ body.dark-mode .rising-card-badge { color: #34d399; }
   gap: 16px;
   flex-wrap: wrap;
 }
-.trend-week-label { font-size: 12px; color: #9ca3af; margin-bottom: 4px; }
-.trend-week-value { font-size: 20px; font-weight: 700; color: #1f2937; }
+.trend-week-label { font-size: 12px; color: var(--t-faint); margin-bottom: 4px; }
+.trend-week-value { font-size: 20px; font-weight: 700; color: var(--t-primary); }
 .trend-arrow-big { font-size: 28px; font-weight: 700; }
-.no-data-text { font-size: 13px; color: #9ca3af; }
+.no-data-text { font-size: 13px; color: var(--t-faint); }
 
 /* ===== ソートコントロール（トラッカーと共通デザイン） ===== */
 .sort-control {
   display: inline-flex;
   align-items: center;
-  background: #f1f5f9;
+  background: var(--s-overlay);
   border-radius: var(--r-md);
   padding: 3px;
   gap: 2px;
@@ -685,15 +661,15 @@ body.dark-mode .rising-card-badge { color: #34d399; }
   background: transparent;
   font-size: 12px;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--t-faint);
   cursor: pointer;
   transition: all var(--transition-hover);
 }
-.sort-key-btn:hover { color: #374151; }
+.sort-key-btn:hover { color: var(--t-secondary); }
 .sort-key-btn.active {
-  background: white;
-  color: #0f3460;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  background: var(--s-base);
+  color: var(--c-primary);
+  box-shadow: var(--shadow-sm);
 }
 .sort-divider {
   width: 1px;
@@ -708,27 +684,19 @@ body.dark-mode .rising-card-badge { color: #34d399; }
   border-radius: var(--r-input);
   background: transparent;
   font-size: 14px;
-  color: #9ca3af;
+  color: var(--t-faint);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-hover);
 }
-.sort-arrow-btn:hover { color: #374151; }
+.sort-arrow-btn:hover { color: var(--t-secondary); }
 .sort-arrow-btn.active {
-  background: white;
-  color: #3b82f6;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  background: var(--s-base);
+  color: var(--c-primary-mid);
+  box-shadow: var(--shadow-sm);
 }
-body.dark-mode .sort-control { background: #2a2a42; }
-body.dark-mode .sort-key-btn { color: #6b7280; }
-body.dark-mode .sort-key-btn:hover { color: #d1d5db; }
-body.dark-mode .sort-key-btn.active { background: #1a1a2e; color: #60a5fa; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-body.dark-mode .sort-divider { background: #3a3a55; }
-body.dark-mode .sort-arrow-btn { color: #6b7280; }
-body.dark-mode .sort-arrow-btn:hover { color: #d1d5db; }
-body.dark-mode .sort-arrow-btn.active { background: #1a1a2e; color: #60a5fa; }
 
 /* ===== 同時pickグラフ ===== */
 .copick-chart-wrap {
@@ -756,9 +724,9 @@ body.dark-mode .sort-arrow-btn.active { background: #1a1a2e; color: #60a5fa; }
   gap: 8px;
   font-size: 11px;
   font-weight: 700;
-  color: #9ca3af;
+  color: var(--t-faint);
   padding-bottom: 6px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--b-subtle);
   margin-bottom: 4px;
   text-transform: uppercase;
 }
@@ -775,7 +743,7 @@ body.dark-mode .sort-arrow-btn.active { background: #1a1a2e; color: #60a5fa; }
   align-items: center;
   gap: 8px;
   padding: 5px 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--s-overlay);
   font-size: 13px;
 }
 .map-table-row:last-child { border-bottom: none; }
@@ -785,9 +753,9 @@ body.dark-mode .sort-arrow-btn.active { background: #1a1a2e; color: #60a5fa; }
   border-radius: 50%;
   flex-shrink: 0;
 }
-.map-name { flex: 1; color: #374151; font-weight: 600; }
-.map-count { width: 50px; text-align: right; color: #6b7280; }
-.map-wr { width: 46px; text-align: right; font-weight: 700; color: #0f3460; }
+.map-name { flex: 1; color: var(--t-secondary); font-weight: 600; }
+.map-count { width: 50px; text-align: right; color: var(--t-muted); }
+.map-wr { width: 46px; text-align: right; font-weight: 700; color: var(--c-primary); }
 
 /* ===== 自キャラ別勝率 ===== */
 .mychar-table-header, .mychar-row {
@@ -795,13 +763,13 @@ body.dark-mode .sort-arrow-btn.active { background: #1a1a2e; color: #60a5fa; }
   gap: 8px;
   font-size: 13px;
   padding: 5px 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--s-overlay);
 }
-.mychar-table-header { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; }
+.mychar-table-header { font-size: 11px; font-weight: 700; color: var(--t-faint); text-transform: uppercase; }
 .mychar-row:last-child { border-bottom: none; }
-.mychar-name { flex: 1; color: #374151; font-weight: 600; }
-.mychar-count { width: 55px; text-align: right; color: #6b7280; }
-.mychar-wr { width: 46px; text-align: right; font-weight: 700; color: #0f3460; }
+.mychar-name { flex: 1; color: var(--t-secondary); font-weight: 600; }
+.mychar-count { width: 55px; text-align: right; color: var(--t-muted); }
+.mychar-wr { width: 46px; text-align: right; font-weight: 700; color: var(--c-primary); }
 
 /* ===== 同時pick ===== */
 .copick-list { display: flex; flex-direction: column; gap: 6px; }
@@ -810,14 +778,14 @@ body.dark-mode .sort-arrow-btn.active { background: #1a1a2e; color: #60a5fa; }
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
-  background: white;
+  background: var(--s-card);
   border-radius: var(--r-input);
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--b-subtle);
   font-size: 13px;
 }
-.copick-rank { font-size: 12px; color: #9ca3af; width: 24px; flex-shrink: 0; }
-.copick-name { flex: 1; font-weight: 600; color: #374151; }
-.copick-pct { color: #6b7280; white-space: nowrap; }
+.copick-rank { font-size: 12px; color: var(--t-faint); width: 24px; flex-shrink: 0; }
+.copick-name { flex: 1; font-weight: 600; color: var(--t-secondary); }
+.copick-pct { color: var(--t-muted); white-space: nowrap; }
 
 /* ===== 試合履歴 ===== */
 .history-filter-row {
@@ -830,21 +798,21 @@ body.dark-mode .sort-arrow-btn.active { background: #1a1a2e; color: #60a5fa; }
   padding: 5px 14px;
   border: 1.5px solid #d1d5db;
   border-radius: var(--r-input);
-  background: white;
+  background: var(--s-card);
   font-size: 13px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--t-muted);
   cursor: pointer;
 }
 .history-filter-btn.active {
-  border-color: #3b82f6;
-  background: #eff6ff;
+  border-color: var(--c-primary-mid);
+  background: var(--c-primary-bg);
   color: #1d4ed8;
 }
 .history-list { display: flex; flex-direction: column; }
 .history-item {
   padding: 10px 4px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--s-overlay);
   border-left: 3px solid transparent;
   display: flex;
   align-items: center;
@@ -852,9 +820,9 @@ body.dark-mode .sort-arrow-btn.active { background: #1a1a2e; color: #60a5fa; }
   flex-wrap: wrap;
 }
 .history-item:last-child { border-bottom: none; }
-.history-item:has(.history-result.win)  { border-left-color: #fbbf24; }
-.history-item:has(.history-result.loss) { border-left-color: #ef4444; }
-.history-item:has(.history-result.draw) { border-left-color: #9ca3af; }
+.history-item:has(.history-result.win)  { border-left-color: var(--win-bg); }
+.history-item:has(.history-result.loss) { border-left-color: var(--lose-bg); }
+.history-item:has(.history-result.draw) { border-left-color: var(--draw-bg); }
 .history-result {
   padding: 3px 10px;
   border-radius: var(--r-sm);
@@ -862,17 +830,17 @@ body.dark-mode .sort-arrow-btn.active { background: #1a1a2e; color: #60a5fa; }
   font-weight: 700;
   flex-shrink: 0;
 }
-.history-result.win  { background: #fbbf24; color: #1f2937; }
-.history-result.loss { background: #ef4444; color: #ffffff; }
-.history-result.draw { background: #9ca3af; color: #1f2937; }
-.history-info { font-size: 13px; color: #374151; flex: 1; }
+.history-result.win  { background: var(--win-bg); color: var(--win-fg); }
+.history-result.loss { background: var(--lose-bg); color: var(--lose-fg); }
+.history-result.draw { background: var(--draw-bg); color: var(--draw-fg); }
+.history-info { font-size: 13px; color: var(--t-secondary); flex: 1; }
 .history-rank-icon {
   height: 20px;
   width: auto;
   vertical-align: middle;
   object-fit: contain;
 }
-.history-comment { font-size: 12px; color: #9ca3af; width: 100%; padding-left: 2px; }
+.history-comment { font-size: 12px; color: var(--t-faint); width: 100%; padding-left: 2px; }
 .history-comment::before { content: '💬 '; }
 .history-vs-row {
   display: flex;
@@ -890,7 +858,7 @@ body.dark-mode .sort-arrow-btn.active { background: #1a1a2e; color: #60a5fa; }
 .history-vs-text {
   font-size: 11px;
   font-weight: 700;
-  color: #9ca3af;
+  color: var(--t-faint);
   flex-shrink: 0;
 }
 .history-co-icon {
@@ -909,39 +877,39 @@ body.dark-mode .sort-arrow-btn.active { background: #1a1a2e; color: #60a5fa; }
   flex-wrap: wrap;
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--s-overlay);
 }
 .page-btn {
   min-width: 36px;
   height: 36px;
   padding: 0 13px;
-  background: white;
-  border: 1px solid #3b82f6;
+  background: var(--s-card);
+  border: 1px solid var(--c-primary-mid);
   border-radius: var(--r-sm);
-  color: #3b82f6;
+  color: var(--c-primary-mid);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   touch-action: manipulation;
   transition: background var(--transition-hover), color var(--transition-hover);
 }
-.page-btn:hover { background: #eff6ff; }
+.page-btn:hover { background: var(--c-primary-bg); }
 .page-btn.current {
-  background: #3b82f6;
+  background: var(--c-primary-mid);
   color: white;
   cursor: default;
 }
 .page-btn:disabled {
-  background: #f1f5f9;
-  border-color: #e5e7eb;
-  color: #9ca3af;
+  background: var(--s-overlay);
+  border-color: var(--b-subtle);
+  color: var(--t-faint);
   cursor: default;
 }
-.page-ellipsis { color: #9ca3af; font-size: 13px; line-height: 36px; }
+.page-ellipsis { color: var(--t-faint); font-size: 13px; line-height: 36px; }
 
 /* ===== レスポンシブ（モバイル） ===== */
 @media (max-width: 767px) {
-  body { background: white; }
+  body { background: var(--s-base); }
   .tier-content { padding: 14px; }
   .detail-body { padding: 12px 12px 60px; }
   .summary-grid { grid-template-columns: repeat(2, 1fr); }
@@ -949,96 +917,26 @@ body.dark-mode .sort-arrow-btn.active { background: #1a1a2e; color: #60a5fa; }
   .priority-cards { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* ===== ダークモード ===== */
+/* ===== ダークモード（グラデーション・固有アクセント色のみ） ===== */
 body.dark-mode {
   background: linear-gradient(135deg, #0d0d1a 0%, #0e1525 100%);
-  color: #d1d5db;
 }
-/* 接続ページ */
-body.dark-mode .connect-card { background: #1e1e3a; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
-body.dark-mode .connect-card-title { color: #d1d5db; }
-body.dark-mode .connect-card-desc { color: #9ca3af; }
-body.dark-mode .connect-input, body.dark-mode .connect-textarea {
-  background: #222238; border-color: #3a3a55; color: #d1d5db;
-}
-body.dark-mode .connect-btn.secondary { background: #2a2a45; color: #d1d5db; }
-/* ヘッダー */
+body.dark-mode .connect-card { box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+body.dark-mode .connect-input, body.dark-mode .connect-textarea { border-color: var(--b-default); }
 body.dark-mode .tier-header { background: linear-gradient(135deg, #0a2240 0%, #0e1525 100%); }
-/* ロック */
-body.dark-mode .lock-screen { background: #1a1a2e; }
-body.dark-mode .lock-title { color: #d1d5db; }
-body.dark-mode .lock-message { color: #9ca3af; }
-body.dark-mode .lock-progress-wrap { background: #2a2a42; }
-/* コンテンツ */
-body.dark-mode .tier-content { background: #1a1a2e; }
-/* 要対策 */
-body.dark-mode .priority-heading { color: #d1d5db; }
+body.dark-mode .rising-card { background: linear-gradient(135deg, #0a2318, #0d2e20); border-color: #065f46; }
+body.dark-mode .rising-card-name { color: #6ee7b7; }
+body.dark-mode .rising-card-sub { color: #34d399; }
+body.dark-mode .rising-card-badge { color: #34d399; }
 body.dark-mode .priority-card { background: #2a2018; border-color: #78350f; }
 body.dark-mode .priority-rank { color: #fbbf24; }
-body.dark-mode .priority-name { color: #e5e7eb; }
-body.dark-mode .priority-score { color: #9ca3af; }
-/* フィルター */
-body.dark-mode .filter-toggle-btn { background: #2a2a42; border-color: #3a3a55; color: #d1d5db; }
-body.dark-mode .filter-toggle-btn.active { background: #1e2a45; border-color: #3b82f6; color: #60a5fa; }
-body.dark-mode .filter-drawer { background: #222238; border-color: #3a3a55; }
-body.dark-mode .multi-rank-trigger { background: #222238; border-color: #3a3a55; color: #d1d5db; }
-body.dark-mode .multi-rank-trigger.open { border-color: #60a5fa; }
-body.dark-mode .multi-rank-dropdown { background: #222238; border-color: #60a5fa; border-top-color: #3a3a55; }
-body.dark-mode .multi-rank-item { color: #d1d5db; border-bottom-color: #2e2e48; }
-body.dark-mode .multi-rank-item:hover { background: #1e2a45; }
-body.dark-mode .multi-rank-item.all-item { border-bottom-color: #3a3a55; color: #9ca3af; }
-/* Tier表 */
-body.dark-mode .tier-rows { border-color: #2e2e48; }
-body.dark-mode .tier-row { border-bottom-color: #2e2e48; }
-body.dark-mode .tier-chars { background: #1a1a2e; }
-body.dark-mode .tier-char-btn { background: transparent; }
+body.dark-mode .multi-rank-trigger { border-color: var(--b-default); }
+body.dark-mode .sort-divider { background: var(--b-default); }
 body.dark-mode .tier-icon-arrow { background: rgba(34,34,56,0.88); }
 body.dark-mode .tier-empty { color: #4b5563; }
-/* 未対戦 */
-body.dark-mode .no-encounter-label { color: #6b7280; }
 body.dark-mode .no-encounter-icon { opacity: 0.25; }
-/* 詳細 */
-body.dark-mode .detail-body { background: #1a1a2e; }
-body.dark-mode .detail-card { background: #222238; border-color: #2e2e48; }
-body.dark-mode .detail-section-title { color: #9ca3af; }
-body.dark-mode .summary-item { background: #1e1e34; border-color: #2e2e48; }
-body.dark-mode .summary-value { color: #60a5fa; }
-body.dark-mode .summary-label { color: #6b7280; }
-body.dark-mode .danger-breakdown { background: #1e1e34; border-color: #2e2e48; color: #9ca3af; }
-body.dark-mode .trend-week-value { color: #d1d5db; }
-body.dark-mode .no-data-text { color: #6b7280; }
-body.dark-mode .map-table-header { color: #6b7280; border-bottom-color: #2e2e48; }
-body.dark-mode .map-table-row { border-bottom-color: #2e2e48; }
-body.dark-mode .map-name { color: #d1d5db; }
-body.dark-mode .map-count { color: #9ca3af; }
-body.dark-mode .map-wr { color: #60a5fa; }
-body.dark-mode .mychar-table-header { color: #6b7280; }
-body.dark-mode .mychar-row { border-bottom-color: #2e2e48; }
-body.dark-mode .mychar-name { color: #d1d5db; }
-body.dark-mode .mychar-count { color: #9ca3af; }
-body.dark-mode .mychar-wr { color: #60a5fa; }
-body.dark-mode .copick-item { background: #1e1e34; border-color: #2e2e48; }
-body.dark-mode .copick-rank { color: #6b7280; }
-body.dark-mode .copick-name { color: #d1d5db; }
-body.dark-mode .copick-pct { color: #9ca3af; }
-/* マップソート */
-body.dark-mode .map-sort-btn { background: #1e1e34; border-color: #3a3a55; color: #9ca3af; }
-body.dark-mode .map-sort-btn.active { background: #1e2a45; border-color: #3b82f6; color: #60a5fa; }
-/* Tier説明 */
-body.dark-mode .tier-desc-text { color: #6b7280; }
-body.dark-mode .history-filter-btn { background: #1e1e34; border-color: #3a3a55; color: #9ca3af; }
-body.dark-mode .history-filter-btn.active { background: #1e2a45; border-color: #3b82f6; color: #60a5fa; }
-body.dark-mode .history-item { border-bottom-color: #2e2e48; }
-body.dark-mode .history-result.win  { background: #fbbf24; color: #1f2937; }
-body.dark-mode .history-result.loss { background: #ef4444; color: #ffffff; }
-body.dark-mode .history-result.draw { background: #9ca3af; color: #1f2937; }
-body.dark-mode .history-info { color: #d1d5db; }
-body.dark-mode .history-comment { color: #6b7280; }
-body.dark-mode .pagination { border-top-color: #2e2e48; }
-body.dark-mode .page-btn { background: #1e1e34; border-color: #3b82f6; color: #60a5fa; }
-body.dark-mode .page-btn.current { background: #3b82f6; color: white; }
-body.dark-mode .page-btn:disabled { background: #222238; border-color: #2e2e48; color: #4b5563; }
-body.dark-mode .page-ellipsis { color: #6b7280; }
+body.dark-mode .history-filter-btn { border-color: var(--b-default); }
+body.dark-mode .history-filter-btn.active { color: var(--c-primary-light); }
 @media (max-width: 767px) {
-  body.dark-mode { background: #1a1a2e; }
+  body.dark-mode { background: var(--s-base); }
 }

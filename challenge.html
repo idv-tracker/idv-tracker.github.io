@@ -247,10 +247,22 @@
   <div id="calib-modal" class="modal-overlay hidden">
     <div class="modal-box">
       <div class="modal-title">キャリブレーション</div>
-      <p class="modal-desc">ゲーム内で実際のptを確認して入力してください。起点がリセットされ予測精度が上がります。</p>
-      <div class="ch-field">
-        <label class="ch-label">現在の実際のpt <span class="required-mark">*</span></label>
-        <input type="number" id="calib-actual-pt" class="ch-input" placeholder="ゲーム内で確認した実際のpt">
+      <p class="modal-desc">ゲーム内で実際の段位・ptを確認して入力してください。起点がリセットされ予測精度が上がります。</p>
+      <!-- 段位用: ランク選択 -->
+      <div id="calib-rank-area" class="hidden">
+        <div class="ch-field">
+          <label class="ch-label">現在の段位 <span class="required-mark">*</span></label>
+          <div id="rank-calib-icons" class="rank-icon-row calib-rank-icons"></div>
+          <div id="rank-calib-sub-row" class="sub-rank-row hidden"></div>
+          <div id="rank-calib-stars-area" class="stars-area hidden"></div>
+        </div>
+      </div>
+      <!-- 認知用: 数値入力 -->
+      <div id="calib-pt-area" class="hidden">
+        <div class="ch-field">
+          <label class="ch-label">現在の実際のpt <span class="required-mark">*</span></label>
+          <input type="number" id="calib-actual-pt" class="ch-input" placeholder="ゲーム内で確認した実際のpt">
+        </div>
       </div>
       <div class="calib-samples-toggle" onclick="toggleCalibSamples()">
         ptサンプルも更新する（任意）

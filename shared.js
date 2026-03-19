@@ -409,7 +409,7 @@ class SearchableSelect {
 
 // ===== ConnectModule（接続ロジック共通化） =====
 // tier-app.js / challenge-app.js の接続・切断・キャッシュ処理を集約
-function createConnectModule({ onConnected, onNoData, cacheKey = 'tier_local_data' }) {
+function createConnectModule({ onConnected, onNoData, onGoalsLoaded, cacheKey = 'tier_local_data' }) {
   let db = null;
   function ensureDb() { if (!db) db = initFirebase(); return db; }
 
@@ -423,6 +423,7 @@ function createConnectModule({ onConnected, onNoData, cacheKey = 'tier_local_dat
         const lu = data.lastModified || null;
         localStorage.setItem(cacheKey, JSON.stringify({ matches: m, lastUpdated: lu }));
         onConnected(m, lu);
+        if (onGoalsLoaded && data.goals) onGoalsLoaded(data.goals);
       } else {
         _fallbackToCache();
       }
@@ -496,5 +497,12 @@ function createConnectModule({ onConnected, onNoData, cacheKey = 'tier_local_dat
     _fallbackToCache();
   }
 
-  return { startup, connectWithSyncCode, connectWithJSON, connectWithJSONFile, importJSONText, disconnect };
+  /** Firestore ドキュメント参照を返す（未接続なら null） */
+  function getDocRef() {
+    const syncCode = localStorage.getItem('identity5_sync_code');
+    if (!syncCode || !ensureDb()) return null;
+    return db.collection('idv_tracker').doc(syncCode);
+  }
+
+  return { startup, connectWithSyncCode, connectWithJSON, connectWithJSONFile, importJSONText, disconnect, getDocRef };
 }

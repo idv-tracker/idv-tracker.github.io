@@ -95,13 +95,15 @@
       { id: 'hunter-map',            persistKey: 'persist-hunter-map' }
     ];
     // SearchableSelect同期対象ID
-    const SS_SURVIVOR_IDS = ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter', 'survivor-map'];
+    const BAN_CHAR_IDS = ['ban-char-1', 'ban-char-2', 'ban-char-3'];
+    const SS_SURVIVOR_IDS = ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter', 'survivor-map', ...BAN_CHAR_IDS];
     const SS_HUNTER_IDS  = ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4', 'hunter-map'];
     const SS_ALL_CHAR_IDS = [
       'my-survivor', 'teammate-1', 'teammate-2', 'teammate-3',
       'opponent-hunter', 'my-hunter',
       'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4',
-      'survivor-map', 'hunter-map'
+      'survivor-map', 'hunter-map',
+      ...BAN_CHAR_IDS
     ];
 
     const SEASONS = [
@@ -277,7 +279,8 @@
       survivorUsed: {},   // サバイバーとして使った回数（サバイバー視点）
       survivorFaced: {},  // サバイバーとして対戦した回数（ハンター視点）
       hunterUsed: {},     // ハンターとして使った回数（ハンター視点）
-      hunterFaced: {}     // ハンターとして対戦した回数（サバイバー視点）
+      hunterFaced: {},    // ハンターとして対戦した回数（サバイバー視点）
+      survivorBanned: {}  // BANされた回数（サバイバー視点）
     };
     
     // キャラクター使用回数を増やす
@@ -354,13 +357,15 @@
           if (loadedData.survivorUsed !== undefined) {
             // 新しい構造
             characterUsageCount = loadedData;
+            if (!characterUsageCount.survivorBanned) characterUsageCount.survivorBanned = {};
           } else {
             // 古い構造の場合、全試合データから再計算
             characterUsageCount = {
               survivorUsed: {},
               survivorFaced: {},
               hunterUsed: {},
-              hunterFaced: {}
+              hunterFaced: {},
+              survivorBanned: {}
             };
             
             // 全試合データから使用回数を再計算（保存は最後に1回だけ）
@@ -415,7 +420,8 @@
             survivorUsed: {},
             survivorFaced: {},
             hunterUsed: {},
-            hunterFaced: {}
+            hunterFaced: {},
+            survivorBanned: {}
           };
         }
       }
@@ -504,7 +510,23 @@
       });
       opponentHunterSelect.value = opponentHunterCurrentValue;
       updatePlaceholderStyle(opponentHunterSelect);
-      
+
+      // BANキャラ選択：BAN回数順
+      const sortedSurvivorsBanned = sortCharactersByUsage(SURVIVORS, 'survivorBanned');
+      BAN_CHAR_IDS.forEach(id => {
+        const select = document.getElementById(id);
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">なし</option>';
+        sortedSurvivorsBanned.forEach(survivor => {
+          const option = document.createElement('option');
+          option.value = survivor;
+          option.textContent = survivor;
+          select.appendChild(option);
+        });
+        select.value = currentValue;
+        updatePlaceholderStyle(select);
+      });
+
       // SearchableSelectを同期
       SS_ALL_CHAR_IDS.forEach(syncSearchableSelect);
     }
@@ -706,6 +728,18 @@
         myHunterSelect.appendChild(option);
       });
       
+      // BANキャラ選択：BAN回数順にソート
+      const sortedSurvivorsBanned = sortCharactersByUsage(SURVIVORS, 'survivorBanned');
+      BAN_CHAR_IDS.forEach(id => {
+        const select = document.getElementById(id);
+        sortedSurvivorsBanned.forEach(survivor => {
+          const option = document.createElement('option');
+          option.value = survivor;
+          option.textContent = survivor;
+          select.appendChild(option);
+        });
+      });
+
       // ハンター選択（相手）：ハンター対戦回数順にソート
       const opponentHunterSelect = document.getElementById('opponent-hunter');
       const sortedHuntersFaced = sortCharactersByUsage(HUNTERS, 'hunterFaced');
@@ -1232,6 +1266,20 @@
     }
     
     // 脱出人数を選択
+    function toggleDetailInput() {
+      const area  = document.getElementById('detail-input-area');
+      const arrow = document.getElementById('detail-toggle-arrow');
+      area.classList.toggle('hidden');
+      arrow.classList.toggle('open');
+    }
+
+    function toggleHunterDetailInput() {
+      const area  = document.getElementById('hunter-detail-input-area');
+      const arrow = document.getElementById('hunter-detail-toggle-arrow');
+      area.classList.toggle('hidden');
+      arrow.classList.toggle('open');
+    }
+
     function selectEscapeCount(perspective, count, el) {
       selectedEscapeCount[perspective] = count;
 
@@ -1288,6 +1336,8 @@
         match.escapeCount = escapeCount;
         match.result = getResultFromEscapeCount(escapeCount, perspective);
         match.comment = document.getElementById('survivor-comment').value.trim();
+        const banned = BAN_CHAR_IDS.map(id => document.getElementById(id).value).filter(v => v);
+        if (banned.length > 0) match.bannedCharacters = banned;
       } else {
         const date = document.getElementById('hunter-date').value;
         const rank = document.getElementById('hunter-rank').value;
@@ -1323,6 +1373,7 @@
             decrementCharacterUsage('survivorUsed', [oldMatch.myCharacter, ...oldMatch.teammates]);
             // 対戦相手ハンターの対戦回数を減らす
             decrementCharacterUsage('hunterFaced', oldMatch.opponentHunter);
+            if (oldMatch.bannedCharacters) decrementCharacterUsage('survivorBanned', oldMatch.bannedCharacters);
           } else {
             // ハンター視点：自分の使用回数を減らす
             decrementCharacterUsage('hunterUsed', oldMatch.myCharacter);
@@ -1341,6 +1392,8 @@
         incrementCharacterUsage('survivorUsed', [match.myCharacter, ...match.teammates]);
         // 対戦相手ハンターの対戦回数を増やす
         incrementCharacterUsage('hunterFaced', match.opponentHunter);
+        // BANキャラの使用回数を増やす
+        if (match.bannedCharacters) incrementCharacterUsage('survivorBanned', match.bannedCharacters);
       } else {
         // ハンター視点：自分の使用回数を増やす
         incrementCharacterUsage('hunterUsed', match.myCharacter);
@@ -1377,12 +1430,17 @@
       if (perspective === 'survivor') {
         selectedEscapeCount.survivor = null;
         document.getElementById('survivor-comment').value = '';
+        BAN_CHAR_IDS.forEach(id => { document.getElementById(id).value = ''; });
+        document.getElementById('detail-input-area').classList.add('hidden');
+        document.getElementById('detail-toggle-arrow').classList.remove('open');
         document.querySelectorAll('#survivor-input .result-button').forEach(btn => btn.classList.remove('selected'));
         updateSurvivorSelectOptions();
         SS_SURVIVOR_IDS.forEach(syncSearchableSelect);
       } else {
         selectedEscapeCount.hunter = null;
         document.getElementById('hunter-comment').value = '';
+        document.getElementById('hunter-detail-input-area').classList.add('hidden');
+        document.getElementById('hunter-detail-toggle-arrow').classList.remove('open');
         document.querySelectorAll('#hunter-input .result-button').forEach(btn => btn.classList.remove('selected'));
         updateHunterOpponentSelectOptions();
         SS_HUNTER_IDS.forEach(syncSearchableSelect);
@@ -3298,8 +3356,16 @@
         document.getElementById('opponent-hunter').value = match.opponentHunter;
         document.getElementById('survivor-map').value = match.map;
         document.getElementById('survivor-comment').value = match.comment || '';
+        // BANキャラ復元
+        const bans = match.bannedCharacters || [];
+        BAN_CHAR_IDS.forEach((id, i) => { document.getElementById(id).value = bans[i] || ''; });
+        // コメントまたはBANがあれば詳細エリアを開く
+        if (match.comment || bans.length > 0) {
+          document.getElementById('detail-input-area').classList.remove('hidden');
+          document.getElementById('detail-toggle-arrow').classList.add('open');
+        }
         selectedEscapeCount.survivor = match.escapeCount !== undefined ? match.escapeCount : null;
-        
+
         document.querySelectorAll('.perspective-tab').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.perspective-tab')[0].classList.add('active');
         document.getElementById('survivor-input').classList.remove('hidden');
@@ -3326,8 +3392,12 @@
         document.getElementById('opponent-survivor-4').value = match.opponentSurvivors[3];
         document.getElementById('hunter-map').value = match.map;
         document.getElementById('hunter-comment').value = match.comment || '';
+        if (match.comment) {
+          document.getElementById('hunter-detail-input-area').classList.remove('hidden');
+          document.getElementById('hunter-detail-toggle-arrow').classList.add('open');
+        }
         selectedEscapeCount.hunter = match.escapeCount !== undefined ? match.escapeCount : null;
-        
+
         document.querySelectorAll('.perspective-tab').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.perspective-tab')[1].classList.add('active');
         document.getElementById('survivor-input').classList.add('hidden');
@@ -3364,6 +3434,7 @@
           decrementCharacterUsage('survivorUsed', [match.myCharacter, ...match.teammates]);
           // 対戦相手ハンターの対戦回数を減らす
           decrementCharacterUsage('hunterFaced', match.opponentHunter);
+          if (match.bannedCharacters) decrementCharacterUsage('survivorBanned', match.bannedCharacters);
         } else {
           // ハンター視点：自分の使用回数を減らす
           decrementCharacterUsage('hunterUsed', match.myCharacter);
@@ -3371,7 +3442,7 @@
           decrementCharacterUsage('survivorFaced', match.opponentSurvivors);
         }
       }
-      
+
       matches = matches.filter(m => m.id !== id);
       saveData();
       refreshAfterDataChange({ rebuildSelects: true });
@@ -3388,7 +3459,7 @@
       saveData();
       
       // キャラクター使用回数もリセット
-      characterUsageCount = { survivorUsed: {}, survivorFaced: {}, hunterUsed: {}, hunterFaced: {} };
+      characterUsageCount = { survivorUsed: {}, survivorFaced: {}, hunterUsed: {}, hunterFaced: {}, survivorBanned: {} };
       saveCharacterUsageCount();
       
       refreshAfterDataChange({ rebuildSelects: true });
@@ -3507,7 +3578,7 @@
       try {
         // データを復元
         matches = data.matches;
-        characterUsageCount = data.characterUsageCount || { survivorUsed: {}, survivorFaced: {}, hunterUsed: {}, hunterFaced: {} };
+        characterUsageCount = data.characterUsageCount || { survivorUsed: {}, survivorFaced: {}, hunterUsed: {}, hunterFaced: {}, survivorBanned: {} };
         
         // localStorageに保存
         saveData();
@@ -3913,7 +3984,7 @@
     // クラウドからダウンロードしてローカルに反映
     async function downloadFromCloud(cloudData) {
       matches = cloudData.matches || [];
-      characterUsageCount = cloudData.characterUsageCount || { survivorUsed: {}, survivorFaced: {}, hunterUsed: {}, hunterFaced: {} };
+      characterUsageCount = cloudData.characterUsageCount || { survivorUsed: {}, survivorFaced: {}, hunterUsed: {}, hunterFaced: {}, survivorBanned: {} };
       localStorage.setItem('identity5_matches', JSON.stringify(matches));
       localStorage.setItem('identity5_data_modified', cloudData.lastModified || new Date().toISOString());
       saveCharacterUsageCount();

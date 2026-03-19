@@ -723,6 +723,26 @@ body.dark-mode .multi-rank-item.all-item {
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
 }
+/* 詳細入力（コメント）トグル */
+.detail-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--t-muted);
+  cursor: pointer;
+  padding: 8px 0;
+  user-select: none;
+}
+.detail-toggle:hover { color: var(--t-secondary); }
+#detail-toggle-arrow {
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+#detail-toggle-arrow.open {
+  transform: rotate(90deg);
+}
+
 /* レスポンシブ対応：スマホでは2列に */
 @media (max-width: 480px) {
   .teammate-grid,
@@ -1937,8 +1957,8 @@ body.dark-mode .header-gear-btn {
   transition: color var(--transition-hover), background var(--transition-hover);
 }
 .bottom-nav-item.active {
-  background: var(--c-primary);
-  color: #ffffff;
+  background: rgba(225,29,72,0.10);
+  color: #be123c;
 }
 .bnav-icon {
   display: flex;
@@ -1972,7 +1992,7 @@ body.dark-mode .bottom-nav {
   box-shadow: 0 4px 24px rgba(0,0,0,0.45), 0 1px 6px rgba(0,0,0,0.25);
 }
 body.dark-mode .bottom-nav-item         { color: var(--t-muted); }
-body.dark-mode .bottom-nav-item.active  { color: #ffffff; }
+body.dark-mode .bottom-nav-item.active  { background: rgba(56,189,248,0.12); color: #38bdf8; }
 
 /* ===== レスポンシブ ===== */
 @media (max-width: 767px) {

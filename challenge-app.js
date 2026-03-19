@@ -1057,21 +1057,19 @@ function syncGoalsToCloud() {
 
 function importGoalsFromCloud(goals) {
   if (!goals) return;
-  // 段位ゴール
+  // 段位ゴール（クラウドで常に上書き）
   if (goals.rankGoals) {
     for (const [side, goal] of Object.entries(goals.rankGoals)) {
-      const key = 'identity5_rank_goal_' + side;
-      if (!localStorage.getItem(key) && goal) {
-        localStorage.setItem(key, JSON.stringify(goal));
+      if (goal) {
+        localStorage.setItem('identity5_rank_goal_' + side, JSON.stringify(goal));
       }
     }
   }
-  // 認知ゴール
+  // 認知ゴール（クラウドで常に上書き）
   if (goals.cogGoals) {
     for (const [charName, goal] of Object.entries(goals.cogGoals)) {
-      const key = 'identity5_cog_goal_' + charName;
-      if (!localStorage.getItem(key) && goal) {
-        localStorage.setItem(key, JSON.stringify(goal));
+      if (goal) {
+        localStorage.setItem('identity5_cog_goal_' + charName, JSON.stringify(goal));
       }
     }
   }
@@ -1087,15 +1085,17 @@ function countCharMatches(charName) {
   return matches.filter(m => m.perspective === perspective && m.myCharacter === charName).length;
 }
 
-// --- ゴール後の試合数を取得 ---
+// --- ゴール後の試合数を取得（日付ベース） ---
 function getMatchesSinceGoalStart(goal, type, charName) {
-  let total;
-  if (type === 'rank') {
-    total = countPerspectiveMatches();
-  } else {
-    total = countCharMatches(charName);
-  }
-  return Math.max(0, total - goal.startMatchIndex);
+  const perspective = type === 'rank'
+    ? (rankIconSide === 'survivors' ? 'survivor' : 'hunter')
+    : (SURVIVORS.includes(charName) ? 'survivor' : 'hunter');
+  const since = goal.createdDate || '1970-01-01';
+  return matches.filter(m =>
+    m.perspective === perspective &&
+    m.date >= since &&
+    (type === 'rank' || m.myCharacter === charName)
+  ).length;
 }
 
 // --- 区間ごとの予測pt計算 ---

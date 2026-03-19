@@ -1170,6 +1170,19 @@ body.dark-mode .sort-arrow-btn.active {
   color: var(--c-primary-light);
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
+/* ダークモード: 詳細ソートコントロール（トップページと統一） */
+body.dark-mode .detail-sort-key-btn:hover { color: var(--t-primary); }
+body.dark-mode .detail-sort-key-btn.active {
+  color: var(--c-primary-light);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+body.dark-mode .detail-sort-divider { background: var(--b-default); }
+body.dark-mode .detail-sort-arrow-btn { color: var(--t-muted); }
+body.dark-mode .detail-sort-arrow-btn:hover { color: var(--t-primary); }
+body.dark-mode .detail-sort-arrow-btn.active {
+  color: var(--c-primary-light);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
 /* ダークモード: 検索ドロップダウン */
 body.dark-mode .ss-input {
   background: var(--s-raised);
@@ -2397,31 +2410,51 @@ body.dark-mode .detail-stat-winrate { color: var(--c-primary-light); }
   gap: var(--sp-1);
   flex-shrink: 0;
 }
-.detail-sort-key-btn,
-.detail-sort-arrow-btn {
-  padding: 3px 10px;
-  min-height: 44px;
-  min-width: 44px;
-  border: 1px solid var(--b-default);
-  border-radius: var(--r-sm);
-  background: var(--s-raised);
-  font-size: var(--fs-xs);
-  color: var(--t-secondary);
+.detail-sort-key-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--r-input);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
+  color: var(--t-muted);
   touch-action: manipulation;
-  transition: background var(--transition-hover), color var(--transition-hover), border-color var(--transition-hover);
+  transition: background var(--transition-hover), color var(--transition-hover), box-shadow var(--transition-hover);
 }
-.detail-sort-key-btn.active,
+.detail-sort-key-btn:hover { color: var(--t-secondary); }
+.detail-sort-key-btn.active {
+  background: var(--s-base);
+  color: var(--c-primary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.detail-sort-arrow-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--r-input);
+  background: transparent;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  color: var(--t-faint);
+  touch-action: manipulation;
+  transition: background var(--transition-hover), color var(--transition-hover), box-shadow var(--transition-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.detail-sort-arrow-btn:hover { color: var(--t-secondary); }
 .detail-sort-arrow-btn.active {
-  background: var(--c-primary);
-  color: #fff;
-  border-color: var(--c-primary);
+  background: var(--s-base);
+  color: var(--c-primary-mid);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 .detail-sort-divider {
   width: 1px;
-  background: var(--b-default);
-  align-self: stretch;
-  margin: 2px 2px;
+  height: 24px;
+  background: var(--b-strong);
+  margin: 0 2px;
 }
 .detail-history-title {
   font-size: var(--fs-sm);

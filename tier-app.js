@@ -108,23 +108,6 @@ function showDetailPage(charName) {
 
 function _initDetailScrollBehavior() {
   _removeDetailScrollHandler();
-  const header = document.querySelector('.detail-header');
-  if (!header) return;
-  let lastY = 0;
-  _detailScrollHandler = () => {
-    if (window.innerWidth > 767) {
-      header.classList.remove('hide');
-      return;
-    }
-    const y = window.scrollY;
-    if (y > lastY && y > 60) {
-      header.classList.add('hide');
-    } else {
-      header.classList.remove('hide');
-    }
-    lastY = y;
-  };
-  window.addEventListener('scroll', _detailScrollHandler, { passive: true });
 }
 
 function _removeDetailScrollHandler() {
@@ -936,7 +919,7 @@ function renderDetailBanPick(s) {
         const pct = base > 0 ? (count / base * 100).toFixed(1) : '-';
         return `<div class="copick-item">
           <span class="copick-rank">${i + 1}位</span>
-          <img class="tier-row-icon" src="${getCharIconPath(char)}" alt="" onerror="this.style.display='none'">
+          <img class="tier-row-icon" src="${buildIconPath(char, 'survivor')}" alt="" onerror="this.style.display='none'">
           <span class="copick-name">${escapeHTML(char)}</span>
           <span class="copick-pct">${count}/${base}試合（${pct}%）</span>
         </div>`;
@@ -955,8 +938,8 @@ function renderDetailBanPick(s) {
       labels: data.map(([char]) => char),
       datasets: [{
         data: data.map(([, count]) => count),
-        backgroundColor: isDark ? 'rgba(248,113,113,0.7)' : 'rgba(239,68,68,0.7)',
-        borderColor:     isDark ? '#f87171' : '#ef4444',
+        backgroundColor: isDark ? 'rgba(96,165,250,0.7)' : 'rgba(59,130,246,0.7)',
+        borderColor:     isDark ? '#60a5fa' : '#3b82f6',
         borderWidth: 1,
         borderRadius: 4,
       }]

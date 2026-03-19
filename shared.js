@@ -449,8 +449,8 @@ function createConnectModule({ onConnected, onNoData, onGoalsLoaded, cacheKey = 
         const m  = data.matches || [];
         const lu = data.lastModified || null;
         localStorage.setItem(cacheKey, JSON.stringify({ matches: m, lastUpdated: lu }));
-        onConnected(m, lu);
         if (onGoalsLoaded && data.goals) onGoalsLoaded(data.goals);
+        onConnected(m, lu);
       } else {
         _fallbackToCache();
       }

@@ -796,9 +796,9 @@ body.dark-mode .multi-rank-item.all-item {
   height: 44px;
   border: none;
   background: transparent;
-  color: var(--t-faint);
+  color: var(--t-muted);
   border-radius: 50%;
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1;
   cursor: pointer;
   display: none;
@@ -1183,7 +1183,7 @@ body.dark-mode .ss-input::placeholder {
   color: var(--t-muted);
 }
 body.dark-mode .ss-clear {
-  background: var(--b-default);
+  background: transparent;
   color: var(--t-muted);
 }
 body.dark-mode .ss-clear:hover {

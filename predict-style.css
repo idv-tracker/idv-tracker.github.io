@@ -1,7 +1,7 @@
 /* ===== predict-style.css — トークン参照版 ===== */
 
 body {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: linear-gradient(135deg, #f0f2f7 0%, #e8eaf2 100%);
   color: var(--t-primary);
 }
 
@@ -12,24 +12,24 @@ body {
 /* ===== 接続ページ ===== */
 .connect-wrap { max-width: 560px; margin: 0 auto; padding: 32px 20px 60px; }
 .connect-header { text-align: center; margin-bottom: 32px; }
-.connect-app-brand { font-size: 13px; color: rgba(255,255,255,0.6); letter-spacing: 0.05em; margin-bottom: 4px; }
-.connect-app-title { font-size: 32px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-.connect-app-sub { font-size: 15px; color: rgba(255,255,255,0.7); margin-bottom: 16px; }
-.connect-desc { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.7; }
+.connect-app-brand { font-size: 13px; color: var(--t-muted); letter-spacing: 0.05em; margin-bottom: 4px; }
+.connect-app-title { font-size: 32px; font-weight: 700; color: var(--t-primary); margin-bottom: 4px; }
+.connect-app-sub { font-size: 15px; color: var(--t-secondary); margin-bottom: 16px; }
+.connect-desc { font-size: 14px; color: var(--t-muted); line-height: 1.7; }
 .connect-card {
   background: var(--s-card); border-radius: 12px; padding: 24px;
-  margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 .connect-card-title { font-size: 16px; font-weight: 700; color: var(--t-primary); margin-bottom: 8px; }
 .connect-card-desc { font-size: 13px; color: var(--t-muted); line-height: 1.6; margin-bottom: 14px; }
 .connect-input {
-  width: 100%; padding: 10px 12px; border: 1.5px solid #d1d5db; border-radius: 8px;
+  width: 100%; padding: 10px 12px; border: 1.5px solid var(--b-default); border-radius: 8px;
   font-size: 13px; font-family: monospace; color: var(--t-secondary); background: var(--s-input);
   margin-bottom: 10px; outline: none;
 }
 .connect-input:focus { border-color: var(--c-primary-mid); }
 .connect-textarea {
-  width: 100%; height: 100px; padding: 10px 12px; border: 1.5px solid #d1d5db;
+  width: 100%; height: 100px; padding: 10px 12px; border: 1.5px solid var(--b-default);
   border-radius: 8px; font-size: 12px; font-family: monospace; color: var(--t-secondary);
   resize: vertical; margin-bottom: 10px; outline: none;
 }
@@ -39,6 +39,7 @@ body {
   font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
 }
 .connect-btn:hover { opacity: 0.85; }
+.connect-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .connect-btn.primary { background: var(--c-primary); color: white; width: 100%; }
 .connect-btn.secondary { background: var(--b-subtle); color: var(--t-secondary); }
 .connect-btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -46,9 +47,9 @@ body {
 .connect-btn-or { font-size: 12px; color: var(--t-muted); align-self: center; }
 .connect-back-link {
   display: block; text-align: center; margin-top: 20px;
-  color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px;
+  color: var(--t-faint); text-decoration: none; font-size: 13px;
 }
-.connect-back-link:hover { color: rgba(255,255,255,0.8); }
+.connect-back-link:hover { color: var(--t-secondary); }
 
 /* ===== ヘッダー ===== */
 .pr-header {
@@ -82,19 +83,28 @@ body {
   max-width: 560px; margin: 60px auto; padding: 40px 20px; text-align: center;
 }
 .lock-icon { font-size: 48px; margin-bottom: 16px; }
-.lock-title { font-size: 18px; font-weight: 700; color: rgba(255,255,255,0.9); margin-bottom: 20px; }
+.lock-title { font-size: 18px; font-weight: 700; color: var(--t-primary); margin-bottom: 20px; }
 .lock-progress { max-width: 300px; margin: 0 auto 12px; }
 .lock-progress-track {
-  height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;
+  height: 8px; background: var(--b-subtle); border-radius: 4px; overflow: hidden;
 }
 .lock-progress-bar {
   height: 100%; background: var(--c-primary-mid); border-radius: 4px;
   transition: width 0.5s ease;
 }
 .lock-progress-text {
-  font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 6px;
+  font-size: 13px; color: var(--t-muted); margin-top: 6px;
 }
-.lock-message { font-size: 14px; color: rgba(255,255,255,0.5); }
+.lock-message { font-size: 14px; color: var(--t-faint); }
+
+/* ===== 精度警告バナー ===== */
+.pr-accuracy-warning:not(.hidden) {
+  display: block;
+  background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;
+  padding: 10px 16px; margin: 12px auto;
+  max-width: 520px;
+  font-size: 13px; color: #92400e; line-height: 1.5;
+}
 
 /* ===== 入力セクション ===== */
 .pr-input-section {
@@ -102,7 +112,7 @@ body {
 }
 .pr-input-card {
   background: var(--s-card); border-radius: 12px; padding: 24px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 .pr-input-title {
   font-size: 16px; font-weight: 700; color: var(--t-primary); margin-bottom: 20px;
@@ -141,7 +151,7 @@ body {
   max-width: 560px; margin: 0 auto; padding: 0 20px 20px;
 }
 .pr-result-title {
-  font-size: 18px; font-weight: 700; color: rgba(255,255,255,0.95);
+  font-size: 18px; font-weight: 700; color: var(--t-primary);
   margin-bottom: 16px;
 }
 
@@ -152,7 +162,7 @@ body {
 
 .pr-result-item {
   background: var(--s-card); border-radius: 10px; padding: 14px 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 .pr-result-item-main {
   display: flex; align-items: center; gap: 12px;
@@ -204,6 +214,9 @@ body {
 .pr-counter-char-rate {
   font-size: 11px; font-weight: 600; color: var(--c-success);
 }
+.pr-counter-char-n {
+  font-size: 10px; font-weight: 400; color: var(--t-faint); margin-left: 1px;
+}
 
 /* ===== 結果なし ===== */
 .pr-empty-message {
@@ -215,7 +228,7 @@ body {
 /* ===== ハンター選択セクション ===== */
 .pr-select-section {
   background: var(--s-card); border-radius: 12px; padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 .pr-select-title {
   font-size: 15px; font-weight: 700; color: var(--t-primary); margin-bottom: 4px;
@@ -289,27 +302,24 @@ body {
 
 /* ===== ダークモード ===== */
 body.dark-mode {
-  --s-card: #1e293b;
-  --s-raised: #334155;
-  --s-raised-rgb: 51, 65, 85;
-  --s-input: #1e293b;
-  --s-subtle: #273548;
-  --s-muted: #334155;
-  --b-subtle: #475569;
-  --b-default: #475569;
-  --b-strong: #64748b;
-  --t-primary: #f1f5f9;
-  --t-secondary: #e2e8f0;
-  --t-muted: #94a3b8;
-  --t-faint: #64748b;
-  --c-primary-bg: rgba(59,130,246,0.15);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
 }
+body.dark-mode .connect-card { box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+body.dark-mode .connect-app-brand { color: rgba(255,255,255,0.6); }
+body.dark-mode .connect-app-title { color: #fff; }
+body.dark-mode .connect-app-sub { color: rgba(255,255,255,0.7); }
+body.dark-mode .connect-desc { color: rgba(255,255,255,0.6); }
+body.dark-mode .connect-back-link { color: rgba(255,255,255,0.5); }
+body.dark-mode .connect-back-link:hover { color: rgba(255,255,255,0.8); }
 body.dark-mode .pr-input-card { box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
 body.dark-mode .pr-result-item { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
 body.dark-mode .pr-result-pct { color: var(--c-primary-light); }
 body.dark-mode .pr-select-section { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
 body.dark-mode .pr-hunter-btn:hover {
   border-color: var(--c-primary-light); background: rgba(59,130,246,0.15);
+}
+body.dark-mode .pr-accuracy-warning:not(.hidden) {
+  background: #422006; border-color: #92400e; color: #fbbf24;
 }
 body.dark-mode .ss-clear { background: transparent; }
 

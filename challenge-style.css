@@ -2,7 +2,7 @@
 /* リセット・フォント・トークンは base.css で定義 */
 
 body {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: linear-gradient(135deg, #f0f2f7 0%, #e8eaf2 100%);
   color: var(--t-primary);
 }
 
@@ -13,13 +13,13 @@ body {
 /* ===== 接続ページ ===== */
 .connect-wrap { max-width: 560px; margin: 0 auto; padding: 32px 20px 60px; }
 .connect-header { text-align: center; margin-bottom: 32px; }
-.connect-app-brand { font-size: 13px; color: rgba(255,255,255,0.6); letter-spacing: 0.05em; margin-bottom: 4px; }
-.connect-app-title { font-size: 32px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-.connect-app-sub { font-size: 15px; color: rgba(255,255,255,0.7); margin-bottom: 16px; }
-.connect-desc { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.7; }
+.connect-app-brand { font-size: 13px; color: var(--t-muted); letter-spacing: 0.05em; margin-bottom: 4px; }
+.connect-app-title { font-size: 32px; font-weight: 700; color: var(--t-primary); margin-bottom: 4px; }
+.connect-app-sub { font-size: 15px; color: var(--t-secondary); margin-bottom: 16px; }
+.connect-desc { font-size: 14px; color: var(--t-muted); line-height: 1.7; }
 .connect-card {
   background: var(--s-card); border-radius: 12px; padding: 24px;
-  margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 .connect-card-title { font-size: 16px; font-weight: 700; color: var(--t-primary); margin-bottom: 8px; }
 .connect-card-desc { font-size: 13px; color: var(--t-muted); line-height: 1.6; margin-bottom: 14px; }
@@ -46,9 +46,10 @@ body {
 .connect-btn-row .connect-btn { flex: 1; min-width: 120px; }
 .connect-back-link {
   display: block; text-align: center; margin-top: 20px;
-  color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px;
+  color: var(--t-faint); text-decoration: none; font-size: 13px;
 }
-.connect-back-link:hover { color: rgba(255,255,255,0.8); }
+.connect-back-link:hover { color: var(--t-secondary); }
+.connect-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ===== ヘッダー ===== */
 .ch-header {
@@ -349,6 +350,12 @@ body {
 body.dark-mode {
   background: #0d0d1a;
 }
+body.dark-mode .connect-app-brand { color: rgba(255,255,255,0.6); }
+body.dark-mode .connect-app-title { color: #fff; }
+body.dark-mode .connect-app-sub { color: rgba(255,255,255,0.7); }
+body.dark-mode .connect-desc { color: rgba(255,255,255,0.6); }
+body.dark-mode .connect-back-link { color: rgba(255,255,255,0.5); }
+body.dark-mode .connect-back-link:hover { color: rgba(255,255,255,0.8); }
 body.dark-mode .ch-card { box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
 body.dark-mode .ch-input,
 body.dark-mode .ch-select,

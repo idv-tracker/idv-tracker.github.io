@@ -87,6 +87,21 @@ function buildIconPath(charName, type) {
   return `${folder}/${prefix}_${name}.PNG`;
 }
 
+// ===== トースト通知 =====
+function showToast(message, type) {
+  const existing = document.querySelector('.shared-toast');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'shared-toast' + (type === 'error' ? ' toast-error' : '');
+  el.textContent = message;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('visible'));
+  setTimeout(() => {
+    el.classList.remove('visible');
+    setTimeout(() => el.remove(), 300);
+  }, 3000);
+}
+
 // ===== Firebase 設定 =====
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyD11HYRuGLn0N4_eFhXfTK5R-3QyJ4RsSo",
@@ -442,8 +457,23 @@ function createConnectModule({ onConnected, onNoData, onGoalsLoaded, cacheKey = 
   let db = null;
   function ensureDb() { if (!db) db = initFirebase(); return db; }
 
+  // ローディング制御: connect-btn.primary を全て disabled 化
+  function _setLoading(loading) {
+    document.querySelectorAll('.connect-btn.primary').forEach(btn => {
+      if (loading) {
+        btn._origText = btn.textContent;
+        btn.textContent = '読み込み中...';
+        btn.disabled = true;
+      } else {
+        if (btn._origText) btn.textContent = btn._origText;
+        btn.disabled = false;
+      }
+    });
+  }
+
   async function loadFromFirebase(syncCode) {
     if (!ensureDb()) { _fallbackToCache(); return; }
+    _setLoading(true);
     try {
       const snap = await db.collection('idv_tracker').doc(syncCode).get();
       if (snap.exists) {
@@ -456,8 +486,11 @@ function createConnectModule({ onConnected, onNoData, onGoalsLoaded, cacheKey = 
       } else {
         _fallbackToCache();
       }
-    } catch (_) {
+    } catch (e) {
+      console.warn('Firebase読み込み失敗:', e);
       _fallbackToCache();
+    } finally {
+      _setLoading(false);
     }
   }
 
@@ -468,21 +501,21 @@ function createConnectModule({ onConnected, onNoData, onGoalsLoaded, cacheKey = 
         const parsed = JSON.parse(cached);
         onConnected(parsed.matches || [], parsed.lastUpdated || null);
         return;
-      } catch (_) {}
+      } catch (e) { console.warn('キャッシュ解析失敗:', e); }
     }
     onNoData();
   }
 
   function connectWithSyncCode() {
     const code = document.getElementById('sync-code-input').value.trim();
-    if (!code) { alert('同期コードを入力してください'); return; }
+    if (!code) { showToast('同期コードを入力してください', 'error'); return; }
     localStorage.setItem('identity5_sync_code', code);
     loadFromFirebase(code);
   }
 
   function connectWithJSON() {
     const text = document.getElementById('json-input').value.trim();
-    if (!text) { alert('データを貼り付けてください'); return; }
+    if (!text) { showToast('データを貼り付けてください', 'error'); return; }
     importJSONText(text);
   }
 
@@ -501,14 +534,15 @@ function createConnectModule({ onConnected, onNoData, onGoalsLoaded, cacheKey = 
     try {
       const data = JSON.parse(text);
       if (!data.matches || !Array.isArray(data.matches)) {
-        alert('データの形式が正しくありません');
+        showToast('データの形式が正しくありません', 'error');
         return;
       }
       const lu = new Date().toISOString();
       localStorage.setItem(cacheKey, JSON.stringify({ matches: data.matches, lastUpdated: lu }));
       onConnected(data.matches, lu);
-    } catch (_) {
-      alert('JSONの解析に失敗しました');
+    } catch (e) {
+      console.warn('JSON解析失敗:', e);
+      showToast('JSONの解析に失敗しました', 'error');
     }
   }
 

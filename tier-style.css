@@ -2,7 +2,7 @@
 /* リセット・フォント・トークンは base.css で定義 */
 
 body {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: linear-gradient(135deg, #f0f2f7 0%, #e8eaf2 100%);
   color: var(--t-primary);
 }
 
@@ -22,24 +22,24 @@ body {
 }
 .connect-app-brand {
   font-size: 13px;
-  color: rgba(255,255,255,0.6);
+  color: var(--t-muted);
   letter-spacing: 0.05em;
   margin-bottom: 4px;
 }
 .connect-app-title {
   font-size: 32px;
   font-weight: 700;
-  color: #fff;
+  color: var(--t-primary);
   margin-bottom: 4px;
 }
 .connect-app-sub {
   font-size: 15px;
-  color: rgba(255,255,255,0.7);
+  color: var(--t-secondary);
   margin-bottom: 16px;
 }
 .connect-desc {
   font-size: 14px;
-  color: rgba(255,255,255,0.6);
+  color: var(--t-muted);
   line-height: 1.7;
 }
 .connect-card {
@@ -47,7 +47,7 @@ body {
   border-radius: var(--r-lg);
   padding: 24px;
   margin-bottom: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 .connect-card-title {
   font-size: 16px;
@@ -110,11 +110,12 @@ body {
   display: block;
   text-align: center;
   margin-top: 20px;
-  color: rgba(255,255,255,0.5);
+  color: var(--t-faint);
   text-decoration: none;
   font-size: 13px;
 }
-.connect-back-link:hover { color: rgba(255,255,255,0.8); }
+.connect-back-link:hover { color: var(--t-secondary); }
+.connect-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ===== 共通コンテナ ===== */
 .tier-page-inner {
@@ -921,6 +922,12 @@ body {
 body.dark-mode {
   background: linear-gradient(135deg, #0d0d1a 0%, #0e1525 100%);
 }
+body.dark-mode .connect-app-brand { color: rgba(255,255,255,0.6); }
+body.dark-mode .connect-app-title { color: #fff; }
+body.dark-mode .connect-app-sub { color: rgba(255,255,255,0.7); }
+body.dark-mode .connect-desc { color: rgba(255,255,255,0.6); }
+body.dark-mode .connect-back-link { color: rgba(255,255,255,0.5); }
+body.dark-mode .connect-back-link:hover { color: rgba(255,255,255,0.8); }
 body.dark-mode .connect-card { box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
 body.dark-mode .connect-input, body.dark-mode .connect-textarea { border-color: var(--b-default); }
 body.dark-mode .tier-header { background: linear-gradient(135deg, #0a2240 0%, #0e1525 100%); }

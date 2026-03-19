@@ -1,10 +1,14 @@
 // ===== 状態 =====
 let matches = [];
 let lastUpdated = null;
-let _selectionGuard = false; // SearchableSelect選択直後のクリック誤発火防止
+let _lastSelectTime = 0; // SearchableSelect選択タイムスタンプ（ゴーストクリック防止）
 
 // SearchableSelectインスタンス
 const searchableSelects = {};
+
+// ===== 定数 =====
+const HBAN_PERSIST_KEY = 'predict_hunter_ban_persist';
+const HBAN_IDS = ['predict-hban-1', 'predict-hban-2', 'predict-hban-3'];
 
 // ===== 接続モジュール =====
 const _conn = createConnectModule({
@@ -106,8 +110,7 @@ function initSearchableSelect(selectId) {
   const ss = new SearchableSelect(selectEl);
   const isHban = selectId.startsWith('predict-hban');
   ss.onSelected = () => {
-    _selectionGuard = true;
-    setTimeout(() => { _selectionGuard = false; }, 400);
+    _lastSelectTime = Date.now();
     if (isHban) saveHunterBanPersist();
     // フォーカスを完全に解除（次フィールドへの自動遷移を防止）
     setTimeout(() => {
@@ -162,8 +165,6 @@ function setupBanExclude() {
 }
 
 // ===== ハンターBAN保持 =====
-const HBAN_PERSIST_KEY = 'predict_hunter_ban_persist';
-const HBAN_IDS = ['predict-hban-1', 'predict-hban-2', 'predict-hban-3'];
 
 function loadHunterBanPersist() {
   const saved = localStorage.getItem(HBAN_PERSIST_KEY);
@@ -176,7 +177,7 @@ function loadHunterBanPersist() {
         if (ss) ss.setValue(data[i]);
       }
     });
-  } catch (_) {}
+  } catch (e) { console.warn('ハンターBAN復元失敗:', e); }
 }
 
 function saveHunterBanPersist() {
@@ -207,24 +208,36 @@ function renderMainPage() {
 
   const lock = document.getElementById('lock-screen');
   const content = document.getElementById('main-content');
+  const warning = document.getElementById('accuracy-warning');
 
-  if (total < 100) {
+  if (total < 50) {
     lock.classList.remove('hidden');
     content.classList.add('hidden');
-    const pct = Math.min(total / 100 * 100, 100);
+    const pct = Math.min(total / 50 * 100, 100);
     document.getElementById('lock-progress-bar').style.width = pct + '%';
-    document.getElementById('lock-progress-text').textContent = `${total} / 100試合`;
-    document.getElementById('lock-message').textContent = `あと${100 - total}試合記録すると解放されます`;
+    document.getElementById('lock-progress-text').textContent = `${total} / 50試合`;
+    document.getElementById('lock-message').textContent = `あと${50 - total}試合記録すると解放されます`;
     return;
   }
 
   lock.classList.add('hidden');
   content.classList.remove('hidden');
+
+  // 50〜99試合: 精度警告バナー表示
+  if (warning) {
+    if (total < 100) {
+      warning.classList.remove('hidden');
+      document.getElementById('accuracy-count').textContent = total;
+    } else {
+      warning.classList.add('hidden');
+    }
+  }
 }
 
 // ===== 予測ロジック =====
 function runPrediction() {
-  if (_selectionGuard) return;
+  // ゴーストクリック防止: SearchableSelect選択直後100ms以内のクリックを無視
+  if (Date.now() - _lastSelectTime < 100) return;
   const mapVal = document.getElementById('predict-map').value;
   const bans = [
     document.getElementById('predict-ban-1').value,
@@ -234,21 +247,23 @@ function runPrediction() {
 
   const hunterBans = getHunterBans();
 
-  if (!mapVal) { alert('マップを選択してください'); return; }
-  if (bans.length === 0) { alert('BANキャラを1体以上選択してください'); return; }
+  if (!mapVal) { showToast('マップを選択してください', 'error'); return; }
+  if (bans.length === 0) { showToast('BANキャラを1体以上選択してください', 'error'); return; }
 
   // ハンターBAN保持を保存
   saveHunterBanPersist();
 
   const surMatches = matches.filter(m => m.perspective === 'survivor');
+  const banSurMatches = surMatches.filter(m => (m.bannedCharacters || []).some(b => b));
   const hunterBanSet = new Set(hunterBans);
 
   // === ベイズ逆引き方式 ===
   // 各ハンターHについて: P(H|BAN構成,マップ) ∝ Π P(ban_i|H) × P(マップ|H) × P(H)
+  // 母集団: BAN記録がある試合のみ（BAN未記録試合は尤度を希釈するため除外）
 
   // ハンター別の試合データを集計
   const hunterStats = {}; // hunter -> { total, banCounts: {char: n}, mapCount }
-  surMatches.forEach(m => {
+  banSurMatches.forEach(m => {
     if (!m.opponentHunter) return;
     const h = m.opponentHunter;
     if (!hunterStats[h]) hunterStats[h] = { total: 0, banCounts: {}, mapCount: 0 };
@@ -260,12 +275,13 @@ function runPrediction() {
     });
   });
 
-  const totalSurMatches = surMatches.length;
+  const totalSurMatches = banSurMatches.length;
   const scores = [];
 
-  // ゼロ回避用の擬似スムージング。最終段階で合計100%に正規化するため
-  // 正式なラプラス平滑化（分母に α×K を加算）は省略している
-  const SMOOTH = 0.01;
+  // ラプラス平滑化: 未観測の組み合わせでもゼロにならない
+  const ALPHA = 1;
+  const BAN_VOCAB = SURVIVORS.length;
+  const MAP_VOCAB = MAPS.length;
 
   Object.entries(hunterStats).forEach(([hunter, stat]) => {
     // ハンターBANされたハンターは除外
@@ -278,17 +294,15 @@ function runPrediction() {
     let banProduct = 1;
     bans.forEach(banChar => {
       const banCount = stat.banCounts[banChar] || 0;
-      const pBanGivenH = (banCount + SMOOTH) / (stat.total + SMOOTH);
+      const pBanGivenH = (banCount + ALPHA) / (stat.total + ALPHA * BAN_VOCAB);
       banProduct *= pBanGivenH;
     });
 
     // P(マップ | H)
-    const pMapGivenH = (stat.mapCount + SMOOTH) / (stat.total + SMOOTH);
+    const pMapGivenH = (stat.mapCount + ALPHA) / (stat.total + ALPHA * MAP_VOCAB);
 
     const score = banProduct * pMapGivenH * prior;
-    if (score > 0) {
-      scores.push({ hunter, score });
-    }
+    scores.push({ hunter, score });
   });
 
   // スコアで降順ソート
@@ -378,7 +392,7 @@ function renderResult(top5, allScores) {
             ${entry.counters.map(c =>
               `<span class="pr-counter-char">
                 <img class="pr-counter-char-icon" src="${buildIconPath(c.char, 'survivor')}" alt="${escapeHTML(c.char)}" onerror="this.style.display='none'">
-                <span class="pr-counter-char-rate">${Math.round(c.winRate * 100)}%</span>
+                <span class="pr-counter-char-rate">${Math.round(c.winRate * 100)}%<span class="pr-counter-char-n">(${c.total})</span></span>
               </span>`
             ).join('')}
           </div>
@@ -445,7 +459,7 @@ function getSurvivorsSortedByBanFrequency() {
       const parsed = JSON.parse(raw);
       banCounts = parsed.survivorBanned || {};
     }
-  } catch (_) {}
+  } catch (e) { console.warn('BAN頻度データ読み込み失敗:', e); }
 
   return SURVIVORS.slice().sort((a, b) => {
     const countA = banCounts[a] || 0;

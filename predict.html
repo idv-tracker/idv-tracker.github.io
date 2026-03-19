@@ -87,7 +87,7 @@
     <!-- ロック画面 -->
     <div id="lock-screen" class="lock-screen hidden">
       <div class="lock-icon">🔒</div>
-      <div class="lock-title">BAN入力済み100試合以上で解放</div>
+      <div class="lock-title">BAN入力済み50試合以上で解放</div>
       <div class="lock-progress">
         <div class="lock-progress-track">
           <div class="lock-progress-bar" id="lock-progress-bar"></div>
@@ -99,6 +99,11 @@
 
     <!-- メインコンテンツ -->
     <div id="main-content" class="hidden">
+
+      <!-- 精度警告バナー -->
+      <div id="accuracy-warning" class="pr-accuracy-warning hidden">
+        データが少ないため予測精度が低い可能性があります（現在<span id="accuracy-count">0</span>試合）
+      </div>
 
       <!-- 入力セクション -->
       <div class="pr-input-section">

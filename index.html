@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>第五人格トラッカー | 戦績管理・勝率計算アプリ</title>
   <meta name="description" content="第五人格（Identity V）のランク戦の戦績を簡単に記録・管理できる無料ツール。勝率、キャラ別統計、マップ別データを自動計算。サバイバー/ハンター両対応で完全無料。">
   <meta name="keywords" content="第五人格,Identity V,戦績,勝率,トラッカー,ランク戦,統計,サバイバー,ハンター">
@@ -52,11 +52,11 @@
   <link rel="stylesheet" href="style.css">
 
   <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 
   <!-- Firebase SDK (クラウド同期用) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <main class="container">
@@ -767,6 +767,8 @@
   </div>
 
   </main>
+
+  <div id="toast-container" class="toast-container"></div>
 
   <script src="shared.js"></script>
   <script src="app.js"></script>

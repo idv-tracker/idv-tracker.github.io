@@ -127,6 +127,7 @@ class SearchableSelect {
 
     this._build();
     this._bindEvents();
+    this._bindDropdownEvents();
   }
 
   _build() {
@@ -198,12 +199,58 @@ class SearchableSelect {
     document.addEventListener('click', this._onDocClick);
   }
 
+  /** ドロップダウンのイベント委譲（オプション個別リスナー不要） */
+  _bindDropdownEvents() {
+    this._onDropdownMousedown = (e) => {
+      const opt = e.target.closest('.ss-option');
+      if (opt) e.preventDefault();
+    };
+    this._onDropdownClick = (e) => {
+      if (this._touchHandled) { this._touchHandled = false; return; }
+      const opt = e.target.closest('.ss-option');
+      if (!opt) return;
+      e.stopPropagation();
+      const idx = parseInt(opt.dataset.index, 10);
+      if (this._filteredOptions && this._filteredOptions[idx]) {
+        this._selectOption(this._filteredOptions[idx]);
+      }
+    };
+    this._onDropdownTouchstart = (e) => {
+      const opt = e.target.closest('.ss-option');
+      if (!opt) return;
+      this._touchStartX = e.touches[0].clientX;
+      this._touchStartY = e.touches[0].clientY;
+    };
+    this._onDropdownTouchend = (e) => {
+      const opt = e.target.closest('.ss-option');
+      if (!opt) return;
+      const dx = e.changedTouches[0].clientX - (this._touchStartX || 0);
+      const dy = e.changedTouches[0].clientY - (this._touchStartY || 0);
+      if (Math.sqrt(dx * dx + dy * dy) > 10) return;
+      this._touchHandled = true;
+      const idx = parseInt(opt.dataset.index, 10);
+      if (this._filteredOptions && this._filteredOptions[idx]) {
+        this._selectOption(this._filteredOptions[idx]);
+      }
+      setTimeout(() => { this._touchHandled = false; }, 50);
+    };
+
+    this.dropdown.addEventListener('mousedown', this._onDropdownMousedown);
+    this.dropdown.addEventListener('click', this._onDropdownClick);
+    this.dropdown.addEventListener('touchstart', this._onDropdownTouchstart, { passive: true });
+    this.dropdown.addEventListener('touchend', this._onDropdownTouchend, { passive: true });
+  }
+
   destroy() {
     this.input.removeEventListener('focus', this._onFocus);
     this.input.removeEventListener('input', this._onInput);
     this.input.removeEventListener('keydown', this._onKeydown);
     this.clearBtn.removeEventListener('click', this._onClearClick);
     document.removeEventListener('click', this._onDocClick);
+    this.dropdown.removeEventListener('mousedown', this._onDropdownMousedown);
+    this.dropdown.removeEventListener('click', this._onDropdownClick);
+    this.dropdown.removeEventListener('touchstart', this._onDropdownTouchstart);
+    this.dropdown.removeEventListener('touchend', this._onDropdownTouchend);
     if (this.wrapper.parentNode) {
       this.wrapper.parentNode.insertBefore(this.select, this.wrapper);
       this.wrapper.remove();
@@ -310,26 +357,6 @@ class SearchableSelect {
       div.className = 'ss-option';
       div.dataset.index = idx;
       div.textContent = opt.label;
-
-      div.addEventListener('mousedown', (e) => e.preventDefault());
-      div.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (this._touchHandled) { this._touchHandled = false; return; }
-        this._selectOption(opt);
-      });
-      div.addEventListener('touchstart', (e) => {
-        this._touchStartX = e.touches[0].clientX;
-        this._touchStartY = e.touches[0].clientY;
-      }, { passive: true });
-      div.addEventListener('touchend', (e) => {
-        const dx = e.changedTouches[0].clientX - (this._touchStartX || 0);
-        const dy = e.changedTouches[0].clientY - (this._touchStartY || 0);
-        if (Math.sqrt(dx * dx + dy * dy) > 10) return;
-        this._touchHandled = true;
-        this._selectOption(opt);
-        setTimeout(() => { this._touchHandled = false; }, 50);
-      }, { passive: true });
-
       this.dropdown.appendChild(div);
     });
   }

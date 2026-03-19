@@ -1,4 +1,18 @@
 ﻿
+    // ===== トースト通知 =====
+    function showToast(message, type = 'info', duration = 3000) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const el = document.createElement('div');
+      el.className = 'toast' + (type === 'error' ? ' toast-error' : '');
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.classList.add('toast-out');
+        el.addEventListener('animationend', () => el.remove());
+      }, duration);
+    }
+
     // ===== アイコンパス（app.js固有） =====
     const MAP_ICON_OVERRIDES = {
       '軍需工場': 'maps/gunju_kojou.PNG',
@@ -400,7 +414,7 @@
                 }
                 
                 // サバイバー対戦回数
-                const survivors = match.opponentSurvivors;
+                const survivors = match.opponentSurvivors || [];
                 survivors.forEach(char => {
                   if (!char) return;
                   if (!characterUsageCount.survivorFaced[char]) {
@@ -604,10 +618,14 @@
     
     // 汎用ソート関数
     function sortByState(keys, statsMap, perspective, state) {
+      // Schwartzian transform: 事前に統計計算してキャッシュ
+      const cache = new Map();
+      keys.forEach(k => cache.set(k, calculateWinrate(statsMap[k], perspective)));
+
       return keys.sort((a, b) => {
-        const statsA = calculateWinrate(statsMap[a], perspective);
-        const statsB = calculateWinrate(statsMap[b], perspective);
-        
+        const statsA = cache.get(a);
+        const statsB = cache.get(b);
+
         let primary, secondary;
         if (state.key === 'winrate') {
           primary = parseFloat(statsB.winrate) - parseFloat(statsA.winrate);
@@ -616,16 +634,38 @@
           primary = statsB.totalWithDraws - statsA.totalWithDraws;
           secondary = parseFloat(statsB.winrate) - parseFloat(statsA.winrate);
         }
-        
+
         if (state.order === 'asc') {
           primary = -primary;
           secondary = -secondary;
         }
-        
+
         return primary !== 0 ? primary : secondary;
       });
     }
     
+    // TOPカード共通: best/worstを抽出
+    function findBestWorst(items, statsMap, perspective, minCount) {
+      const qualified = items.filter(k => statsMap[k].length >= minCount);
+      if (qualified.length === 0) return { best: null, worst: null };
+      const wrCache = new Map(qualified.map(k => [k, parseFloat(calculateWinrate(statsMap[k], perspective).winrate)]));
+      qualified.sort((a, b) => wrCache.get(b) - wrCache.get(a));
+      const best = qualified[0];
+      const worstRaw = qualified.length > 1 ? qualified[qualified.length - 1] : null;
+      const worst = worstRaw && wrCache.get(worstRaw) < 100 ? worstRaw : null;
+      return { best, worst };
+    }
+
+    // TOPカード共通: best/worstからHTML生成
+    function buildTopCardsHtml(best, worst, buildCardFn) {
+      if (!best) return '';
+      const hasWorst = worst && best !== worst;
+      return `<div class="top-cards-row${hasWorst ? '' : ' top-cards-single'}">
+        ${buildCardFn(best, 'best')}
+        ${hasWorst ? buildCardFn(worst, 'worst') : ''}
+      </div>`;
+    }
+
     // 初期化
     function init() {
       // Firebase初期化
@@ -773,8 +813,8 @@
         });
       });
       
-      // サバイバー選択時の重複チェックを追加
-      ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3'].forEach(id => {
+      // サバイバー選択時の重複チェックを追加（BAN含む相互除外）
+      ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', ...BAN_CHAR_IDS].forEach(id => {
         document.getElementById(id).addEventListener('change', () => updateSurvivorSelectOptions());
       });
       
@@ -1010,41 +1050,60 @@
       updateAllStats();
     }
 
-    // サバイバー視点：選択済みキャラを他の選択肢から除外
+    // サバイバー視点：選択済みキャラを他の選択肢から除外（BAN↔編成 相互除外）
     function updateSurvivorSelectOptions() {
       const mySurvivor = document.getElementById('my-survivor').value;
       const teammate1 = document.getElementById('teammate-1').value;
       const teammate2 = document.getElementById('teammate-2').value;
       const teammate3 = document.getElementById('teammate-3').value;
-      
-      const selected = [mySurvivor, teammate1, teammate2, teammate3].filter(v => v);
-      
-      // サバイバー使用回数順にソート
-      const sortedSurvivors = sortCharactersByUsage(SURVIVORS, 'survivorUsed');
-      
+      const ban1 = document.getElementById('ban-char-1').value;
+      const ban2 = document.getElementById('ban-char-2').value;
+      const ban3 = document.getElementById('ban-char-3').value;
+
+      const partySelected = [mySurvivor, teammate1, teammate2, teammate3].filter(v => v);
+      const banSelected   = [ban1, ban2, ban3].filter(v => v);
+
+      // 編成セレクト: 他の編成メンバー＋BAN済みを除外
+      const sortedSurvivorsUsed = sortCharactersByUsage(SURVIVORS, 'survivorUsed');
       ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3'].forEach(id => {
         const select = document.getElementById(id);
         const currentValue = select.value;
-        
-        // 選択肢を再構築
+        const excluded = new Set([...partySelected, ...banSelected]);
+        excluded.delete(currentValue);
+
         select.innerHTML = '<option value="">選択してください</option>';
-        sortedSurvivors.forEach(survivor => {
-          // 自分以外で選択されているキャラは除外
-          if (!selected.includes(survivor) || survivor === currentValue) {
+        sortedSurvivorsUsed.forEach(survivor => {
+          if (!excluded.has(survivor)) {
             const option = document.createElement('option');
             option.value = survivor;
             option.textContent = survivor;
             select.appendChild(option);
           }
         });
-        
-        // 現在の値を復元
         select.value = currentValue;
-        
-        // プレースホルダースタイルを更新
         updatePlaceholderStyle(select);
-        
-        // SearchableSelect同期
+        syncSearchableSelect(id);
+      });
+
+      // BANセレクト: 他のBAN＋編成メンバーを除外
+      const sortedSurvivorsBanned = sortCharactersByUsage(SURVIVORS, 'survivorBanned');
+      BAN_CHAR_IDS.forEach(id => {
+        const select = document.getElementById(id);
+        const currentValue = select.value;
+        const excluded = new Set([...partySelected, ...banSelected]);
+        excluded.delete(currentValue);
+
+        select.innerHTML = '<option value="">なし</option>';
+        sortedSurvivorsBanned.forEach(survivor => {
+          if (!excluded.has(survivor)) {
+            const option = document.createElement('option');
+            option.value = survivor;
+            option.textContent = survivor;
+            select.appendChild(option);
+          }
+        });
+        select.value = currentValue;
+        updatePlaceholderStyle(select);
         syncSearchableSelect(id);
       });
     }
@@ -1247,11 +1306,6 @@
         updateDataInfo();
       }
       
-      // 総合勝率タブに切り替えた時は総合勝率とグラフを更新
-      if (tabName === 'overall') {
-        updateOverallStatsTab();
-      }
-      
       updateAllStats();
       // モバイルボトムナビの同期（5タブ）
       if (['input', 'overall', 'character', 'map', 'opponent'].includes(tabName)) {
@@ -1323,7 +1377,7 @@
         const escapeCount = selectedEscapeCount.survivor;
         
         if (!date || !rank || !mySurvivor || !teammate1 || !teammate2 || !teammate3 || !opponentHunter || !map || escapeCount === null) {
-          alert('全ての項目を入力してください');
+          showToast('全ての項目を入力してください', 'error');
           return;
         }
         
@@ -1350,7 +1404,7 @@
         const escapeCount = selectedEscapeCount.hunter;
         
         if (!date || !rank || !myHunter || !opponentSurvivor1 || !opponentSurvivor2 || !opponentSurvivor3 || !opponentSurvivor4 || !map || escapeCount === null) {
-          alert('全ての項目を入力してください');
+          showToast('全ての項目を入力してください', 'error');
           return;
         }
         
@@ -1378,7 +1432,7 @@
             // ハンター視点：自分の使用回数を減らす
             decrementCharacterUsage('hunterUsed', oldMatch.myCharacter);
             // 対戦相手サバイバー4人の対戦回数を減らす
-            decrementCharacterUsage('survivorFaced', oldMatch.opponentSurvivors);
+            decrementCharacterUsage('survivorFaced', oldMatch.opponentSurvivors || []);
           }
         }
         
@@ -1409,7 +1463,7 @@
       
       resetForm(perspective);
       
-      alert('試合を記録しました！');
+      showToast('試合を記録しました！');
       refreshAfterDataChange({ rebuildSelects: true });
     }
     
@@ -1451,6 +1505,7 @@
     function saveData() {
       localStorage.setItem('identity5_matches', JSON.stringify(matches));
       localStorage.setItem('identity5_data_modified', new Date().toISOString());
+      _autoSyncFailCount = 0; // データ変更時にリセットして再試行可能にする
       autoSync();
     }
     
@@ -1730,23 +1785,41 @@
       updateAllStats();
     }
     
-    // 全ての統計を更新
+    // 全ての統計を更新（アクティブタブのみDOM構築、他はdirtyマーク）
     let _updateAllStatsRAF = 0;
+    const _tabDirty = { overall: true, character: true, map: true, opponent: true, history: true };
+    const _tabUpdaters = {
+      overall:   () => updateOverallStatsTab(),
+      character: () => updateCharacterStats(),
+      map:       () => updateMapStats(),
+      opponent:  () => updateOpponentStats(),
+      history:   () => updateMatchHistory()
+    };
+
+    function _getActiveTabId() {
+      const el = document.querySelector('.tab-content.active');
+      return el ? el.id.replace('-tab', '') : 'input';
+    }
+
     function updateAllStats() {
       if (_updateAllStatsRAF) return;
       _updateAllStatsRAF = requestAnimationFrame(() => {
         _updateAllStatsRAF = 0;
         updateAllSelectStyles();
-        updateOverallStatsTab();
-        updateCharacterStats();
-        updateMapStats();
-        updateOpponentStats();
-        updateMatchHistory();
+        const activeTab = _getActiveTabId();
+        for (const tab in _tabUpdaters) {
+          if (tab === activeTab) {
+            _tabUpdaters[tab]();
+            _tabDirty[tab] = false;
+          } else {
+            _tabDirty[tab] = true;
+          }
+        }
         updateHeaderStats();
         ['overall', 'character', 'map', 'opponent', 'history'].forEach(id => renderFilterChips(id));
       });
     }
-    
+
     // フィルター変更時にページをリセット
     function resetPagination() {
       currentPages.teammateStats = 1;
@@ -2266,7 +2339,7 @@
                       (currentPerspective === 'hunter' && match.result === 'hunter_win');
         const isDraw = match.result === 'draw';
         const key = isWin ? 'win' : isDraw ? 'draw' : 'lose';
-        return `<div class="recent-block" style="background:${BLOCK_COLORS[key]};" title="${match.date || ''}"></div>`;
+        return `<div class="recent-block" style="background:${BLOCK_COLORS[key]};" title="${escapeHTML(match.date || '')}"></div>`;
       }).join('');
 
       container.innerHTML = `
@@ -2752,23 +2825,16 @@
       const filteredChars = sortedChars.filter(c => characterStats[c].length >= minCharCount);
 
       // TOPカード（得意/苦手キャラ）— sortStateに関係なく勝率で独立ソート・最低5試合
-      let topCardsHtml = '';
-      const topCardMinChar = Math.max(5, minCharCount);
-      const charsForTop = [...filteredChars]
-        .filter(c => characterStats[c].length >= topCardMinChar)
-        .sort((a, b) =>
-          parseFloat(calculateWinrate(characterStats[b], currentPerspective).winrate) -
-          parseFloat(calculateWinrate(characterStats[a], currentPerspective).winrate));
-      const bestChar = charsForTop.length > 0 ? charsForTop[0] : null;
-      const _worstCharRaw = charsForTop.length > 1 ? charsForTop[charsForTop.length - 1] : null;
-      const worstChar = _worstCharRaw && parseFloat(calculateWinrate(characterStats[_worstCharRaw], currentPerspective).winrate) < 100 ? _worstCharRaw : null;
-      if (bestChar) {
-        const hasWorst = worstChar && bestChar !== worstChar;
-        topCardsHtml = `<div class="top-cards-row${hasWorst ? '' : ' top-cards-single'}">
-          ${buildTopCharCard(bestChar, characterStats, perspectiveMatches, 'best')}
-          ${hasWorst ? buildTopCharCard(worstChar, characterStats, perspectiveMatches, 'worst') : ''}
-        </div>`;
-      }
+      const { best: bestChar, worst: worstChar } = findBestWorst(filteredChars, characterStats, currentPerspective, Math.max(5, minCharCount));
+      const sideLabel = currentPerspective === 'survivor' ? 'サバイバー' : 'ハンター';
+      const charIconType = currentPerspective === 'survivor' ? 'survivor' : 'hunter';
+      const topCardsHtml = buildTopCardsHtml(bestChar, worstChar, (name, type) => buildTopCard({
+        name, matches: characterStats[name] || [], totalMatches: perspectiveMatches.length,
+        iconSrc: buildIconPath(name, charIconType), iconClass: 'top-card-char-icon',
+        headLabel: type === 'best' ? `✨ TOP${sideLabel}` : `⚠️ 苦手${sideLabel}`,
+        detailPage: 'char', type, groupKeyFn: m => m.map,
+        detailRows: { bestLabel: '得意マップ', worstLabel: '苦手マップ' }
+      }));
 
       let html = topCardsHtml;
 
@@ -2845,24 +2911,14 @@
       const filteredMaps = sortedMaps.filter(m => mapStats[m].length >= minMapCount);
 
       // TOPカード（得意/苦手マップ）— sortStateに関係なく勝率で独立ソート・最低5試合
-      let topMapsCardsHtml = '';
-      const topCardMinMap = Math.max(5, minMapCount);
-      const mapsForTop = [...filteredMaps]
-        .filter(m => mapStats[m].length >= topCardMinMap)
-        .sort((a, b) =>
-          parseFloat(calculateWinrate(mapStats[b], currentPerspective).winrate) -
-          parseFloat(calculateWinrate(mapStats[a], currentPerspective).winrate));
-      const bestMap = mapsForTop.length > 0 ? mapsForTop[0] : null;
-      const _worstMapRaw = mapsForTop.length > 1 ? mapsForTop[mapsForTop.length - 1] : null;
-      const worstMap = _worstMapRaw && parseFloat(calculateWinrate(mapStats[_worstMapRaw], currentPerspective).winrate) < 100 ? _worstMapRaw : null;
-      if (bestMap) {
-        const hasWorstMap = worstMap && bestMap !== worstMap;
-        topMapsCardsHtml = `<div class="top-cards-row${hasWorstMap ? '' : ' top-cards-single'}">
-          ${buildTopMapCard(bestMap, mapStats, 'best')}
-          ${hasWorstMap ? buildTopMapCard(worstMap, mapStats, 'worst') : ''}
-        </div>`;
-      }
-      let html = topMapsCardsHtml;
+      const { best: bestMap, worst: worstMap } = findBestWorst(filteredMaps, mapStats, currentPerspective, Math.max(5, minMapCount));
+      let html = buildTopCardsHtml(bestMap, worstMap, (name, type) => buildTopCard({
+        name, matches: mapStats[name] || [], totalMatches: null,
+        iconSrc: getMapIconPath(name), iconClass: 'top-card-map-icon',
+        headLabel: type === 'best' ? '✨ 得意マップ' : '⚠️ 苦手マップ',
+        detailPage: 'map', type, groupKeyFn: m => m.myCharacter,
+        detailRows: { bestLabel: '得意キャラ', worstLabel: '苦手キャラ' }
+      }));
 
       html += generateSortButtons('map');
 
@@ -2880,7 +2936,7 @@
               <div class="bar-label-wrapper">
                 ${getBarIconHTML(map, 'map')}
                 <div class="bar-label-text">
-                  <div class="bar-label">${map}</div>
+                  <div class="bar-label">${escapeHTML(map)}</div>
                   <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
                 </div>
               </div>
@@ -2928,203 +2984,106 @@
       }
 
       if (currentPerspective === 'survivor') {
-        const hunterStats = {};
-        const teammateStats = {};
-        
-        perspectiveMatches.forEach(match => {
-          const hunter = match.opponentHunter;
-          if (!hunterStats[hunter]) {
-            hunterStats[hunter] = [];
-          }
-          hunterStats[hunter].push(match);
-          
-          match.teammates.forEach(teammate => {
-            if (!teammateStats[teammate]) {
-              teammateStats[teammate] = [];
-            }
-            teammateStats[teammate].push(match);
-          });
-        });
-        
-        // TOPカード（得意/苦手ハンター）— 最低5試合
-        const minHunterCountForTop = Math.max(5, minMatchCounts.opponentHunter || 1);
-        const huntersForTop = Object.keys(hunterStats).filter(h => hunterStats[h].length >= minHunterCountForTop);
-        huntersForTop.sort((a, b) => {
-          const sa = calculateWinrate(hunterStats[a], currentPerspective);
-          const sb = calculateWinrate(hunterStats[b], currentPerspective);
-          return sb.winrate - sa.winrate;
-        });
-        const bestHunter = huntersForTop.length > 0 ? huntersForTop[0] : null;
-        const _worstHunterRaw = huntersForTop.length > 1 ? huntersForTop[huntersForTop.length - 1] : null;
-        const worstHunter = _worstHunterRaw && parseFloat(calculateWinrate(hunterStats[_worstHunterRaw], currentPerspective).winrate) < 100 ? _worstHunterRaw : null;
-        let topHunterCardsHtml = '';
-        if (bestHunter) {
-          const hasWorstHunter = !!worstHunter;
-          topHunterCardsHtml = `<div class="top-cards-row${hasWorstHunter ? '' : ' top-cards-single'}">
-            ${buildTopOpponentCard(bestHunter, hunterStats, perspectiveMatches, 'best')}
-            ${hasWorstHunter ? buildTopOpponentCard(worstHunter, hunterStats, perspectiveMatches, 'worst') : ''}
-          </div>`;
-        }
-
-        let html = topHunterCardsHtml;
-
-        // ===== 対戦相手ハンター別勝率 =====
-        html += generateSortButtons('opponentHunter');
-
-        const sortedHunters = sortByState(Object.keys(hunterStats), hunterStats, currentPerspective, sortState.opponentHunter);
-        const minHunterCount = minMatchCounts.opponentHunter || 1;
-        const filteredHunters = sortedHunters.filter(h => hunterStats[h].length >= minHunterCount);
-        const totalHunterPages = Math.ceil(filteredHunters.length / itemsPerPage);
-        const hunterStartIndex = (currentPages.opponentStats - 1) * itemsPerPage;
-        const hunterEndIndex = Math.min(hunterStartIndex + itemsPerPage, filteredHunters.length);
-
-        html += `<div class="stats-card">
-          <div class="stats-title">対戦相手ハンター別勝率<span class="stats-count-badge">全${filteredHunters.length}件（${itemsPerPage}件/ページ）</span></div>
-          <div class="bar-chart-horizontal">`;
-
-        if (filteredHunters.length === 0) {
-          html += buildEmptyState(true);
-        } else {
-          filteredHunters.slice(hunterStartIndex, hunterEndIndex).forEach(hunter => {
-            const stats = calculateWinrate(hunterStats[hunter], currentPerspective);
-            html += `
-              <div class="bar-row clickable" onclick="openDetailPage('opponent','${escapeHTML(hunter)}')">
-                <div class="bar-label-wrapper">
-                  ${getBarIconHTML(hunter, 'opponent-hunter')}
-                  <div class="bar-label-text">
-                    <div class="bar-label">${hunter}</div>
-                    <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
-                  </div>
-                </div>
-                <div class="bar-wrapper">${renderBarHTML(stats.winrate)}</div>
-              </div>`;
-          });
-        }
-
-        html += '</div>';
-        html += generatePagination(currentPages.opponentStats, totalHunterPages, 'changeOpponentPage');
-        html += '</div>';
-
-        // ===== 味方別勝率（折りたたみ） =====
-        const teammateToggleIcon = teammateStatsExpanded ? '▲' : '▼';
-        const teammateToggleLabel = teammateStatsExpanded ? '味方別勝率を閉じる' : '味方別勝率を見る';
-        html += `<button class="pair-toggle-btn" onclick="toggleTeammateStats()">
-          <span class="pair-toggle-icon">${teammateToggleIcon}</span>${teammateToggleLabel}
-        </button>`;
-
-        if (teammateStatsExpanded) {
-          html += generateSortButtons('teammate');
-          html += `<div class="stats-card">
-            <div class="stats-title">味方別勝率</div>
-            <div class="bar-chart-horizontal">`;
-
-          const sortedTeammates = sortByState(Object.keys(teammateStats), teammateStats, currentPerspective, sortState.teammate);
-          const minTeammateCount = minMatchCounts.teammate || 1;
-          const filteredTeammates = sortedTeammates.filter(t => teammateStats[t].length >= minTeammateCount);
-          const totalTeammatePages = Math.ceil(filteredTeammates.length / itemsPerPage);
-          const teammateStartIndex = (currentPages.teammateStats - 1) * itemsPerPage;
-          const teammateEndIndex = Math.min(teammateStartIndex + itemsPerPage, filteredTeammates.length);
-
-          if (filteredTeammates.length === 0) {
-            html += buildEmptyState(true);
-          } else {
-            filteredTeammates.slice(teammateStartIndex, teammateEndIndex).forEach(teammate => {
-              const stats = calculateWinrate(teammateStats[teammate], currentPerspective);
-              html += `
-                <div class="bar-row">
-                  <div class="bar-label-wrapper">
-                    ${getBarIconHTML(teammate, 'survivor')}
-                    <div class="bar-label-text">
-                      <div class="bar-label">${teammate}</div>
-                      <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
-                    </div>
-                  </div>
-                  <div class="bar-wrapper">${renderBarHTML(stats.winrate)}</div>
-                </div>`;
-            });
-          }
-
-          html += '</div>';
-          html += generatePagination(currentPages.teammateStats, totalTeammatePages, 'changeTeammatePage');
-          html += '</div>';
-        }
-
-        container.innerHTML = html;
-        
+        container.innerHTML = buildSurvivorOpponentHtml(perspectiveMatches);
       } else {
-        const survivorStats = {};
-        const pairStats = {};
+        container.innerHTML = buildHunterOpponentHtml(perspectiveMatches);
+      }
+    }
 
-        perspectiveMatches.forEach(match => {
-          const survivors = match.opponentSurvivors;
+    // 対戦相手別勝率: サバイバー視点（ハンター別 + 味方別）
+    function buildSurvivorOpponentHtml(perspectiveMatches) {
+      const hunterStats = {};
+      const teammateStats = {};
 
-          // 1キャラ集計
-          survivors.forEach(survivor => {
-            if (!survivor) return;
-            if (!survivorStats[survivor]) survivorStats[survivor] = [];
-            survivorStats[survivor].push(match);
-          });
+      perspectiveMatches.forEach(match => {
+        const hunter = match.opponentHunter;
+        if (!hunterStats[hunter]) hunterStats[hunter] = [];
+        hunterStats[hunter].push(match);
 
-          // 2キャラ組み合わせ集計（C(4,2) = 6通り）
-          for (let i = 0; i < survivors.length; i++) {
-            for (let j = i + 1; j < survivors.length; j++) {
-              if (!survivors[i] || !survivors[j]) continue;
-              const pair = [survivors[i], survivors[j]]
-                .sort((a, b) => SURVIVORS.indexOf(a) - SURVIVORS.indexOf(b))
-                .join(' ＆ ');
-              if (!pairStats[pair]) pairStats[pair] = [];
-              pairStats[pair].push(match);
-            }
-          }
+        match.teammates.forEach(teammate => {
+          if (!teammateStats[teammate]) teammateStats[teammate] = [];
+          teammateStats[teammate].push(match);
         });
+      });
 
-        // TOPカード（得意/苦手サバイバー）— 最低5試合
-        const minSurvivorCountForTop = Math.max(5, minMatchCounts.opponent || 1);
-        const survivorsForTop = Object.keys(survivorStats).filter(s => survivorStats[s].length >= minSurvivorCountForTop);
-        survivorsForTop.sort((a, b) => {
-          const sa = calculateWinrate(survivorStats[a], currentPerspective);
-          const sb = calculateWinrate(survivorStats[b], currentPerspective);
-          return sb.winrate - sa.winrate;
+      // TOPカード（得意/苦手ハンター）— 最低5試合
+      const { best: bestHunter, worst: worstHunter } = findBestWorst(Object.keys(hunterStats), hunterStats, currentPerspective, Math.max(5, minMatchCounts.opponentHunter || 1));
+      let html = buildTopCardsHtml(bestHunter, worstHunter, (name, type) => buildTopCard({
+        name, matches: hunterStats[name] || [], totalMatches: perspectiveMatches.length,
+        iconSrc: buildIconPath(name, 'hunter'), iconClass: 'top-card-char-icon',
+        headLabel: type === 'best' ? '✨ 得意ハンター' : '⚠️ 苦手ハンター',
+        detailPage: 'opponent', type, groupKeyFn: m => m.map,
+        detailRows: { bestLabel: '得意マップ', worstLabel: '苦手マップ' }
+      }));
+
+      // ===== 対戦相手ハンター別勝率 =====
+      html += generateSortButtons('opponentHunter');
+
+      const sortedHunters = sortByState(Object.keys(hunterStats), hunterStats, currentPerspective, sortState.opponentHunter);
+      const minHunterCount = minMatchCounts.opponentHunter || 1;
+      const filteredHunters = sortedHunters.filter(h => hunterStats[h].length >= minHunterCount);
+      const totalHunterPages = Math.ceil(filteredHunters.length / itemsPerPage);
+      const hunterStartIndex = (currentPages.opponentStats - 1) * itemsPerPage;
+      const hunterEndIndex = Math.min(hunterStartIndex + itemsPerPage, filteredHunters.length);
+
+      html += `<div class="stats-card">
+        <div class="stats-title">対戦相手ハンター別勝率<span class="stats-count-badge">全${filteredHunters.length}件（${itemsPerPage}件/ページ）</span></div>
+        <div class="bar-chart-horizontal">`;
+
+      if (filteredHunters.length === 0) {
+        html += buildEmptyState(true);
+      } else {
+        filteredHunters.slice(hunterStartIndex, hunterEndIndex).forEach(hunter => {
+          const stats = calculateWinrate(hunterStats[hunter], currentPerspective);
+          html += `
+            <div class="bar-row clickable" onclick="openDetailPage('opponent','${escapeHTML(hunter)}')">
+              <div class="bar-label-wrapper">
+                ${getBarIconHTML(hunter, 'opponent-hunter')}
+                <div class="bar-label-text">
+                  <div class="bar-label">${escapeHTML(hunter)}</div>
+                  <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
+                </div>
+              </div>
+              <div class="bar-wrapper">${renderBarHTML(stats.winrate)}</div>
+            </div>`;
         });
-        const bestSurvivor = survivorsForTop.length > 0 ? survivorsForTop[0] : null;
-        const _worstSurvivorRaw = survivorsForTop.length > 1 ? survivorsForTop[survivorsForTop.length - 1] : null;
-        const worstSurvivor = _worstSurvivorRaw && parseFloat(calculateWinrate(survivorStats[_worstSurvivorRaw], currentPerspective).winrate) < 100 ? _worstSurvivorRaw : null;
-        let topSurvivorCardsHtml = '';
-        if (bestSurvivor) {
-          const hasWorstSurvivor = !!worstSurvivor;
-          topSurvivorCardsHtml = `<div class="top-cards-row${hasWorstSurvivor ? '' : ' top-cards-single'}">
-            ${buildTopOpponentCard(bestSurvivor, survivorStats, perspectiveMatches, 'best')}
-            ${hasWorstSurvivor ? buildTopOpponentCard(worstSurvivor, survivorStats, perspectiveMatches, 'worst') : ''}
-          </div>`;
-        }
+      }
 
-        let html = topSurvivorCardsHtml;
+      html += '</div>';
+      html += generatePagination(currentPages.opponentStats, totalHunterPages, 'changeOpponentPage');
+      html += '</div>';
 
-        // 並び替えボタン（1キャラ）
-        html += generateSortButtons('opponent');
+      // ===== 味方別勝率（折りたたみ） =====
+      const teammateToggleIcon = teammateStatsExpanded ? '▲' : '▼';
+      const teammateToggleLabel = teammateStatsExpanded ? '味方別勝率を閉じる' : '味方別勝率を見る';
+      html += `<button class="pair-toggle-btn" onclick="toggleTeammateStats()">
+        <span class="pair-toggle-icon">${teammateToggleIcon}</span>${teammateToggleLabel}
+      </button>`;
 
-        const sortedSurvivors = sortByState(Object.keys(survivorStats), survivorStats, currentPerspective, sortState.opponent);
-        const minSurvivorCount = minMatchCounts.opponent || 1;
-        const filteredSurvivors = sortedSurvivors.filter(s => survivorStats[s].length >= minSurvivorCount);
-        const totalSurvivorPages = Math.ceil(filteredSurvivors.length / itemsPerPage);
-        const survivorStartIndex = (currentPages.opponentStats - 1) * itemsPerPage;
-        const survivorEndIndex = Math.min(survivorStartIndex + itemsPerPage, filteredSurvivors.length);
-
+      if (teammateStatsExpanded) {
+        html += generateSortButtons('teammate');
         html += `<div class="stats-card">
-          <div class="stats-title">対戦相手サバイバー別勝率<span class="stats-count-badge">全${filteredSurvivors.length}件（${itemsPerPage}件/ページ）</span></div>
+          <div class="stats-title">味方別勝率</div>
           <div class="bar-chart-horizontal">`;
 
-        if (filteredSurvivors.length === 0) {
+        const sortedTeammates = sortByState(Object.keys(teammateStats), teammateStats, currentPerspective, sortState.teammate);
+        const minTeammateCount = minMatchCounts.teammate || 1;
+        const filteredTeammates = sortedTeammates.filter(t => teammateStats[t].length >= minTeammateCount);
+        const totalTeammatePages = Math.ceil(filteredTeammates.length / itemsPerPage);
+        const teammateStartIndex = (currentPages.teammateStats - 1) * itemsPerPage;
+        const teammateEndIndex = Math.min(teammateStartIndex + itemsPerPage, filteredTeammates.length);
+
+        if (filteredTeammates.length === 0) {
           html += buildEmptyState(true);
         } else {
-          filteredSurvivors.slice(survivorStartIndex, survivorEndIndex).forEach(survivor => {
-            const stats = calculateWinrate(survivorStats[survivor], currentPerspective);
+          filteredTeammates.slice(teammateStartIndex, teammateEndIndex).forEach(teammate => {
+            const stats = calculateWinrate(teammateStats[teammate], currentPerspective);
             html += `
-              <div class="bar-row clickable" onclick="openDetailPage('opponent','${escapeHTML(survivor)}')">
+              <div class="bar-row">
                 <div class="bar-label-wrapper">
-                  ${getBarIconHTML(survivor, 'survivor')}
+                  ${getBarIconHTML(teammate, 'survivor')}
                   <div class="bar-label-text">
-                    <div class="bar-label">${survivor}</div>
+                    <div class="bar-label">${escapeHTML(teammate)}</div>
                     <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
                   </div>
                 </div>
@@ -3134,113 +3093,184 @@
         }
 
         html += '</div>';
-        html += generatePagination(currentPages.opponentStats, totalSurvivorPages, 'changeOpponentPage');
+        html += generatePagination(currentPages.teammateStats, totalTeammatePages, 'changeTeammatePage');
         html += '</div>';
+      }
 
-        // ===== ペア別勝率（折りたたみ） =====
+      return html;
+    }
 
-        // ペアフィルターのselectオプションを生成
-        const usedSurvivorsSet = new Set();
-        perspectiveMatches.forEach(m => m.opponentSurvivors.forEach(s => { if (s) usedSurvivorsSet.add(s); }));
-        const pairSelectSurvivors = SURVIVORS.filter(s => usedSurvivorsSet.has(s));
+    // 対戦相手別勝率: ハンター視点（サバイバー別 + ペア別）
+    function buildHunterOpponentHtml(perspectiveMatches) {
+      const survivorStats = {};
+      const pairStats = {};
 
-        const makeOptions = (excludeChar) =>
-          `<option value="">指定なし</option>` +
-          pairSelectSurvivors
-            .filter(s => s !== excludeChar)
-            .map(s => `<option value="${escapeHTML(s)}"${pairFilterChar1 === s || pairFilterChar2 === s ? ' selected' : ''}>${escapeHTML(s)}</option>`)
-            .join('');
+      perspectiveMatches.forEach(match => {
+        const survivors = match.opponentSurvivors || [];
 
-        const char1Options = pairSelectSurvivors
-          .filter(s => s !== pairFilterChar2)
-          .map(s => `<option value="${escapeHTML(s)}"${pairFilterChar1 === s ? ' selected' : ''}>${escapeHTML(s)}</option>`)
-          .join('');
-        const char2Options = pairSelectSurvivors
-          .filter(s => s !== pairFilterChar1)
-          .map(s => `<option value="${escapeHTML(s)}"${pairFilterChar2 === s ? ' selected' : ''}>${escapeHTML(s)}</option>`)
-          .join('');
+        // 1キャラ集計
+        survivors.forEach(survivor => {
+          if (!survivor) return;
+          if (!survivorStats[survivor]) survivorStats[survivor] = [];
+          survivorStats[survivor].push(match);
+        });
 
-        const toggleIcon = pairStatsExpanded ? '▲' : '▼';
-        const toggleLabel = pairStatsExpanded ? 'ペア別勝率を閉じる' : 'ペア別勝率を見る';
-
-        html += `<button class="pair-toggle-btn" onclick="togglePairStats()">
-          <span class="pair-toggle-icon">${toggleIcon}</span>${toggleLabel}
-        </button>`;
-
-        if (pairStatsExpanded) {
-          // ペアフィルター
-          html += `<div class="filter-section" style="margin-top:10px;">
-            <div class="filter-group">
-              <label class="filter-label">ペア絞り込み キャラ1</label>
-              <select id="pair-filter-char-1" onchange="onPairChar1Change()">
-                <option value="">指定なし</option>${char1Options}
-              </select>
-            </div>
-            <div class="filter-group">
-              <label class="filter-label">ペア絞り込み キャラ2</label>
-              <select id="pair-filter-char-2" onchange="onPairChar2Change()">
-                <option value="">指定なし</option>${char2Options}
-              </select>
-            </div>
-          </div>`;
-
-          // ペアフィルターを適用
-          let filteredPairStats = pairStats;
-          if (pairFilterChar1 && pairFilterChar2) {
-            const key = [pairFilterChar1, pairFilterChar2]
+        // 2キャラ組み合わせ集計（C(4,2) = 6通り）
+        for (let i = 0; i < survivors.length; i++) {
+          for (let j = i + 1; j < survivors.length; j++) {
+            if (!survivors[i] || !survivors[j]) continue;
+            const pair = [survivors[i], survivors[j]]
               .sort((a, b) => SURVIVORS.indexOf(a) - SURVIVORS.indexOf(b))
               .join(' ＆ ');
-            filteredPairStats = pairStats[key] ? { [key]: pairStats[key] } : {};
-          } else if (pairFilterChar1 || pairFilterChar2) {
-            const target = pairFilterChar1 || pairFilterChar2;
-            filteredPairStats = Object.fromEntries(
-              Object.entries(pairStats).filter(([k]) => {
-                const [a, b] = k.split(' ＆ ');
-                return a === target || b === target;
-              })
-            );
+            if (!pairStats[pair]) pairStats[pair] = [];
+            pairStats[pair].push(match);
           }
+        }
+      });
 
-          // 並び替えボタン
-          html += generateSortButtons('opponentPair');
+      // TOPカード（得意/苦手サバイバー）— 最低5試合
+      const { best: bestSurvivor, worst: worstSurvivor } = findBestWorst(Object.keys(survivorStats), survivorStats, currentPerspective, Math.max(5, minMatchCounts.opponent || 1));
+      let html = buildTopCardsHtml(bestSurvivor, worstSurvivor, (name, type) => buildTopCard({
+        name, matches: survivorStats[name] || [], totalMatches: perspectiveMatches.length,
+        iconSrc: buildIconPath(name, 'survivor'), iconClass: 'top-card-char-icon',
+        headLabel: type === 'best' ? '✨ 得意サバイバー' : '⚠️ 苦手サバイバー',
+        detailPage: 'opponent', type, groupKeyFn: m => m.map,
+        detailRows: { bestLabel: '得意マップ', worstLabel: '苦手マップ' }
+      }));
 
-          html += `<div class="stats-card">
-            <div class="stats-title">ペア別勝率</div>
-            <div class="bar-chart-horizontal">`;
+      // 並び替えボタン（1キャラ）
+      html += generateSortButtons('opponent');
 
-          const sortedPairs = sortByState(Object.keys(filteredPairStats), filteredPairStats, currentPerspective, sortState.opponentPair);
-          const minPairCount = minMatchCounts.opponentPair || 1;
-          const finalPairs = sortedPairs.filter(p => filteredPairStats[p].length >= minPairCount);
-          const totalPairPages = Math.ceil(finalPairs.length / itemsPerPage);
-          const pairStartIndex = (currentPages.pairStats - 1) * itemsPerPage;
-          const pairEndIndex = Math.min(pairStartIndex + itemsPerPage, finalPairs.length);
+      const sortedSurvivors = sortByState(Object.keys(survivorStats), survivorStats, currentPerspective, sortState.opponent);
+      const minSurvivorCount = minMatchCounts.opponent || 1;
+      const filteredSurvivors = sortedSurvivors.filter(s => survivorStats[s].length >= minSurvivorCount);
+      const totalSurvivorPages = Math.ceil(filteredSurvivors.length / itemsPerPage);
+      const survivorStartIndex = (currentPages.opponentStats - 1) * itemsPerPage;
+      const survivorEndIndex = Math.min(survivorStartIndex + itemsPerPage, filteredSurvivors.length);
 
-          if (finalPairs.length === 0) {
-            html += buildEmptyState(true);
-          } else {
-            finalPairs.slice(pairStartIndex, pairEndIndex).forEach(pair => {
-              const stats = calculateWinrate(filteredPairStats[pair], currentPerspective);
-              html += `
-                <div class="bar-row">
-                  <div class="bar-label-wrapper">
-                    ${getBarIconHTML(pair, 'pair-survivor')}
-                    <div class="bar-label-text">
-                      <div class="bar-label">${pair}</div>
-                      <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
-                    </div>
-                  </div>
-                  <div class="bar-wrapper">${renderBarHTML(stats.winrate)}</div>
-                </div>`;
-            });
-          }
+      html += `<div class="stats-card">
+        <div class="stats-title">対戦相手サバイバー別勝率<span class="stats-count-badge">全${filteredSurvivors.length}件（${itemsPerPage}件/ページ）</span></div>
+        <div class="bar-chart-horizontal">`;
 
-          html += '</div>';
-          html += generatePagination(currentPages.pairStats, Math.ceil(finalPairs.length / itemsPerPage), 'changePairPage');
-          html += '</div>';
+      if (filteredSurvivors.length === 0) {
+        html += buildEmptyState(true);
+      } else {
+        filteredSurvivors.slice(survivorStartIndex, survivorEndIndex).forEach(survivor => {
+          const stats = calculateWinrate(survivorStats[survivor], currentPerspective);
+          html += `
+            <div class="bar-row clickable" onclick="openDetailPage('opponent','${escapeHTML(survivor)}')">
+              <div class="bar-label-wrapper">
+                ${getBarIconHTML(survivor, 'survivor')}
+                <div class="bar-label-text">
+                  <div class="bar-label">${escapeHTML(survivor)}</div>
+                  <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
+                </div>
+              </div>
+              <div class="bar-wrapper">${renderBarHTML(stats.winrate)}</div>
+            </div>`;
+        });
+      }
+
+      html += '</div>';
+      html += generatePagination(currentPages.opponentStats, totalSurvivorPages, 'changeOpponentPage');
+      html += '</div>';
+
+      // ===== ペア別勝率（折りたたみ） =====
+
+      // ペアフィルターのselectオプションを生成
+      const usedSurvivorsSet = new Set();
+      perspectiveMatches.forEach(m => (m.opponentSurvivors || []).forEach(s => { if (s) usedSurvivorsSet.add(s); }));
+      const pairSelectSurvivors = SURVIVORS.filter(s => usedSurvivorsSet.has(s));
+
+      const char1Options = pairSelectSurvivors
+        .filter(s => s !== pairFilterChar2)
+        .map(s => `<option value="${escapeHTML(s)}"${pairFilterChar1 === s ? ' selected' : ''}>${escapeHTML(s)}</option>`)
+        .join('');
+      const char2Options = pairSelectSurvivors
+        .filter(s => s !== pairFilterChar1)
+        .map(s => `<option value="${escapeHTML(s)}"${pairFilterChar2 === s ? ' selected' : ''}>${escapeHTML(s)}</option>`)
+        .join('');
+
+      const toggleIcon = pairStatsExpanded ? '▲' : '▼';
+      const toggleLabel = pairStatsExpanded ? 'ペア別勝率を閉じる' : 'ペア別勝率を見る';
+
+      html += `<button class="pair-toggle-btn" onclick="togglePairStats()">
+        <span class="pair-toggle-icon">${toggleIcon}</span>${toggleLabel}
+      </button>`;
+
+      if (pairStatsExpanded) {
+        // ペアフィルター
+        html += `<div class="filter-section" style="margin-top:10px;">
+          <div class="filter-group">
+            <label class="filter-label">ペア絞り込み キャラ1</label>
+            <select id="pair-filter-char-1" onchange="onPairChar1Change()">
+              <option value="">指定なし</option>${char1Options}
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">ペア絞り込み キャラ2</label>
+            <select id="pair-filter-char-2" onchange="onPairChar2Change()">
+              <option value="">指定なし</option>${char2Options}
+            </select>
+          </div>
+        </div>`;
+
+        // ペアフィルターを適用
+        let filteredPairStats = pairStats;
+        if (pairFilterChar1 && pairFilterChar2) {
+          const key = [pairFilterChar1, pairFilterChar2]
+            .sort((a, b) => SURVIVORS.indexOf(a) - SURVIVORS.indexOf(b))
+            .join(' ＆ ');
+          filteredPairStats = pairStats[key] ? { [key]: pairStats[key] } : {};
+        } else if (pairFilterChar1 || pairFilterChar2) {
+          const target = pairFilterChar1 || pairFilterChar2;
+          filteredPairStats = Object.fromEntries(
+            Object.entries(pairStats).filter(([k]) => {
+              const [a, b] = k.split(' ＆ ');
+              return a === target || b === target;
+            })
+          );
         }
 
-        container.innerHTML = html;
+        // 並び替えボタン
+        html += generateSortButtons('opponentPair');
+
+        html += `<div class="stats-card">
+          <div class="stats-title">ペア別勝率</div>
+          <div class="bar-chart-horizontal">`;
+
+        const sortedPairs = sortByState(Object.keys(filteredPairStats), filteredPairStats, currentPerspective, sortState.opponentPair);
+        const minPairCount = minMatchCounts.opponentPair || 1;
+        const finalPairs = sortedPairs.filter(p => filteredPairStats[p].length >= minPairCount);
+        const totalPairPages = Math.ceil(finalPairs.length / itemsPerPage);
+        const pairStartIndex = (currentPages.pairStats - 1) * itemsPerPage;
+        const pairEndIndex = Math.min(pairStartIndex + itemsPerPage, finalPairs.length);
+
+        if (finalPairs.length === 0) {
+          html += buildEmptyState(true);
+        } else {
+          finalPairs.slice(pairStartIndex, pairEndIndex).forEach(pair => {
+            const stats = calculateWinrate(filteredPairStats[pair], currentPerspective);
+            html += `
+              <div class="bar-row">
+                <div class="bar-label-wrapper">
+                  ${getBarIconHTML(pair, 'pair-survivor')}
+                  <div class="bar-label-text">
+                    <div class="bar-label">${escapeHTML(pair)}</div>
+                    <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
+                  </div>
+                </div>
+                <div class="bar-wrapper">${renderBarHTML(stats.winrate)}</div>
+              </div>`;
+          });
+        }
+
+        html += '</div>';
+        html += generatePagination(currentPages.pairStats, Math.ceil(finalPairs.length / itemsPerPage), 'changePairPage');
+        html += '</div>';
       }
+
+      return html;
     }
     
     // 試合履歴を更新
@@ -3386,10 +3416,11 @@
         document.getElementById('hunter-date').value = match.date || getToday();
         document.getElementById('hunter-rank').value = match.rank || '';
         document.getElementById('my-hunter').value = match.myCharacter;
-        document.getElementById('opponent-survivor-1').value = match.opponentSurvivors[0];
-        document.getElementById('opponent-survivor-2').value = match.opponentSurvivors[1];
-        document.getElementById('opponent-survivor-3').value = match.opponentSurvivors[2];
-        document.getElementById('opponent-survivor-4').value = match.opponentSurvivors[3];
+        const oppSurvivors = match.opponentSurvivors || [];
+        document.getElementById('opponent-survivor-1').value = oppSurvivors[0] || '';
+        document.getElementById('opponent-survivor-2').value = oppSurvivors[1] || '';
+        document.getElementById('opponent-survivor-3').value = oppSurvivors[2] || '';
+        document.getElementById('opponent-survivor-4').value = oppSurvivors[3] || '';
         document.getElementById('hunter-map').value = match.map;
         document.getElementById('hunter-comment').value = match.comment || '';
         if (match.comment) {
@@ -3439,7 +3470,7 @@
           // ハンター視点：自分の使用回数を減らす
           decrementCharacterUsage('hunterUsed', match.myCharacter);
           // 対戦相手サバイバー4人の対戦回数を減らす
-          decrementCharacterUsage('survivorFaced', match.opponentSurvivors);
+          decrementCharacterUsage('survivorFaced', match.opponentSurvivors || []);
         }
       }
 
@@ -3506,10 +3537,10 @@
         const jsonString = JSON.stringify(data, null, 2);
         
         await navigator.clipboard.writeText(jsonString);
-        alert('データをクリップボードにコピーしました！\n\nLINEやメモ帳に貼り付けて保存してください。');
+        showToast('データをコピーしました');
       } catch (error) {
         console.error('Export to clipboard failed:', error);
-        alert('クリップボードへのコピーに失敗しました。\n\nファイルダウンロードをお試しください。');
+        showToast('コピーに失敗しました。ファイルダウンロードをお試しください', 'error', 5000);
       }
     }
     
@@ -3530,10 +3561,10 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        alert('バックアップファイルをダウンロードしました！');
+        showToast('ダウンロードしました');
       } catch (error) {
         console.error('Export to file failed:', error);
-        alert('ファイルのダウンロードに失敗しました。');
+        showToast('ダウンロードに失敗しました', 'error');
       }
     }
     
@@ -3818,7 +3849,7 @@
     // ===== 同グループ内の選択済みキャラを除外 =====
     function initGroupExclude() {
       const CHAR_GROUPS = [
-        ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3'],
+        ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', ...BAN_CHAR_IDS],
         ['opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4']
       ];
       CHAR_GROUPS.forEach(group => {
@@ -3919,7 +3950,7 @@
 
     // 新しく同期を開始（新規コード生成）
     async function startNewSync() {
-      if (!db) { alert('同期機能を現在利用できません。'); return; }
+      if (!db) { showToast('同期機能を利用できません', 'error'); return; }
       const syncCode = generateUUID();
       localStorage.setItem('identity5_sync_code', syncCode);
       if (!localStorage.getItem('identity5_data_modified')) {
@@ -3929,14 +3960,16 @@
       try {
         await uploadToCloud();
         updateSyncUI();
+        showToast('同期を開始しました');
       } catch (e) {
         console.warn('Initial upload failed:', e);
+        showToast('同期の開始に失敗しました。通信環境を確認してください', 'error', 5000);
       }
     }
 
     // 既存コードで別デバイスと接続
     async function linkWithInputCode() {
-      if (!db) { alert('同期機能を現在利用できません。'); return; }
+      if (!db) { showToast('同期機能を利用できません', 'error'); return; }
       const input = document.getElementById('sync-code-input');
       if (!input) return;
       const code = input.value.trim().toLowerCase();
@@ -3994,7 +4027,7 @@
 
     // 手動同期（タイムスタンプ比較して適切な方向に同期）
     async function syncData() {
-      if (!db) { alert('同期機能を現在利用できません。'); return; }
+      if (!db) { showToast('同期機能を利用できません', 'error'); return; }
       const syncCode = getSyncCode();
       if (!syncCode) return;
       const btn = document.getElementById('sync-now-btn');
@@ -4004,7 +4037,8 @@
         if (!docSnap.exists) {
           await uploadToCloud();
           updateSyncUI();
-          alert('クラウドに保存しました');
+          _autoSyncFailCount = 0;
+          showToast('クラウドに保存しました');
           return;
         }
         const cloudData = docSnap.data();
@@ -4016,16 +4050,18 @@
           );
           if (confirmed) {
             await downloadFromCloud(cloudData);
-            alert('クラウドのデータを読み込みました');
+            _autoSyncFailCount = 0;
+            showToast('クラウドのデータを読み込みました');
           }
         } else if (localTime > cloudTime) {
           await uploadToCloud();
-          alert('クラウドに同期しました');
+          _autoSyncFailCount = 0;
+          showToast('クラウドに同期しました');
         } else {
-          alert('既に最新の状態です');
+          showToast('既に最新の状態です');
         }
       } catch (e) {
-        alert('同期に失敗しました。通信環境を確認してください。');
+        showToast('同期に失敗しました。通信環境を確認してください', 'error', 5000);
         console.error('Sync error:', e);
       } finally {
         updateSyncUI();
@@ -4033,11 +4069,20 @@
     }
 
     // 自動同期（saveData呼び出し時、サイレント実行）
+    let _autoSyncFailCount = 0;
     function autoSync() {
       if (!db || !getSyncCode()) return;
+      if (_autoSyncFailCount >= 3) return; // 連続3回失敗で停止
       uploadToCloud()
-        .then(() => updateSyncUI())
-        .catch(() => {});
+        .then(() => { _autoSyncFailCount = 0; updateSyncUI(); })
+        .catch(() => {
+          _autoSyncFailCount++;
+          if (_autoSyncFailCount === 1) {
+            showToast('同期に失敗しました', 'error');
+          } else if (_autoSyncFailCount >= 3) {
+            showToast('同期を一時停止しました。設定から手動同期してください', 'error', 5000);
+          }
+        });
     }
 
     // 同期コードをクリップボードにコピー
@@ -4046,7 +4091,7 @@
       if (!syncCode) return;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(syncCode)
-          .then(() => alert('同期コードをコピーしました'))
+          .then(() => showToast('コピーしました'))
           .catch(() => _fallbackCopy(syncCode));
       } else {
         _fallbackCopy(syncCode);
@@ -4057,8 +4102,8 @@
       const input = document.querySelector('#sync-ui input[readonly]');
       if (input) {
         input.select();
-        try { document.execCommand('copy'); alert('同期コードをコピーしました'); }
-        catch (e) { alert('コピーできませんでした。\n手動で選択してコピーしてください。'); }
+        try { document.execCommand('copy'); showToast('コピーしました'); }
+        catch (e) { showToast('コピーできませんでした', 'error'); }
       }
     }
 
@@ -4326,138 +4371,49 @@
     }
 
     // ===== TOPカードヘルパー =====
-    function getCharBestWorstMap(charMatches, minGames = 3) {
-      const mapGroups = {};
-      charMatches.forEach(m => {
-        if (!m.map) return;
-        if (!mapGroups[m.map]) mapGroups[m.map] = [];
-        mapGroups[m.map].push(m);
+    function getGroupedBestWorst(matches, groupKeyFn, minGames = 3) {
+      const groups = {};
+      matches.forEach(m => {
+        const key = groupKeyFn(m);
+        if (!key) return;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(m);
       });
-      const valid = Object.keys(mapGroups)
-        .filter(k => mapGroups[k].length >= minGames)
-        .map(k => ({ name: k, ...calculateWinrate(mapGroups[k], currentPerspective) }));
+      const valid = Object.keys(groups)
+        .filter(k => groups[k].length >= minGames)
+        .map(k => ({ name: k, ...calculateWinrate(groups[k], currentPerspective) }));
       if (valid.length === 0) return { best: null, worst: null };
       valid.sort((a, b) => parseFloat(b.winrate) - parseFloat(a.winrate));
       const worstCandidate = valid[valid.length - 1];
       return { best: valid[0], worst: valid.length >= 2 && parseFloat(worstCandidate.winrate) < 100 ? worstCandidate : null };
     }
 
-    function getMapBestWorstChar(mapMatches, minGames = 3) {
-      const charGroups = {};
-      mapMatches.forEach(m => {
-        if (!m.myCharacter) return;
-        if (!charGroups[m.myCharacter]) charGroups[m.myCharacter] = [];
-        charGroups[m.myCharacter].push(m);
-      });
-      const valid = Object.keys(charGroups)
-        .filter(k => charGroups[k].length >= minGames)
-        .map(k => ({ name: k, ...calculateWinrate(charGroups[k], currentPerspective) }));
-      if (valid.length === 0) return { best: null, worst: null };
-      valid.sort((a, b) => parseFloat(b.winrate) - parseFloat(a.winrate));
-      const worstCandidate = valid[valid.length - 1];
-      return { best: valid[0], worst: valid.length >= 2 && parseFloat(worstCandidate.winrate) < 100 ? worstCandidate : null };
-    }
-
-    function getOppBestWorstMap(oppMatches, minGames = 3) {
-      return getCharBestWorstMap(oppMatches, minGames);
-    }
-
-    function buildTopCharCard(charName, allCharMatches, perspectiveMatches, type) {
-      const charMatches = allCharMatches[charName] || [];
-      const stats = calculateWinrate(charMatches, currentPerspective);
-      const pickRate = perspectiveMatches.length > 0
-        ? (charMatches.length / perspectiveMatches.length * 100).toFixed(1)
-        : '0.0';
-      const { best, worst } = getCharBestWorstMap(charMatches);
-      const iconType = currentPerspective === 'survivor' ? 'survivor' : 'hunter';
-      const iconSrc = buildIconPath(charName, iconType);
+    function buildTopCard({ name, matches, totalMatches, iconSrc, iconClass, headLabel, detailPage, type, detailRows, groupKeyFn }) {
+      const stats = calculateWinrate(matches, currentPerspective);
+      const subParts = [`${stats.wins}勝${stats.losses}敗${stats.draws}分 / ${matches.length}試合`];
+      if (totalMatches != null && totalMatches > 0) {
+        subParts.push(`<br>Pick ${(matches.length / totalMatches * 100).toFixed(1)}%`);
+      }
+      const { best, worst } = getGroupedBestWorst(matches, groupKeyFn);
       const isBest = type === 'best';
-      const winrateColor = isBest ? '#059669' : '#dc2626';
-      const sideLabel = currentPerspective === 'survivor' ? 'サバイバー' : 'ハンター';
-      const headLabel = isBest ? `✨ TOP${sideLabel}` : `⚠️ 苦手${sideLabel}`;
       const cardClass = isBest ? 'top-card top-card-best' : 'top-card top-card-worst';
 
       return `
-        <div class="${cardClass}" onclick="openDetailPage('char','${escapeHTML(charName)}')">
+        <div class="${cardClass}" onclick="openDetailPage('${detailPage}','${escapeHTML(name)}')">
           <div class="top-card-head">${headLabel}</div>
           <div class="top-card-body">
             <div class="top-card-icon-wrap">
-              <img class="top-card-char-icon" src="${iconSrc}" alt="${escapeHTML(charName)}" onerror="this.style.display='none'">
+              <img class="${iconClass}" src="${iconSrc}" alt="${escapeHTML(name)}" onerror="this.style.display='none'">
             </div>
             <div class="top-card-info">
-              <div class="top-card-name">${escapeHTML(charName)}</div>
-              <div class="top-card-winrate" style="color:${winrateColor}">${stats.winrate}%</div>
-              <div class="top-card-sub">${stats.wins}勝${stats.losses}敗${stats.draws}分 / ${charMatches.length}試合<br>Pick ${pickRate}%</div>
+              <div class="top-card-name">${escapeHTML(name)}</div>
+              <div class="top-card-winrate">${stats.winrate}%</div>
+              <div class="top-card-sub">${subParts.join('')}</div>
             </div>
           </div>
-          <div class="top-card-detail-row" style="padding:4px 10px 8px;border-top:1px solid rgba(0,0,0,0.06)">
-            <div class="top-card-detail-item"><strong>得意マップ</strong><span>${best ? `${escapeHTML(best.name)}<em>${best.winrate}%</em>` : '—'}</span></div>
-            <div class="top-card-detail-item"><strong>苦手マップ</strong><span>${worst ? `${escapeHTML(worst.name)}<em>${worst.winrate}%</em>` : '—'}</span></div>
-          </div>
-        </div>`;
-    }
-
-    function buildTopMapCard(mapName, allMapMatches, type) {
-      const mapMatches = allMapMatches[mapName] || [];
-      const stats = calculateWinrate(mapMatches, currentPerspective);
-      const { best, worst } = getMapBestWorstChar(mapMatches);
-      const iconSrc = getMapIconPath(mapName);
-      const isBest = type === 'best';
-      const winrateColor = isBest ? '#059669' : '#dc2626';
-      const headLabel = isBest ? '✨ 得意マップ' : '⚠️ 苦手マップ';
-      const cardClass = isBest ? 'top-card top-card-best' : 'top-card top-card-worst';
-
-      return `
-        <div class="${cardClass}" onclick="openDetailPage('map','${escapeHTML(mapName)}')">
-          <div class="top-card-head">${headLabel}</div>
-          <div class="top-card-body">
-            <div class="top-card-icon-wrap">
-              <img class="top-card-map-icon" src="${iconSrc}" alt="${escapeHTML(mapName)}" onerror="this.style.display='none'">
-            </div>
-            <div class="top-card-info">
-              <div class="top-card-name">${escapeHTML(mapName)}</div>
-              <div class="top-card-winrate" style="color:${winrateColor}">${stats.winrate}%</div>
-              <div class="top-card-sub">${stats.wins}勝${stats.losses}敗${stats.draws}分 / ${mapMatches.length}試合</div>
-            </div>
-          </div>
-          <div class="top-card-detail-row" style="padding:4px 10px 8px;border-top:1px solid rgba(0,0,0,0.06)">
-            <div class="top-card-detail-item"><strong>得意キャラ</strong><span>${best ? `${escapeHTML(best.name)}<em>${best.winrate}%</em>` : '—'}</span></div>
-            <div class="top-card-detail-item"><strong>苦手キャラ</strong><span>${worst ? `${escapeHTML(worst.name)}<em>${worst.winrate}%</em>` : '—'}</span></div>
-          </div>
-        </div>`;
-    }
-
-    function buildTopOpponentCard(oppName, allOppMatches, perspectiveMatches, type) {
-      const oppMatches = allOppMatches[oppName] || [];
-      const stats = calculateWinrate(oppMatches, currentPerspective);
-      const pickRate = perspectiveMatches.length > 0
-        ? (oppMatches.length / perspectiveMatches.length * 100).toFixed(1)
-        : '0.0';
-      const { best, worst } = getOppBestWorstMap(oppMatches);
-      const iconType = currentPerspective === 'survivor' ? 'hunter' : 'survivor';
-      const iconSrc = buildIconPath(oppName, iconType);
-      const isBest = type === 'best';
-      const winrateColor = isBest ? '#059669' : '#dc2626';
-      const oppSideLabel = currentPerspective === 'survivor' ? 'ハンター' : 'サバイバー';
-      const headLabel = isBest ? `✨ 得意${oppSideLabel}` : `⚠️ 苦手${oppSideLabel}`;
-      const cardClass = isBest ? 'top-card top-card-best' : 'top-card top-card-worst';
-
-      return `
-        <div class="${cardClass}" onclick="openDetailPage('opponent','${escapeHTML(oppName)}')">
-          <div class="top-card-head">${headLabel}</div>
-          <div class="top-card-body">
-            <div class="top-card-icon-wrap">
-              <img class="top-card-char-icon" src="${iconSrc}" alt="${escapeHTML(oppName)}" onerror="this.style.display='none'">
-            </div>
-            <div class="top-card-info">
-              <div class="top-card-name">${escapeHTML(oppName)}</div>
-              <div class="top-card-winrate" style="color:${winrateColor}">${stats.winrate}%</div>
-              <div class="top-card-sub">${stats.wins}勝${stats.losses}敗${stats.draws}分 / ${oppMatches.length}試合<br>Pick ${pickRate}%</div>
-            </div>
-          </div>
-          <div class="top-card-detail-row" style="padding:4px 10px 8px;border-top:1px solid rgba(0,0,0,0.06)">
-            <div class="top-card-detail-item"><strong>得意マップ</strong><span>${best ? `${escapeHTML(best.name)}<em>${best.winrate}%</em>` : '—'}</span></div>
-            <div class="top-card-detail-item"><strong>苦手マップ</strong><span>${worst ? `${escapeHTML(worst.name)}<em>${worst.winrate}%</em>` : '—'}</span></div>
+          <div class="top-card-detail-row">
+            <div class="top-card-detail-item"><strong>${detailRows.bestLabel}</strong><span>${best ? `${escapeHTML(best.name)}<em>${best.winrate}%</em>` : '—'}</span></div>
+            <div class="top-card-detail-item"><strong>${detailRows.worstLabel}</strong><span>${worst ? `${escapeHTML(worst.name)}<em>${worst.winrate}%</em>` : '—'}</span></div>
           </div>
         </div>`;
     }
@@ -4602,7 +4558,7 @@
         else if (type === 'map') body.innerHTML = buildDetailMapContent(name);
         else if (type === 'opponent') body.innerHTML = buildDetailOpponentContent(name);
         renderDetailPieCharts();
-      }
+        }
 
       // タブコンテンツを非表示にして詳細を表示
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -4798,8 +4754,90 @@
 
       html += buildDetailBarSection('マップ別成績', perspectiveMatches, m => m.map, 'map', 'dbs-opp-map', true);
       html += buildDetailBarSection('自キャラ別成績', perspectiveMatches, m => m.myCharacter, 'char', 'dbs-opp-char');
+      if (currentPerspective === 'survivor') {
+        html += buildBanDonutSection(perspectiveMatches);
+      }
       html += buildDetailHistory(perspectiveMatches);
       return html;
+    }
+
+    // BAN棒グラフ（サバイバー視点・ハンター詳細）
+    const BAN_SECTION_ID = 'dbs-opp-ban';
+    let _banBarCache = null;  // { data, banTotal }
+
+    function buildBanDonutSection(matches) {
+      const banMatches = matches.filter(m => m.bannedCharacters && m.bannedCharacters.length > 0);
+      const banTotal = banMatches.length;
+      const banCounts = {};
+      banMatches.forEach(m => {
+        m.bannedCharacters.forEach(bc => {
+          if (bc) banCounts[bc] = (banCounts[bc] || 0) + 1;
+        });
+      });
+
+      const sorted = Object.entries(banCounts).sort((a, b) => b[1] - a[1]);
+      if (sorted.length === 0) {
+        return `<div class="detail-section"><div class="detail-section-title">BANが多いキャラ</div><p class="no-data-text">BANデータがありません</p></div>`;
+      }
+
+      _banBarCache = { data: sorted, banTotal };
+      return renderBanBarSection();
+    }
+
+    function renderBanBarSection() {
+      if (!_banBarCache) return '';
+      const { data, banTotal } = _banBarCache;
+      const state = detailBarSortState[BAN_SECTION_ID] || { key: 'games', dir: 'desc' };
+      const PAGE_SIZE = 10;
+      const currentPage = detailBarPageState[BAN_SECTION_ID] || 1;
+
+      const sorted = state.dir === 'asc' ? [...data].reverse() : [...data];
+      const totalItems = sorted.length;
+      const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+      const page = Math.max(1, Math.min(currentPage, totalPages));
+      const pageItems = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+      const descActive = state.dir === 'desc' ? ' active' : '';
+      const ascActive = state.dir === 'asc' ? ' active' : '';
+      const sid = BAN_SECTION_ID;
+
+      const rowsHtml = pageItems.map(([char, count]) => {
+        const pct = banTotal > 0 ? (count / banTotal * 100).toFixed(1) : '0';
+        const iconHtml = `<img class="bar-icon" src="${buildIconPath(char, 'survivor')}" alt="" onerror="this.style.display='none'">`;
+        return `<div class="bar-row">
+            <div class="bar-label-wrapper">
+              ${iconHtml}
+              <div class="bar-label-text">
+                <div class="bar-label">${escapeHTML(char)}</div>
+                <div class="bar-sublabel">${count}回 / ${banTotal}試合</div>
+              </div>
+            </div>
+            <div class="bar-wrapper">${renderBarHTML(pct)}</div>
+          </div>`;
+      }).join('');
+
+      let html = `<div class="detail-section">
+        <div class="detail-bar-sort-row">
+          <div class="detail-bar-sort-title">BANが多いキャラ
+            <span class="ban-record-note">(BAN記録 ${banTotal}試合)</span>
+            <span class="stats-count-badge">全${totalItems}件</span>
+          </div>
+          <div class="detail-bar-sort-control">
+            <button type="button" class="detail-sort-arrow-btn${descActive}" onclick="changeBanBarDir('desc')">↓</button>
+            <button type="button" class="detail-sort-arrow-btn${ascActive}" onclick="changeBanBarDir('asc')">↑</button>
+          </div>
+        </div>
+        <div class="bar-chart-horizontal detail-bar-card">${rowsHtml}</div>`;
+      html += generatePagination(page, totalPages, `changeDetailBarPage('${sid}',`);
+      html += '</div>';
+      return html;
+    }
+
+    function changeBanBarDir(dir) {
+      if (!detailBarSortState[BAN_SECTION_ID]) detailBarSortState[BAN_SECTION_ID] = { key: 'games', dir: 'desc' };
+      detailBarSortState[BAN_SECTION_ID].dir = dir;
+      detailBarPageState[BAN_SECTION_ID] = 1;
+      rebuildDetailPageBody();
     }
 
     function buildDetailBarSection(title, matchList, keyFn, type, sectionId, showPie = false) {

@@ -42,6 +42,8 @@ body {
   --win-bg:  #fbbf24;  --win-fg:  #1f2937;
   --lose-bg: #ef4444;  --lose-fg: #ffffff;
   --draw-bg: #9ca3af;  --draw-fg: #1f2937;
+  --c-success: #059669;
+  --c-danger:  #dc2626;
 
   /* Interactive */
   --c-primary-bg: #eff6ff;
@@ -125,6 +127,8 @@ body.dark-mode {
   --win-bg:  #fbbf24;  --win-fg:  #1f2937;
   --lose-bg: #ef4444;  --lose-fg: #ffffff;
   --draw-bg: #9ca3af;  --draw-fg: #1f2937;
+  --c-success: #059669;  /* ダーク背景でもコントラスト十分、据え置き */
+  --c-danger:  #dc2626;
   --c-primary-bg: #1e2d4a;
 }
 

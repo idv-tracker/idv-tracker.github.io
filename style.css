@@ -171,6 +171,7 @@ select:focus {
 
 .result-button {
   padding: 12px 8px;
+  min-height: 44px;
   border: 2px solid var(--b-default);
   border-radius: var(--r-input);
   background: var(--s-base);
@@ -788,13 +789,13 @@ body.dark-mode .multi-rank-item.all-item {
 
 .ss-clear {
   position: absolute;
-  right: 8px;
+  right: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 22px;
-  height: 22px;
+  width: 44px;
+  height: 44px;
   border: none;
-  background: var(--b-subtle);
+  background: transparent;
   color: var(--t-muted);
   border-radius: 50%;
   font-size: 14px;
@@ -2052,6 +2053,7 @@ body.dark-mode .bottom-nav-item.active  { background: rgba(56,189,248,0.12); col
   align-items: center;
   gap: 3px;
   padding: 2px 8px;
+  min-height: 36px;
   background: #dbeafe;
   color: #1e40af;
   border: none;
@@ -2167,8 +2169,8 @@ body.dark-mode .fchip:hover { background: #253355; }
   margin-bottom: 2px;
   font-variant-numeric: tabular-nums;
 }
-.top-card-best .top-card-winrate { color: #059669; }
-.top-card-worst .top-card-winrate { color: #dc2626; }
+.top-card-best .top-card-winrate { color: var(--c-success); }
+.top-card-worst .top-card-winrate { color: var(--c-danger); }
 .top-card-sub {
   font-size: 11px;
   color: var(--t-muted);
@@ -2367,6 +2369,12 @@ body.dark-mode .detail-page-header {
 }
 body.dark-mode .detail-stat-winrate { color: var(--c-primary-light); }
 
+/* ===== BAN割合バー ===== */
+.ban-record-note {
+  font-size: 11px; font-weight: 500; color: var(--t-faint); letter-spacing: 0;
+  text-transform: none;
+}
+
 /* ===== 詳細ページ ソートバー・ページネーション ===== */
 .detail-bar-sort-row {
   display: flex;
@@ -2392,6 +2400,8 @@ body.dark-mode .detail-stat-winrate { color: var(--c-primary-light); }
 .detail-sort-key-btn,
 .detail-sort-arrow-btn {
   padding: 3px 10px;
+  min-height: 44px;
+  min-width: 44px;
   border: 1px solid var(--b-default);
   border-radius: var(--r-sm);
   background: var(--s-raised);
@@ -2432,8 +2442,8 @@ body.dark-mode .detail-stat-winrate { color: var(--c-primary-light); }
   padding: 12px 0 8px;
 }
 .page-btn {
-  min-width: 36px;
-  height: 36px;
+  min-width: 44px;
+  height: 44px;
   padding: 0 13px;
   background: var(--s-base);
   border: 1px solid var(--c-primary-mid);
@@ -2843,4 +2853,49 @@ body.dark-mode .detail-pie-wrap {
   font-size: var(--fs-sm);
   color: var(--t-muted);
   margin-bottom: var(--sp-3);
+}
+
+/* ===== トースト通知 ===== */
+.toast-container {
+  position: fixed;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  padding: 10px 20px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: #1e293b;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  opacity: 0;
+  transform: translateY(12px);
+  animation: toast-in 0.25s ease forwards;
+  pointer-events: auto;
+}
+body.dark-mode .toast {
+  background: #334155;
+}
+.toast.toast-error {
+  background: #dc2626;
+}
+body.dark-mode .toast.toast-error {
+  background: #b91c1c;
+}
+.toast.toast-out {
+  animation: toast-out 0.2s ease forwards;
+}
+@keyframes toast-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-out {
+  to { opacity: 0; transform: translateY(12px); }
 }

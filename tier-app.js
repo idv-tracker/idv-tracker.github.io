@@ -10,6 +10,7 @@ const TIER_COLORS = {
   C:   { bg: '#9ca3af', text: '#ffffff' },
   D:   { bg: '#4b5563', text: '#ffffff' },
 };
+const ARROW_COLORS = { '↑': '#22c55e', '→': '#9ca3af', '↓': '#ef4444' };
 const MAP_COLOR_PALETTE = ['#3b82f6','#ef4444','#f59e0b','#10b981','#8b5cf6','#06b6d4','#f97316','#ec4899','#84cc16'];
 const MAP_COLOR_MAP = {};
 MAPS.forEach((m, i) => { MAP_COLOR_MAP[m] = MAP_COLOR_PALETTE[i]; });
@@ -36,11 +37,18 @@ let detailPage        = 1;
 let detailResultFilter = 'all'; // 'all' | 'win' | 'loss' | 'draw'
 let mapChart          = null;
 let coPickChart       = null;
+let banPickChart      = null;
 let mapSortOrder      = 'count';
 let mapSortDir        = 'desc';
 let myCharSortOrder   = 'count';
 let myCharSortDir     = 'desc';
 let lastUpdated       = null;
+
+// キャッシュ（再計算回避用）
+let _cachedDetailStat = null;   // 詳細ページ用: 現在表示中キャラの stat オブジェクト
+
+// イベントリスナー管理
+let _rankFilterCloseHandler = null;
 
 // ===== 接続モジュール =====
 const _conn = createConnectModule({
@@ -92,6 +100,7 @@ function showDetailPage(charName) {
   myCharSortOrder    = 'count';
   myCharSortDir      = 'desc';
   if (coPickChart) { coPickChart.destroy(); coPickChart = null; }
+  if (banPickChart) { banPickChart.destroy(); banPickChart = null; }
   window.scrollTo(0, 0);
   renderDetailPage(charName);
   _initDetailScrollBehavior();
@@ -246,14 +255,18 @@ function buildRankFilterUI() {
   wrap.appendChild(trigger);
   wrap.appendChild(dd);
 
+  // 前回のリスナーを確実に解除
+  if (_rankFilterCloseHandler) {
+    document.removeEventListener('click', _rankFilterCloseHandler);
+  }
   // ドロワー外クリックで閉じる
-  document.addEventListener('click', function closeDD(e) {
+  _rankFilterCloseHandler = (e) => {
     if (!wrap.contains(e.target)) {
       dd.classList.remove('open');
       trigger.classList.remove('open');
-      document.removeEventListener('click', closeDD);
     }
-  });
+  };
+  document.addEventListener('click', _rankFilterCloseHandler);
 }
 
 function syncRankFilterUI(trigger, filterId) {
@@ -302,9 +315,15 @@ function renderTierPage() {
   const statsMap = computeCharStats(fm);
   const { tiered, notAppeared } = assignTiers(statsMap);
 
-  renderRisingChar(fm);
+  // 週データを1回だけ算出し、急上昇・Tier表トレンドで共有
+  const weeks = getLastTwoCompletedWeeks();
+  const thisWeekMatches = filterByDateRange(fm, weeks.thisWeek.start, weeks.thisWeek.end);
+  const lastWeekMatches = filterByDateRange(fm, weeks.lastWeek.start, weeks.lastWeek.end);
+  const weekData = { thisWeekMatches, lastWeekMatches };
+
+  renderRisingChar(weekData);
   renderPriorityCards(statsMap);
-  renderTierTable(tiered, fm);
+  renderTierTable(tiered, weekData);
   renderNoEncounter(notAppeared);
 }
 
@@ -317,7 +336,7 @@ function computeCharStats(fm) {
   chars.forEach(char => {
     statsMap[char] = {
       char, appeared: 0, wins: 0, losses: 0, draws: 0,
-      maps: {}, myChars: {}, coPick: {}
+      maps: {}, myChars: {}, coPick: {}, banPick: {}, banTotal: 0
     };
   });
 
@@ -328,7 +347,16 @@ function computeCharStats(fm) {
 
     if (currentPerspective === 'survivor') {
       const h = m.opponentHunter;
-      if (h && statsMap[h]) addMatchToStat(statsMap[h], m, iWin, isDraw);
+      if (h && statsMap[h]) {
+        addMatchToStat(statsMap[h], m, iWin, isDraw);
+        // BAN集計
+        if (m.bannedCharacters && m.bannedCharacters.length > 0) {
+          statsMap[h].banTotal++;
+          m.bannedCharacters.forEach(bc => {
+            if (bc) statsMap[h].banPick[bc] = (statsMap[h].banPick[bc] || 0) + 1;
+          });
+        }
+      }
     } else {
       const survs = m.opponentSurvivors || [];
       survs.forEach(s => {
@@ -353,6 +381,7 @@ function computeCharStats(fm) {
     if (contested > 0)      { s.winRate = s.wins / contested * 100; }
     else if (s.draws > 0)   { s.winRate = 50; } // 引き分けのみ → 中立
     else                    { s.winRate = null; }
+    // 脅威度 = ピック率 × (100 - 自分の勝率)。よく出会い、かつ勝てていない相手ほど高スコア
     s.dangerScore = s.appeared > 0
       ? s.pickRate * (100 - (s.winRate ?? 100))
       : 0;
@@ -399,11 +428,10 @@ function assignTiers(statsMap) {
 }
 
 // ===== 急上昇キャラ =====
-function renderRisingChar(fm) {
+function renderRisingChar(weekData) {
   const sec = document.getElementById('rising-section');
-  const { thisWeek, lastWeek } = getLastTwoCompletedWeeks();
-  const thisMatches = filterByDateRange(fm, thisWeek.start, thisWeek.end);
-  const lastMatches = filterByDateRange(fm, lastWeek.start, lastWeek.end);
+  const thisMatches = weekData.thisWeekMatches;
+  const lastMatches = weekData.lastWeekMatches;
 
   if (thisMatches.length === 0 || lastMatches.length === 0) {
     sec.classList.add('hidden');
@@ -470,7 +498,7 @@ function renderPriorityCards(statsMap) {
 }
 
 // ===== Tier表描画 =====
-function renderTierTable(tiered, fm) {
+function renderTierTable(tiered, weekData) {
   let html = '<p class="tier-desc-text">※ あなた自身の対戦データをもとに算出した流行度Tier表です</p><div class="tier-rows">';
   TIER_ORDER.forEach(t => {
     const chars = tiered[t] || [];
@@ -479,8 +507,7 @@ function renderTierTable(tiered, fm) {
       <div class="tier-label" style="background:${c.bg};color:${c.text};">${t}</div>
       <div class="tier-chars">
         ${chars.map(s => {
-          const trend = computeTrend(s.char, fm);
-          const ARROW_COLORS = { '↑': '#22c55e', '→': '#9ca3af', '↓': '#ef4444' };
+          const trend = computeTrend(s.char, weekData);
           const arrowBadge = trend ? `<span class="tier-icon-arrow" style="color:${ARROW_COLORS[trend.arrow]}">${trend.arrow}</span>` : '';
           return `<button type="button" class="tier-char-btn" title="${escapeHTML(s.char)}" onclick="navigateToDetail('${escapeHTML(s.char)}')"><img class="tier-char-icon" src="${getCharIconPath(s.char)}" alt="${escapeHTML(s.char)}" onerror="this.style.display='none'">${arrowBadge}</button>`;
         }).join('')}
@@ -502,10 +529,19 @@ function renderNoEncounter(notAppeared) {
 }
 
 // ===== 前週比トレンド =====
-function computeTrend(charName, fm) {
-  const { thisWeek, lastWeek } = getLastTwoCompletedWeeks();
-  const thisMatches = filterByDateRange(fm, thisWeek.start, thisWeek.end);
-  const lastMatches = filterByDateRange(fm, lastWeek.start, lastWeek.end);
+// weekDataOrFm: { thisWeekMatches, lastWeekMatches } または fm 配列
+function computeTrend(charName, weekDataOrFm) {
+  let thisMatches, lastMatches;
+  if (weekDataOrFm && weekDataOrFm.thisWeekMatches) {
+    // キャッシュ済み週データ
+    thisMatches = weekDataOrFm.thisWeekMatches;
+    lastMatches = weekDataOrFm.lastWeekMatches;
+  } else {
+    // fm 配列から算出（詳細ページからの呼び出し）
+    const weeks = getLastTwoCompletedWeeks();
+    thisMatches = filterByDateRange(weekDataOrFm, weeks.thisWeek.start, weeks.thisWeek.end);
+    lastMatches = filterByDateRange(weekDataOrFm, weeks.lastWeek.start, weeks.lastWeek.end);
+  }
   if (thisMatches.length === 0 || lastMatches.length === 0) return null;
 
   const thisPR = pickRateOf(charName, thisMatches);
@@ -566,6 +602,7 @@ function renderDetailPage(charName) {
   const fm       = getFilteredMatches();
   const statsMap = computeCharStats(fm);
   const s        = statsMap[charName];
+  _cachedDetailStat = s; // ソート関数用にキャッシュ
 
   // ヘッダー
   const charIconEl = document.getElementById('detail-char-icon');
@@ -593,8 +630,8 @@ function renderDetailPage(charName) {
     document.getElementById('detail-copick').classList.remove('hidden');
     renderDetailCopick(s);
   } else {
-    document.getElementById('detail-copick').classList.add('hidden');
-    document.getElementById('detail-copick').innerHTML = '';
+    document.getElementById('detail-copick').classList.remove('hidden');
+    renderDetailBanPick(s);
   }
   renderDetailHistory(charName, fm);
 }
@@ -624,7 +661,7 @@ function renderDetailTrend(charName, fm) {
     container.innerHTML = `<div class="detail-section-title">前週比トレンド</div><p class="no-data-text">先週・今週どちらかのデータがありません</p>`;
     return;
   }
-  const color    = { '↑': '#22c55e', '→': '#9ca3af', '↓': '#ef4444' }[trend.arrow];
+  const color    = ARROW_COLORS[trend.arrow];
   const diffText = trend.diff >= 0 ? `+${trend.diff.toFixed(1)}%` : `${trend.diff.toFixed(1)}%`;
   container.innerHTML = `
     <div class="detail-section-title">前週比トレンド</div>
@@ -748,18 +785,12 @@ function renderDetailMap(s) {
 
 function switchMapSort(order) {
   mapSortOrder = order;
-  const fm = getFilteredMatches();
-  const statsMap = computeCharStats(fm);
-  const s = statsMap[currentDetailChar];
-  if (s) renderDetailMap(s);
+  if (_cachedDetailStat) renderDetailMap(_cachedDetailStat);
 }
 
 function switchMapSortDir(dir) {
   mapSortDir = dir;
-  const fm = getFilteredMatches();
-  const statsMap = computeCharStats(fm);
-  const s = statsMap[currentDetailChar];
-  if (s) renderDetailMap(s);
+  if (_cachedDetailStat) renderDetailMap(_cachedDetailStat);
 }
 
 // ④ 自キャラ別
@@ -806,18 +837,12 @@ function renderDetailMyChar(s) {
 
 function switchMyCharSort(order) {
   myCharSortOrder = order;
-  const fm = getFilteredMatches();
-  const statsMap = computeCharStats(fm);
-  const s = statsMap[currentDetailChar];
-  if (s) renderDetailMyChar(s);
+  if (_cachedDetailStat) renderDetailMyChar(_cachedDetailStat);
 }
 
 function switchMyCharSortDir(dir) {
   myCharSortDir = dir;
-  const fm = getFilteredMatches();
-  const statsMap = computeCharStats(fm);
-  const s = statsMap[currentDetailChar];
-  if (s) renderDetailMyChar(s);
+  if (_cachedDetailStat) renderDetailMyChar(_cachedDetailStat);
 }
 
 // ⑤ 同時pick（ハンター視点のみ）
@@ -860,6 +885,78 @@ function renderDetailCopick(s) {
         data: data.map(([, count]) => count),
         backgroundColor: isDark ? 'rgba(96,165,250,0.7)' : 'rgba(59,130,246,0.7)',
         borderColor:     isDark ? '#60a5fa' : '#3b82f6',
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => data[items[0].dataIndex][0],
+            label: ctx => `${ctx.raw}試合`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: isDark ? '#9ca3af' : '#6b7280', font: { size: 11 }, maxRotation: 45 },
+          grid: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: isDark ? '#9ca3af' : '#6b7280', font: { size: 11 }, stepSize: 1 },
+          grid: { color: isDark ? '#2e2e48' : '#f1f5f9' }
+        }
+      }
+    }
+  });
+}
+
+// ⑤b BANが多いキャラ（サバイバー視点のみ）
+function renderDetailBanPick(s) {
+  const data = Object.entries(s.banPick)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  const container = document.getElementById('detail-copick');
+  if (data.length === 0) {
+    container.innerHTML = `<div class="detail-section-title">BANが多いキャラ</div><p class="no-data-text">データがありません</p>`;
+    return;
+  }
+
+  const base = s.banTotal || s.appeared;
+  container.innerHTML = `
+    <div class="detail-section-title">BANが多いキャラ</div>
+    <div class="copick-list">
+      ${data.map(([char, count], i) => {
+        const pct = base > 0 ? (count / base * 100).toFixed(1) : '-';
+        return `<div class="copick-item">
+          <span class="copick-rank">${i + 1}位</span>
+          <img class="tier-row-icon" src="${getCharIconPath(char)}" alt="" onerror="this.style.display='none'">
+          <span class="copick-name">${escapeHTML(char)}</span>
+          <span class="copick-pct">${count}/${base}試合（${pct}%）</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="copick-chart-wrap"><canvas id="banpick-bar-chart"></canvas></div>
+  `;
+
+  if (banPickChart) { banPickChart.destroy(); banPickChart = null; }
+  const isDark = document.body.classList.contains('dark-mode');
+  const ctx = document.getElementById('banpick-bar-chart').getContext('2d');
+
+  banPickChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map(([char]) => char),
+      datasets: [{
+        data: data.map(([, count]) => count),
+        backgroundColor: isDark ? 'rgba(248,113,113,0.7)' : 'rgba(239,68,68,0.7)',
+        borderColor:     isDark ? '#f87171' : '#ef4444',
         borderWidth: 1,
         borderRadius: 4,
       }]

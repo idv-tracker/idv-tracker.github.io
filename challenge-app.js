@@ -442,17 +442,6 @@ function getRecentMatches(n = 50, perspective) {
   return sortedByRecent(pool).slice(0, n);
 }
 
-// キャラの直近n件 → 不足分を同 perspective の全体直近から補充
-function getCharCombinedMatches(charName, n = 50) {
-  const perspective = SURVIVORS.includes(charName) ? 'survivor' : 'hunter';
-  const sorted     = sortedByRecent(matches.filter(m => m.perspective === perspective));
-  const charRecent = sorted.filter(m => m.myCharacter === charName).slice(0, n);
-  if (charRecent.length >= n) return charRecent;
-  const charIds = new Set(charRecent.map(m => m.id));
-  const fill    = sorted.filter(m => !charIds.has(m.id)).slice(0, n - charRecent.length);
-  return [...charRecent, ...fill];
-}
-
 // キャリブレーション値のフォールバック取得
 function calibVal(lastCalib, key, fallback) {
   return (lastCalib && lastCalib[key] != null) ? lastCalib[key] : fallback;
@@ -472,10 +461,6 @@ function calcWinStats(ms) {
     drawRate: draws / total,
     lossRate: (total - wins - draws) / total,
   };
-}
-
-function getCharWinrate(charName) {
-  return calcWinStats(getCharCombinedMatches(charName));
 }
 
 // 認知用: キャラ個別の試合のみで勝率を計算（他キャラで補充しない）

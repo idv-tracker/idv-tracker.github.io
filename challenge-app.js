@@ -99,7 +99,6 @@ const _conn = createConnectModule({
 });
 
 function init() {
-  initScrollBehavior();
   initCogCharSelect();
   renderRankIcons('cur');
   renderRankIcons('tgt');
@@ -958,25 +957,6 @@ function formatNum(n) {
   return n.toLocaleString();
 }
 
-// ===== スクロールでヘッダー非表示（モバイルのみ） =====
-function initScrollBehavior() {
-  const header = document.querySelector('.ch-header');
-  if (!header) return;
-  let lastY = window.scrollY;
-  window.addEventListener('scroll', () => {
-    if (window.innerWidth > 768) {
-      header.classList.remove('header-hidden');
-      return;
-    }
-    const currentY = window.scrollY;
-    if (currentY > lastY && currentY > 60) {
-      header.classList.add('header-hidden');
-    } else {
-      header.classList.remove('header-hidden');
-    }
-    lastY = currentY;
-  }, { passive: true });
-}
 
 // ===== 目標追跡 =====
 

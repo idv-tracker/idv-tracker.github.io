@@ -69,13 +69,10 @@ function showDisconnectMenu() {
 }
 
 // ===== 画面切替 =====
-let _detailScrollHandler = null;
-
 function showConnectPage() {
   document.getElementById('connect-page').classList.remove('hidden');
   document.getElementById('tier-page').classList.add('hidden');
   document.getElementById('detail-page').classList.add('hidden');
-  _removeDetailScrollHandler();
   window.scrollTo(0, 0);
 }
 
@@ -83,7 +80,6 @@ function showTierPage() {
   document.getElementById('connect-page').classList.add('hidden');
   document.getElementById('tier-page').classList.remove('hidden');
   document.getElementById('detail-page').classList.add('hidden');
-  _removeDetailScrollHandler();
   window.scrollTo(0, 0);
   renderTierPage();
 }
@@ -103,20 +99,6 @@ function showDetailPage(charName) {
   if (banPickChart) { banPickChart.destroy(); banPickChart = null; }
   window.scrollTo(0, 0);
   renderDetailPage(charName);
-  _initDetailScrollBehavior();
-}
-
-function _initDetailScrollBehavior() {
-  _removeDetailScrollHandler();
-}
-
-function _removeDetailScrollHandler() {
-  if (_detailScrollHandler) {
-    window.removeEventListener('scroll', _detailScrollHandler);
-    _detailScrollHandler = null;
-  }
-  const header = document.querySelector('.detail-header');
-  if (header) header.classList.remove('hide');
 }
 
 // ===== ハッシュルーティング =====
@@ -609,11 +591,10 @@ function renderDetailPage(charName) {
   renderDetailTrend(charName, fm);
   renderDetailMap(s);
   renderDetailMyChar(s);
+  document.getElementById('detail-copick').classList.remove('hidden');
   if (currentPerspective === 'hunter') {
-    document.getElementById('detail-copick').classList.remove('hidden');
     renderDetailCopick(s);
   } else {
-    document.getElementById('detail-copick').classList.remove('hidden');
     renderDetailBanPick(s);
   }
   renderDetailHistory(charName, fm);

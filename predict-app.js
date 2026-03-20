@@ -122,45 +122,25 @@ function initSearchableSelect(selectId) {
   searchableSelects[selectId] = ss;
 }
 
-function setupBanExclude() {
-  // サバイバーBAN同士の重複排除
-  const banIds = ['predict-ban-1', 'predict-ban-2', 'predict-ban-3'];
-  banIds.forEach(id => {
+function _setupExcludeGroup(ids) {
+  ids.forEach(id => {
     const ss = searchableSelects[id];
     if (!ss) return;
-    ss.getExcluded = () => {
-      const excluded = [];
-      banIds.forEach(otherId => {
-        if (otherId !== id) {
-          const otherSs = searchableSelects[otherId];
-          if (otherSs && otherSs.value) excluded.push(otherSs.value);
-        }
-      });
-      return excluded;
-    };
+    ss.getExcluded = () => ids
+      .filter(otherId => otherId !== id)
+      .map(otherId => searchableSelects[otherId]?.value)
+      .filter(Boolean);
   });
+}
+
+function setupBanExclude() {
+  _setupExcludeGroup(['predict-ban-1', 'predict-ban-2', 'predict-ban-3']);
+  _setupExcludeGroup(HBAN_IDS);
 
   // ハンターBANクリア時にも保存
-  ['predict-hban-1', 'predict-hban-2', 'predict-hban-3'].forEach(id => {
+  HBAN_IDS.forEach(id => {
     const sel = document.getElementById(id);
     if (sel) sel.addEventListener('change', () => saveHunterBanPersist());
-  });
-
-  // ハンターBAN同士の重複排除
-  const hbanIds = ['predict-hban-1', 'predict-hban-2', 'predict-hban-3'];
-  hbanIds.forEach(id => {
-    const ss = searchableSelects[id];
-    if (!ss) return;
-    ss.getExcluded = () => {
-      const excluded = [];
-      hbanIds.forEach(otherId => {
-        if (otherId !== id) {
-          const otherSs = searchableSelects[otherId];
-          if (otherSs && otherSs.value) excluded.push(otherSs.value);
-        }
-      });
-      return excluded;
-    };
   });
 }
 
@@ -323,6 +303,7 @@ function runPrediction() {
   // カウンターキャラ算出（BANキャラは除外）
   const banSet = new Set(bans);
   top5.forEach(entry => {
+    // カウンター算出はBAN有無に依存しないため全サバイバー試合を母集団とする
     entry.counters = getCounterChars(entry.hunter, surMatches, banSet);
   });
 

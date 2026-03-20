@@ -144,6 +144,12 @@ body.dark-mode {
 .shared-toast.toast-error { background: #dc2626; }
 .shared-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+@media (max-width: 767px) {
+  .shared-toast {
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* ダークモード時のグロー微調整 */
 @media (min-width: 768px) {
   body.dark-mode::before {

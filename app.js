@@ -1,19 +1,4 @@
-﻿
-    // ===== トースト通知 =====
-    function showToast(message, type = 'info', duration = 3000) {
-      const container = document.getElementById('toast-container');
-      if (!container) return;
-      const el = document.createElement('div');
-      el.className = 'toast' + (type === 'error' ? ' toast-error' : '');
-      el.textContent = message;
-      container.appendChild(el);
-      setTimeout(() => {
-        el.classList.add('toast-out');
-        el.addEventListener('animationend', () => el.remove());
-      }, duration);
-    }
-
-    // ===== アイコンパス（app.js固有） =====
+﻿    // ===== アイコンパス（app.js固有） =====
     const MAP_ICON_OVERRIDES = {
       '軍需工場': 'maps/gunju_kojou.PNG',
     };
@@ -756,7 +741,7 @@
       const link = document.getElementById('predict-back-link');
       if (!link) return;
       const banCount = matches.filter(m => m.perspective === 'survivor' && (m.bannedCharacters || []).some(b => b)).length;
-      link.classList.toggle('hidden', banCount < 100);
+      link.classList.toggle('hidden', banCount < 50);
     }
 
     // セレクトボックスにオプションを追加
@@ -3340,7 +3325,7 @@
         perspectiveMatches = perspectiveMatches.filter(m => m.map === mapFilter);
       }
       
-      perspectiveMatches = perspectiveMatches.reverse();
+      perspectiveMatches = [...perspectiveMatches].reverse();
       
       if (perspectiveMatches.length === 0) {
         container.innerHTML = buildEmptyState();
@@ -3620,7 +3605,7 @@
     function importData(data) {
       const validation = validateBackupData(data);
       if (!validation.valid) {
-        alert(`データの復元に失敗しました\n\n${validation.error}`);
+        showToast(`データの復元に失敗しました: ${validation.error}`, 'error');
         return false;
       }
       
@@ -3652,11 +3637,11 @@
         updateDataInfo();
         refreshAfterDataChange({ rebuildSelects: true });
 
-        alert(`データを復元しました！\n\n${newMatchCount}試合のデータを読み込みました。`);
+        showToast(`データを復元しました！ ${newMatchCount}試合のデータを読み込みました。`);
         return true;
       } catch (error) {
         console.error('Import failed:', error);
-        alert(`データの復元中にエラーが発生しました\n\n${error.message}`);
+        showToast(`データの復元中にエラーが発生しました: ${error.message}`, 'error');
         return false;
       }
     }
@@ -3667,7 +3652,7 @@
       const text = textarea.value.trim();
       
       if (!text) {
-        alert('バックアップデータを貼り付けてください');
+        showToast('バックアップデータを貼り付けてください', 'error');
         return;
       }
       
@@ -3678,7 +3663,7 @@
         }
       } catch (error) {
         console.error('JSON parse error:', error);
-        alert('データ形式が正しくありません\n\n正しいバックアップデータを貼り付けてください。');
+        showToast('データ形式が正しくありません', 'error');
       }
     }
     
@@ -3694,7 +3679,7 @@
           importData(data);
         } catch (error) {
           console.error('JSON parse error:', error);
-          alert('ファイルの読み込みに失敗しました\n\nファイル形式が正しくありません。');
+          showToast('ファイルの読み込みに失敗しました', 'error');
         }
         
         // ファイル選択をリセット
@@ -3702,7 +3687,7 @@
       };
       
       reader.onerror = function() {
-        alert('ファイルの読み込みに失敗しました');
+        showToast('ファイルの読み込みに失敗しました', 'error');
         event.target.value = '';
       };
       
@@ -3783,14 +3768,7 @@
       }
       applyChartDefaults();
     }
-    
-    // ダークモードはDOM準備前に即時適用（ちらつき防止）
-    (function() {
-      if (localStorage.getItem('identity5_dark_mode') === 'on') {
-        document.body.classList.add('dark-mode');
-      }
-    })();
-    
+
     // ===== 自動フォーカス =====
     const SURVIVOR_FOCUS_ORDER = [
       'survivor-date', 'survivor-rank', 'my-survivor',
@@ -4007,13 +3985,13 @@
       const code = input.value.trim().toLowerCase();
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
       if (!uuidRegex.test(code)) {
-        alert('同期コードの形式が正しくありません。\nコードを確認してください。');
+        showToast('同期コードの形式が正しくありません', 'error');
         return;
       }
       try {
         const docSnap = await db.collection('idv_tracker').doc(code).get();
         if (!docSnap.exists) {
-          alert('このコードのデータが見つかりません。\nコードを確認してください。');
+          showToast('このコードのデータが見つかりません', 'error');
           return;
         }
         const cloudData = docSnap.data();
@@ -4024,9 +4002,9 @@
         localStorage.setItem('identity5_sync_code', code);
         await downloadFromCloud(cloudData);
         updateSyncUI();
-        alert('接続しました！');
+        showToast('接続しました！');
       } catch (e) {
-        alert('接続に失敗しました。通信環境を確認してください。');
+        showToast('接続に失敗しました。通信環境を確認してください。', 'error');
         console.error('Link error:', e);
       }
     }
@@ -4158,9 +4136,9 @@
         localStorage.removeItem('identity5_sync_code');
         localStorage.removeItem('identity5_last_synced');
         updateSyncUI();
-        alert('クラウドのデータを削除しました');
+        showToast('クラウドのデータを削除しました');
       } catch (e) {
-        alert('削除に失敗しました。');
+        showToast('削除に失敗しました', 'error');
         console.error('Delete error:', e);
       }
     }

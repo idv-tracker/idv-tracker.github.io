@@ -453,6 +453,11 @@ function getCharCombinedMatches(charName, n = 50) {
   return [...charRecent, ...fill];
 }
 
+// キャリブレーション値のフォールバック取得
+function calibVal(lastCalib, key, fallback) {
+  return (lastCalib && lastCalib[key] != null) ? lastCalib[key] : fallback;
+}
+
 function calcWinStats(ms) {
   const total = ms.length;
   if (total === 0) return null;
@@ -471,6 +476,13 @@ function calcWinStats(ms) {
 
 function getCharWinrate(charName) {
   return calcWinStats(getCharCombinedMatches(charName));
+}
+
+// 認知用: キャラ個別の試合のみで勝率を計算（他キャラで補充しない）
+function getCharOnlyWinrate(charName, n = 50) {
+  const perspective = SURVIVORS.includes(charName) ? 'survivor' : 'hunter';
+  const charMatches = sortedByRecent(matches.filter(m => m.perspective === perspective && m.myCharacter === charName)).slice(0, n);
+  return calcWinStats(charMatches);
 }
 
 // 段位用: 現在選択中の陣営に絞った勝率
@@ -574,9 +586,7 @@ function renderCogCardsRow() {
 
   let html = cogCards.map((card, idx) => {
     const active  = activeCogCardIdx === idx ? ' active' : '';
-    const imgSrc  = SURVIVORS.includes(card.charName)
-      ? `survivors/survivor_${card.charName}.PNG`
-      : `hunters/hunter_${card.charName}.PNG`;
+    const imgSrc  = buildIconPath(card.charName, SURVIVORS.includes(card.charName) ? 'survivor' : 'hunter');
     return `<div class="cog-card${active}" onclick="onCogCardClick(${idx})">
       <button type="button" class="card-delete-btn" onclick="deleteCogCard(${idx}, event)">×</button>
       <img class="cog-card-icon" src="${imgSrc}" alt="${card.charName}" onerror="this.style.display='none'">
@@ -648,7 +658,7 @@ function deleteCogCard(idx, event) {
 
 function onSaveCogCard() {
   const charName = getCogCharValue();
-  if (!charName) { alert('キャラクターを選択してください'); return; }
+  if (!charName) { showToast('キャラクターを選択してください', 'error'); return; }
 
   const card = {
     charName,
@@ -736,7 +746,7 @@ function onCogInput() {
     return;
   }
 
-  const wr = getCharWinrate(charName);
+  const wr = getCharOnlyWinrate(charName);
   if (!wr) {
     resultEl.innerHTML = `<div class="result-error">⚠️ このキャラクターの対戦データがありません<br><span style="font-size:12px;color:#6b7280;">トラッカーに${escapeHTML(charName)}での試合を記録してください</span></div>`;
     return;
@@ -1103,9 +1113,9 @@ function calcCurrentPredictedPt(goal, totalSinceGoal, wr) {
   const lastCalib = goal.calibrations.length > 0 ? goal.calibrations[goal.calibrations.length - 1] : null;
   const basePt       = lastCalib ? lastCalib.actualPt : goal.startPt;
   const baseMatchIdx = lastCalib ? lastCalib.matchIndex : 0;
-  const winAvg  = (lastCalib && lastCalib.winAvg  != null) ? lastCalib.winAvg  : goal.winAvg;
-  const drawAvg = (lastCalib && lastCalib.drawAvg != null) ? lastCalib.drawAvg : (goal.drawAvg || 0);
-  const lossAvg = (lastCalib && lastCalib.lossAvg != null) ? lastCalib.lossAvg : goal.lossAvg;
+  const winAvg  = calibVal(lastCalib, 'winAvg',  goal.winAvg);
+  const drawAvg = calibVal(lastCalib, 'drawAvg', goal.drawAvg || 0);
+  const lossAvg = calibVal(lastCalib, 'lossAvg', goal.lossAvg);
 
   const matchesSinceBase = totalSinceGoal - baseMatchIdx;
   if (matchesSinceBase <= 0 || !wr) return basePt;
@@ -1502,9 +1512,9 @@ function showRankTrack(goal) {
   const totalSinceGoal = getMatchesSinceGoalStart(goal, 'rank', null);
   const wr = getOverallWinrate();
   const lastCalib = goal.calibrations.length > 0 ? goal.calibrations[goal.calibrations.length - 1] : null;
-  const winAvg  = (lastCalib && lastCalib.winAvg  != null) ? lastCalib.winAvg  : goal.winAvg;
-  const drawAvg = (lastCalib && lastCalib.drawAvg != null) ? lastCalib.drawAvg : (goal.drawAvg || 0);
-  const lossAvg = (lastCalib && lastCalib.lossAvg != null) ? lastCalib.lossAvg : goal.lossAvg;
+  const winAvg  = calibVal(lastCalib, 'winAvg',  goal.winAvg);
+  const drawAvg = calibVal(lastCalib, 'drawAvg', goal.drawAvg || 0);
+  const lossAvg = calibVal(lastCalib, 'lossAvg', goal.lossAvg);
   const lastExp = wr ? wr.winRate * winAvg + wr.drawRate * drawAvg + wr.lossRate * lossAvg : 0;
   const predictedPt = calcCurrentPredictedPt(goal, totalSinceGoal, wr);
 
@@ -1526,15 +1536,15 @@ function showCogTrack(goal) {
   showCogTrackBtn(false);
 
   const totalSinceGoal = getMatchesSinceGoalStart(goal, 'cog', goal.char);
-  const wr = getCharWinrate(goal.char);
+  const wr = getCharOnlyWinrate(goal.char);
   const lastCalib = goal.calibrations.length > 0 ? goal.calibrations[goal.calibrations.length - 1] : null;
-  const winAvg  = (lastCalib && lastCalib.winAvg  != null) ? lastCalib.winAvg  : goal.winAvg;
-  const drawAvg = (lastCalib && lastCalib.drawAvg != null) ? lastCalib.drawAvg : (goal.drawAvg || 0);
-  const lossAvg = (lastCalib && lastCalib.lossAvg != null) ? lastCalib.lossAvg : goal.lossAvg;
+  const winAvg  = calibVal(lastCalib, 'winAvg',  goal.winAvg);
+  const drawAvg = calibVal(lastCalib, 'drawAvg', goal.drawAvg || 0);
+  const lossAvg = calibVal(lastCalib, 'lossAvg', goal.lossAvg);
   const lastExp = wr ? wr.winRate * winAvg + wr.drawRate * drawAvg + wr.lossRate * lossAvg : 0;
   const predictedPt = calcCurrentPredictedPt(goal, totalSinceGoal, wr);
 
-  const cogPLabel = (SURVIVORS.includes(goal.char) ? 'サバイバー' : 'ハンター') + ' ';
+  const cogPLabel = goal.char + ' ';
   document.getElementById('cog-track-summary').innerHTML =
     buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp, winAvg, drawAvg, lossAvg, cogPLabel);
 
@@ -1602,9 +1612,9 @@ function editRankGoal() {
     if (tgtPos.stars) onStarClick('tgt', tgtPos.stars);
   }
   const lastCalib = goal.calibrations.length > 0 ? goal.calibrations[goal.calibrations.length - 1] : null;
-  document.getElementById('rank-win-samples').value = String((lastCalib && lastCalib.winAvg != null) ? lastCalib.winAvg : goal.winAvg);
-  document.getElementById('rank-draw-samples').value = String((lastCalib && lastCalib.drawAvg != null) ? lastCalib.drawAvg : (goal.drawAvg || 0));
-  document.getElementById('rank-loss-samples').value = String((lastCalib && lastCalib.lossAvg != null) ? lastCalib.lossAvg : goal.lossAvg);
+  document.getElementById('rank-win-samples').value = String(calibVal(lastCalib, 'winAvg', goal.winAvg));
+  document.getElementById('rank-draw-samples').value = String(calibVal(lastCalib, 'drawAvg', goal.drawAvg || 0));
+  document.getElementById('rank-loss-samples').value = String(calibVal(lastCalib, 'lossAvg', goal.lossAvg));
   onRankInput();
 }
 
@@ -1628,9 +1638,9 @@ function editCogGoal() {
   document.getElementById('cog-current').value = goal.startPt;
   document.getElementById('cog-target').value = goal.targetPt;
   const lastCalib = goal.calibrations.length > 0 ? goal.calibrations[goal.calibrations.length - 1] : null;
-  document.getElementById('cog-win-samples').value = String((lastCalib && lastCalib.winAvg != null) ? lastCalib.winAvg : goal.winAvg);
-  document.getElementById('cog-draw-samples').value = String((lastCalib && lastCalib.drawAvg != null) ? lastCalib.drawAvg : (goal.drawAvg || 0));
-  document.getElementById('cog-loss-samples').value = String((lastCalib && lastCalib.lossAvg != null) ? lastCalib.lossAvg : goal.lossAvg);
+  document.getElementById('cog-win-samples').value = String(calibVal(lastCalib, 'winAvg', goal.winAvg));
+  document.getElementById('cog-draw-samples').value = String(calibVal(lastCalib, 'drawAvg', goal.drawAvg || 0));
+  document.getElementById('cog-loss-samples').value = String(calibVal(lastCalib, 'lossAvg', goal.lossAvg));
   onCogInput();
 }
 
@@ -1641,9 +1651,9 @@ function openCalibModal(type, char) {
   // 現在のサンプルをプリセット
   const goal = type === 'rank' ? loadRankGoal() : loadCogGoal(char);
   const lastCalib = goal && goal.calibrations.length > 0 ? goal.calibrations[goal.calibrations.length - 1] : null;
-  const winAvg  = (lastCalib && lastCalib.winAvg  != null) ? lastCalib.winAvg  : goal?.winAvg;
-  const drawAvg = (lastCalib && lastCalib.drawAvg != null) ? lastCalib.drawAvg : goal?.drawAvg;
-  const lossAvg = (lastCalib && lastCalib.lossAvg != null) ? lastCalib.lossAvg : goal?.lossAvg;
+  const winAvg  = calibVal(lastCalib, 'winAvg',  goal?.winAvg);
+  const drawAvg = calibVal(lastCalib, 'drawAvg', goal?.drawAvg);
+  const lossAvg = calibVal(lastCalib, 'lossAvg', goal?.lossAvg);
 
   // 段位/認知で入力UIを切り替え
   const rankArea = document.getElementById('calib-rank-area');
@@ -1699,14 +1709,14 @@ function saveCalibration() {
   let actualPt;
   if (calibTarget.type === 'rank') {
     const { rank, subRank, stars, fracPt } = rankSel.calib;
-    if (!rank) { alert('現在の段位を選択してください'); return; }
+    if (!rank) { showToast('現在の段位を選択してください', 'error'); return; }
     const cfg = RANK_CONFIG[rank];
-    if (cfg && cfg.subRanks && !subRank) { alert('サブ段位を選択してください'); return; }
+    if (cfg && cfg.subRanks && !subRank) { showToast('サブ段位を選択してください', 'error'); return; }
     actualPt = positionToPt(rank, subRank, stars) + (fracPt || 0);
-    if (actualPt === null) { alert('段位の設定が正しくありません'); return; }
+    if (actualPt === null) { showToast('段位の設定が正しくありません', 'error'); return; }
   } else {
     actualPt = parseFloat(document.getElementById('calib-actual-pt').value);
-    if (isNaN(actualPt)) { alert('実際のptを入力してください'); return; }
+    if (isNaN(actualPt)) { showToast('実際のptを入力してください', 'error'); return; }
   }
 
   const winS  = parsePtSamples(document.getElementById('calib-win-samples').value);

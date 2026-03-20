@@ -343,7 +343,7 @@ function renderEmptyResult() {
   const selectSection = resultSection.querySelector('.pr-select-section');
 
   resultSection.classList.remove('hidden');
-  selectSection.style.display = 'none';
+  selectSection.classList.add('hidden');
   resultList.innerHTML =
     '<div class="pr-empty-message">この条件に該当する試合データがありません。<br>BANキャラやマップを変えてお試しください。</div>';
   resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -359,7 +359,7 @@ function renderResult(top5, allScores) {
 
   // 前回の空状態表示をリセット
   const selectSection = resultSection.querySelector('.pr-select-section');
-  selectSection.style.display = '';
+  selectSection.classList.remove('hidden');
 
   // TOP5リスト
   const maxPct = top5[0]?.pct || 100;

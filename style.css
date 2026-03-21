@@ -492,8 +492,11 @@ body.dark-mode .bar-value-outside .bar-pct {
   border-bottom: 1px solid var(--b-default);
   border-left: 3px solid transparent;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  cursor: pointer;
+  position: relative;
 }
 .match-item:has(.match-result.win)  { border-left-color: var(--win-bg); }
 .match-item:has(.match-result.lose) { border-left-color: var(--lose-bg); }
@@ -505,6 +508,7 @@ body.dark-mode .bar-value-outside .bar-pct {
 
 .match-info {
   flex: 1;
+  min-width: 0;
 }
 
 .match-result {
@@ -542,6 +546,79 @@ body.dark-mode .bar-value-outside .bar-pct {
 .edit-button {
   background: #f59e0b;
   color: #000;
+}
+
+/* ===== 試合履歴: タップ展開（モバイル） ===== */
+/* 展開ヒント（∨マーク） */
+.match-expand-hint {
+  display: none;
+}
+/* 展開式アクション（モバイル用） */
+.match-actions-expandable {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .match-item {
+    cursor: pointer;
+  }
+  /* PC用インラインボタンを隠す */
+  .match-actions-inline {
+    display: none;
+  }
+  /* 展開ヒント表示 */
+  .match-expand-hint {
+    display: block;
+    font-size: 12px;
+    color: var(--t-faint);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    padding: 0 2px;
+  }
+  .match-item.actions-open .match-expand-hint {
+    transform: rotate(180deg);
+  }
+  /* 展開式アクション */
+  .match-actions-expandable {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+    padding-top: 10px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.2s ease, opacity 0.2s ease, padding-top 0.2s ease;
+    padding-top: 0;
+  }
+  .match-item.actions-open .match-actions-expandable {
+    max-height: 50px;
+    opacity: 1;
+    padding-top: 10px;
+  }
+  .match-actions-expandable button {
+    flex: 1;
+    margin-left: 0;
+    padding: 8px 0;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--r-input);
+  }
+}
+
+/* PC: 従来通りインライン表示 */
+@media (min-width: 768px) {
+  .match-item {
+    cursor: default;
+  }
+  .match-expand-hint {
+    display: none;
+  }
+  .match-actions-expandable {
+    display: none;
+  }
+  .match-actions-inline {
+    display: flex;
+  }
 }
 
 .match-comment {

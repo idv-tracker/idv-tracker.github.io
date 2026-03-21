@@ -3427,14 +3427,19 @@
         const commentHTML = match.comment ? `<div class="match-comment">${escapeHTML(match.comment)}</div>` : '';
 
         html += `
-          <div class="match-item">
+          <div class="match-item" onclick="toggleMatchActions(this)">
             <div class="match-info">
               <span class="match-result ${displayResultClass}">${resultText}</span>
               <span class="match-meta">${escapeHTML(match.date || '')}　${escapeHTML(match.map || '')}${escapeHTML(escapeInfo)}</span>
               ${vsHTML}
               ${commentHTML}
             </div>
-            <div class="match-actions">
+            <div class="match-actions match-actions-inline">
+              <button type="button" class="edit-button" onclick="event.stopPropagation(); editMatch(${match.id}); return false;">編集</button>
+              <button type="button" class="delete-button" onclick="event.stopPropagation(); deleteMatch(${match.id}); return false;">削除</button>
+            </div>
+            <span class="match-expand-hint">∨</span>
+            <div class="match-actions match-actions-expandable">
               <button type="button" class="edit-button" onclick="event.stopPropagation(); editMatch(${match.id}); return false;">編集</button>
               <button type="button" class="delete-button" onclick="event.stopPropagation(); deleteMatch(${match.id}); return false;">削除</button>
             </div>
@@ -3450,7 +3455,17 @@
       html += generatePagination(currentPages.matchHistory, totalPages, 'changeHistoryPage');
       container.innerHTML = html;
     }
-    
+
+    // 試合アクション展開（モバイル用タップ展開）
+    function toggleMatchActions(el) {
+      const wasOpen = el.classList.contains('actions-open');
+      // 他の開いているアイテムを閉じる
+      document.querySelectorAll('.match-item.actions-open').forEach(item => {
+        if (item !== el) item.classList.remove('actions-open');
+      });
+      el.classList.toggle('actions-open', !wasOpen);
+    }
+
     // 試合を編集
     function editMatch(id) {
       const match = matches.find(m => m.id === id);
@@ -4181,7 +4196,7 @@
         characterUsageCount: characterUsageCount,
         lastModified: now,
         appVersion: '1.0.0'
-      });
+      }, { merge: true });
       localStorage.setItem('identity5_last_synced', now);
     }
 

@@ -1013,6 +1013,10 @@ function collectGoalsForSync() {
       if (charName) try { goals.cogGoals[charName] = JSON.parse(localStorage.getItem(key)); } catch (_) {}
     }
   }
+  // キャラカード・入力フォーム状態も同期
+  try { const c = localStorage.getItem('identity5_challenge_cog_cards');    if (c) goals.cogCards = JSON.parse(c); } catch (_) {}
+  try { const r = localStorage.getItem('identity5_challenge_rank');         if (r) goals.rankInputs = JSON.parse(r); } catch (_) {}
+  try { const g = localStorage.getItem('identity5_challenge_cognition');    if (g) goals.cogInputs = JSON.parse(g); } catch (_) {}
   return goals;
 }
 
@@ -1020,7 +1024,14 @@ function syncGoalsToCloud() {
   const ref = _conn.getDocRef();
   if (!ref) return; // 未接続 or Firebase不可
   const goals = collectGoalsForSync();
-  ref.set({ goals }, { merge: true }).catch(e => console.warn('Goal sync failed:', e));
+  // update() はフィールドを完全置換（ディープマージしない）し、他フィールドは保持
+  ref.update({ goals }).catch(e => {
+    // ドキュメント未作成の場合は set で作成
+    ref.set({ goals }, { merge: true }).catch(e2 => {
+      showToast('ゴールの同期に失敗しました', 'error');
+      console.warn('Goal sync failed:', e2);
+    });
+  });
 }
 
 function importGoalsFromCloud(goals) {
@@ -1042,32 +1053,42 @@ function importGoalsFromCloud(goals) {
         importedChars.push(charName);
       }
     }
-    // クラウドからゴールを取り込んだ場合、対応するキャラカードを自動生成
-    if (importedChars.length > 0) {
-      const existingSet = new Set(cogCards.map(c => c.charName));
-      let added = false;
-      importedChars.forEach(charName => {
-        if (!existingSet.has(charName)) {
-          const g = goals.cogGoals[charName];
-          const lastCalib = g.calibrations && g.calibrations.length > 0
-            ? g.calibrations[g.calibrations.length - 1] : null;
-          cogCards.push({
-            charName,
-            currentPt:   String(g.startPt || ''),
-            targetPt:    String(g.targetPt || ''),
-            winSamples:  String(lastCalib && lastCalib.winAvg != null ? lastCalib.winAvg : g.winAvg || ''),
-            drawSamples: String(lastCalib && lastCalib.drawAvg != null ? lastCalib.drawAvg : g.drawAvg || ''),
-            lossSamples: String(lastCalib && lastCalib.lossAvg != null ? lastCalib.lossAvg : g.lossAvg || ''),
-          });
-          added = true;
-        }
-      });
-      if (added) saveCogCards();
-      // アクティブキャラが未設定なら最初のゴールキャラをセット
-      if (!localStorage.getItem('identity5_cog_goal_active')) {
-        localStorage.setItem('identity5_cog_goal_active', importedChars[0]);
-      }
+    // アクティブキャラが未設定なら最初のゴールキャラをセット
+    if (importedChars.length > 0 && !localStorage.getItem('identity5_cog_goal_active')) {
+      localStorage.setItem('identity5_cog_goal_active', importedChars[0]);
     }
+  }
+  // キャラカード（クラウドにあればそちらを使用、なければゴールから自動生成）
+  if (goals.cogCards && Array.isArray(goals.cogCards)) {
+    cogCards = goals.cogCards;
+    saveCogCards();
+  } else if (goals.cogGoals) {
+    // カードがクラウドにない場合、ゴールから自動生成
+    const existingSet = new Set(cogCards.map(c => c.charName));
+    let added = false;
+    Object.entries(goals.cogGoals).forEach(([charName, g]) => {
+      if (g && !existingSet.has(charName)) {
+        const lastCalib = g.calibrations && g.calibrations.length > 0
+          ? g.calibrations[g.calibrations.length - 1] : null;
+        cogCards.push({
+          charName,
+          currentPt:   String(g.startPt || ''),
+          targetPt:    String(g.targetPt || ''),
+          winSamples:  String(lastCalib && lastCalib.winAvg != null ? lastCalib.winAvg : g.winAvg || ''),
+          drawSamples: String(lastCalib && lastCalib.drawAvg != null ? lastCalib.drawAvg : g.drawAvg || ''),
+          lossSamples: String(lastCalib && lastCalib.lossAvg != null ? lastCalib.lossAvg : g.lossAvg || ''),
+        });
+        added = true;
+      }
+    });
+    if (added) saveCogCards();
+  }
+  // 入力フォーム状態の復元
+  if (goals.rankInputs) {
+    localStorage.setItem('identity5_challenge_rank', JSON.stringify(goals.rankInputs));
+  }
+  if (goals.cogInputs) {
+    localStorage.setItem('identity5_challenge_cognition', JSON.stringify(goals.cogInputs));
   }
 }
 

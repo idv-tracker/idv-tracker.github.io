@@ -364,9 +364,15 @@ function addMatchToStat(s, m, iWin, isDraw) {
     if (iWin) s.maps[m.map].wins++; else if (isDraw) s.maps[m.map].draws++; else s.maps[m.map].losses++;
   }
   if (m.myCharacter) {
-    s.myChars[m.myCharacter] = s.myChars[m.myCharacter] || { appeared: 0, wins: 0, losses: 0, draws: 0 };
+    s.myChars[m.myCharacter] = s.myChars[m.myCharacter] || { appeared: 0, wins: 0, losses: 0, draws: 0, traits: {} };
     s.myChars[m.myCharacter].appeared++;
     if (iWin) s.myChars[m.myCharacter].wins++; else if (isDraw) s.myChars[m.myCharacter].draws++; else s.myChars[m.myCharacter].losses++;
+    if (m.trait) {
+      const t = s.myChars[m.myCharacter].traits;
+      t[m.trait] = t[m.trait] || { appeared: 0, wins: 0, losses: 0, draws: 0 };
+      t[m.trait].appeared++;
+      if (iWin) t[m.trait].wins++; else if (isDraw) t[m.trait].draws++; else t[m.trait].losses++;
+    }
   }
 }
 
@@ -690,7 +696,7 @@ function renderDetailMap(s) {
         <div class="map-table">
           <div class="map-table-header"><span style="width:10px"></span><span class="map-name">マップ</span><span class="map-count">試合</span><span class="map-wr">勝率</span></div>
           ${tableData.map(([map, d]) => {
-            const wr = (d.wins + d.losses) > 0 ? (d.wins / (d.wins + d.losses) * 100).toFixed(1) + '%' : '-';
+            const wr = calcWinratePct(d.wins, d.losses);
             return `<div class="map-table-row">
               <span class="map-color-dot" style="background:${colorMap[map]}"></span>
               <span class="map-name">${escapeHTML(map)}</span>
@@ -793,8 +799,26 @@ function renderDetailMyChar(s) {
     </div>` : ''}
     <div class="mychar-table-header"><span class="mychar-name">キャラ</span><span class="mychar-count">試合数</span><span class="mychar-wr">勝率</span></div>
     ${data.map(([char, d]) => {
-      const wr = (d.wins + d.losses) > 0 ? (d.wins / (d.wins + d.losses) * 100).toFixed(1) + '%' : '-';
-      return `<div class="mychar-row"><img class="tier-row-icon" src="${getMyCharIconPath(char)}" alt="" onerror="this.style.display='none'"><span class="mychar-name">${escapeHTML(char)}</span><span class="mychar-count">${d.appeared}試合</span><span class="mychar-wr">${wr}</span></div>`;
+      const wr = calcWinratePct(d.wins, d.losses);
+      const traitEntries = Object.entries(d.traits || {}).filter(([, t]) => t.appeared > 0).sort((a, b) => b[1].appeared - a[1].appeared);
+      const hasTraits = traitEntries.length >= 2;
+      const traitHTML = hasTraits ? traitEntries.map(([tName, t]) => {
+        const tWr = calcWinratePct(t.wins, t.losses);
+        return `<div class="mychar-trait-row">
+          <img class="mychar-trait-icon" src="${buildTraitIconPath(tName)}" alt="" onerror="this.style.display='none'">
+          <span class="mychar-trait-name">${escapeHTML(tName)}</span>
+          <span class="mychar-trait-count">${t.appeared}試合</span>
+          <span class="mychar-trait-wr">${tWr}</span>
+        </div>`;
+      }).join('') : '';
+      return `<div class="mychar-row${hasTraits ? ' expandable' : ''}" ${hasTraits ? `onclick="this.classList.toggle('expanded')"` : ''}>
+        <img class="tier-row-icon" src="${getMyCharIconPath(char)}" alt="" onerror="this.style.display='none'">
+        <span class="mychar-name">${escapeHTML(char)}</span>
+        <span class="mychar-count">${d.appeared}試合</span>
+        <span class="mychar-wr">${wr}</span>
+        ${hasTraits ? '<span class="mychar-expand-arrow">▶</span>' : ''}
+      </div>
+      ${hasTraits ? `<div class="mychar-trait-detail">${traitHTML}</div>` : ''}`;
     }).join('')}
   `;
 }
@@ -838,46 +862,7 @@ function renderDetailCopick(s) {
   `;
 
   if (coPickChart) { coPickChart.destroy(); coPickChart = null; }
-  const isDark = document.body.classList.contains('dark-mode');
-  const ctx = document.getElementById('copick-bar-chart').getContext('2d');
-
-  coPickChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: data.map(([char]) => char),
-      datasets: [{
-        data: data.map(([, count]) => count),
-        backgroundColor: isDark ? 'rgba(96,165,250,0.7)' : 'rgba(59,130,246,0.7)',
-        borderColor:     isDark ? '#60a5fa' : '#3b82f6',
-        borderWidth: 1,
-        borderRadius: 4,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            title: (items) => data[items[0].dataIndex][0],
-            label: ctx => `${ctx.raw}試合`
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { color: isDark ? '#9ca3af' : '#6b7280', font: { size: 11 }, maxRotation: 45 },
-          grid: { display: false }
-        },
-        y: {
-          beginAtZero: true,
-          ticks: { color: isDark ? '#9ca3af' : '#6b7280', font: { size: 11 }, stepSize: 1 },
-          grid: { color: isDark ? '#2e2e48' : '#f1f5f9' }
-        }
-      }
-    }
-  });
+  coPickChart = createSimpleBarChart('copick-bar-chart', data.map(([char]) => char), data.map(([, count]) => count));
 }
 
 // ⑤b BANが多いキャラ（サバイバー視点のみ）
@@ -910,46 +895,7 @@ function renderDetailBanPick(s) {
   `;
 
   if (banPickChart) { banPickChart.destroy(); banPickChart = null; }
-  const isDark = document.body.classList.contains('dark-mode');
-  const ctx = document.getElementById('banpick-bar-chart').getContext('2d');
-
-  banPickChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: data.map(([char]) => char),
-      datasets: [{
-        data: data.map(([, count]) => count),
-        backgroundColor: isDark ? 'rgba(96,165,250,0.7)' : 'rgba(59,130,246,0.7)',
-        borderColor:     isDark ? '#60a5fa' : '#3b82f6',
-        borderWidth: 1,
-        borderRadius: 4,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            title: (items) => data[items[0].dataIndex][0],
-            label: ctx => `${ctx.raw}試合`
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { color: isDark ? '#9ca3af' : '#6b7280', font: { size: 11 }, maxRotation: 45 },
-          grid: { display: false }
-        },
-        y: {
-          beginAtZero: true,
-          ticks: { color: isDark ? '#9ca3af' : '#6b7280', font: { size: 11 }, stepSize: 1 },
-          grid: { color: isDark ? '#2e2e48' : '#f1f5f9' }
-        }
-      }
-    }
-  });
+  banPickChart = createSimpleBarChart('banpick-bar-chart', data.map(([char]) => char), data.map(([, count]) => count));
 }
 
 // ⑥ 試合履歴
@@ -966,8 +912,7 @@ function renderDetailHistory(charName, fm) {
 
   // 日付降順、同日はid（入力時刻）降順
   charMatches = [...charMatches].sort((a, b) => {
-    const dateDiff = new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp);
-    if (dateDiff !== 0) return dateDiff;
+    if (a.date !== b.date) return (b.date || '') > (a.date || '') ? 1 : -1;
     return (b.id || 0) - (a.id || 0);
   });
 
@@ -1005,8 +950,9 @@ function renderDetailHistory(charName, fm) {
         if (currentPerspective === 'hunter') {
           const survs = [...(m.opponentSurvivors || [])].sort((a, b) => a === charName ? -1 : b === charName ? 1 : 0);
           const mySide  = m.myCharacter ? iconImg(getMyCharIconPath(m.myCharacter), m.myCharacter) : '';
+          const traitIcon = m.trait ? `<img class="history-trait-icon" src="${buildTraitIconPath(m.trait)}" alt="${escapeHTML(m.trait)}" title="${escapeHTML(m.trait)}" onerror="this.style.display='none'">` : '';
           const oppSide = survs.map(s => iconImg(buildIconPath(s, 'survivor'), s)).join('');
-          return `<div class="history-vs-row">${rankIconHTML}<div class="history-vs-side">${mySide}</div><span class="history-vs-text">vs</span><div class="history-vs-side">${oppSide}</div></div>`;
+          return `<div class="history-vs-row">${rankIconHTML}<div class="history-vs-side">${mySide}${traitIcon}</div><span class="history-vs-text">vs</span><div class="history-vs-side">${oppSide}</div></div>`;
         } else {
           const allies  = [m.myCharacter, ...(m.teammates || [])].filter(Boolean);
           const mySide  = allies.map(s => iconImg(buildIconPath(s, 'survivor'), s)).join('');
@@ -1055,6 +1001,49 @@ function renderPaginationHTML(cur, total) {
   html += `<button class="page-btn" ${cur === total ? 'disabled' : ''} onclick="changePage(${cur + 1})">›</button>`;
   html += '</div>';
   return html;
+}
+
+// ===== Chart.js 棒グラフ共通ヘルパー =====
+function createSimpleBarChart(canvasId, labels, data) {
+  const isDark = document.body.classList.contains('dark-mode');
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: isDark ? 'rgba(96,165,250,0.7)' : 'rgba(59,130,246,0.7)',
+        borderColor: isDark ? '#60a5fa' : '#3b82f6',
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => labels[items[0].dataIndex],
+            label: ctx => `${ctx.raw}試合`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: isDark ? '#9ca3af' : '#6b7280', font: { size: 11 }, maxRotation: 45 },
+          grid: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: isDark ? '#9ca3af' : '#6b7280', font: { size: 11 }, stepSize: 1 },
+          grid: { color: isDark ? '#2e2e48' : '#f1f5f9' }
+        }
+      }
+    }
+  });
 }
 
 // ===== ユーティリティ =====

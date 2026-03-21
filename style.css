@@ -1186,19 +1186,6 @@ body.dark-mode .sort-arrow-btn.active {
   color: var(--c-primary-light);
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
-/* ダークモード: 詳細ソートコントロール（トップページと統一） */
-body.dark-mode .detail-sort-key-btn:hover { color: var(--t-primary); }
-body.dark-mode .detail-sort-key-btn.active {
-  color: var(--c-primary-light);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-body.dark-mode .detail-sort-divider { background: var(--b-default); }
-body.dark-mode .detail-sort-arrow-btn { color: var(--t-muted); }
-body.dark-mode .detail-sort-arrow-btn:hover { color: var(--t-primary); }
-body.dark-mode .detail-sort-arrow-btn.active {
-  color: var(--c-primary-light);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
 /* ダークモード: 検索ドロップダウン */
 body.dark-mode .ss-input {
   background: var(--s-raised);
@@ -2417,6 +2404,7 @@ body.dark-mode .detail-stat-winrate { color: var(--c-primary-light); }
   gap: var(--sp-2);
   flex-wrap: wrap;
 }
+.detail-bar-sort-row .sort-control { margin-bottom: 0; }
 .detail-bar-sort-title {
   font-size: var(--fs-sm);
   font-weight: 700;
@@ -2424,57 +2412,6 @@ body.dark-mode .detail-stat-winrate { color: var(--c-primary-light); }
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-}
-.detail-bar-sort-control {
-  display: flex;
-  gap: var(--sp-1);
-  flex-shrink: 0;
-}
-.detail-sort-key-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: var(--r-input);
-  background: transparent;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  color: var(--t-muted);
-  touch-action: manipulation;
-  transition: background var(--transition-hover), color var(--transition-hover), box-shadow var(--transition-hover);
-}
-.detail-sort-key-btn:hover { color: var(--t-secondary); }
-.detail-sort-key-btn.active {
-  background: var(--s-base);
-  color: var(--c-primary);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-.detail-sort-arrow-btn {
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: var(--r-input);
-  background: transparent;
-  font-size: 16px;
-  font-weight: 800;
-  cursor: pointer;
-  color: var(--t-faint);
-  touch-action: manipulation;
-  transition: background var(--transition-hover), color var(--transition-hover), box-shadow var(--transition-hover);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.detail-sort-arrow-btn:hover { color: var(--t-secondary); }
-.detail-sort-arrow-btn.active {
-  background: var(--s-base);
-  color: var(--c-primary-mid);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-.detail-sort-divider {
-  width: 1px;
-  height: 24px;
-  background: var(--b-strong);
-  margin: 0 2px;
 }
 .detail-history-title {
   font-size: var(--fs-sm);
@@ -2907,4 +2844,129 @@ body.dark-mode .detail-pie-wrap {
   color: var(--t-muted);
   margin-bottom: var(--sp-3);
 }
+
+/* ===== バリデーションエラー ===== */
+.validation-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+.result-buttons.validation-error {
+  border: 2px solid #ef4444;
+  border-radius: var(--r-input);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+body.dark-mode .validation-error,
+body.dark-mode .result-buttons.validation-error {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.35);
+}
+
+/* ===== 特質ピッカー ===== */
+.trait-picker { position: relative; }
+.trait-selected-btn {
+  width: 100%;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px;
+  background: var(--s-base);
+  border: 2px solid var(--b-default);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--t-primary);
+}
+.trait-selected-btn img.trait-selected-icon { width: 28px; height: 28px; }
+.trait-placeholder { color: var(--t-faint); }
+.trait-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--s-base);
+  border: 1px solid var(--b-default);
+  border-radius: 8px;
+}
+.trait-grid.hidden { display: none; }
+.trait-icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  padding: 8px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.trait-icon-btn img { width: 36px; height: 36px; }
+.trait-icon-btn.selected { border-color: var(--c-primary); background: rgba(59,130,246,0.1); }
+body.dark-mode .trait-icon-btn.selected { background: rgba(59,130,246,0.2); }
+.trait-icon-btn:active { transform: scale(0.95); }
+
+/* ===== 試合履歴の特質アイコン ===== */
+.match-trait-icon { width: 20px; height: 20px; vertical-align: middle; margin-left: 2px; opacity: 0.85; }
+
+/* ===== カラードット（テーブル共通） ===== */
+.map-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ===== 特質別成績テーブル ===== */
+.trait-pie-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.trait-table-wrap { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 6px; }
+.trait-table-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--t-faint);
+  padding: 0 0 4px;
+  border-bottom: 1px solid var(--b-subtle);
+}
+.trait-table-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--s-overlay);
+  font-size: 13px;
+  color: var(--t-primary);
+}
+.trait-table-row:last-child { border-bottom: none; }
+.trait-table-icon { width: 20px; height: 20px; flex-shrink: 0; }
+.trait-table-name { flex: 1; min-width: 0; font-weight: 600; }
+.trait-table-record { flex-shrink: 0; font-variant-numeric: tabular-nums; color: var(--t-secondary); font-size: var(--fs-sm); }
+.trait-table-wr { width: 45px; text-align: right; flex-shrink: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+@media (max-width: 480px) {
+  .trait-pie-layout { flex-direction: column; align-items: center; }
+  .trait-table-wrap { width: 100%; }
+}
+
+/* ===== マップ別成績の特質展開 ===== */
+.bar-row.trait-expandable { cursor: pointer; }
+.bar-trait-arrow {
+  font-size: 10px; color: var(--t-muted);
+  transition: transform 0.2s;
+  flex-shrink: 0; margin-left: 4px;
+}
+.bar-row.expanded .bar-trait-arrow { transform: rotate(90deg); }
+.bar-trait-expand {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.25s ease;
+  padding-left: 40px;
+}
+.bar-trait-expand.open { max-height: 500px; }
+.bar-trait-expand-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 0; font-size: 12px; color: var(--t-secondary);
+}
+.bar-trait-expand-icon { width: 18px; height: 18px; }
+.bar-trait-expand-name { min-width: 3em; }
+.bar-trait-expand-count { color: var(--t-muted); }
+.bar-trait-expand-record { color: var(--t-muted); }
+.bar-trait-expand-wr { margin-left: auto; font-weight: 600; }
 

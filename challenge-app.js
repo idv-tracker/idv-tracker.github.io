@@ -170,19 +170,12 @@ function renderMainPage() {
   if (savedRankGoal) {
     showRankTrack(savedRankGoal);
   }
-  // 認知ゴール: localStorageをスキャンして最初に見つかったゴールを復元
-  const prefix = 'identity5_cog_goal_';
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith(prefix)) {
-      const charName = key.slice(prefix.length);
-      if (charName) {
-        const savedCogGoal = loadCogGoal(charName);
-        if (savedCogGoal) {
-          showCogTrack(savedCogGoal);
-          break;
-        }
-      }
+  // 認知ゴール: 最後にアクティブだったキャラのゴールを復元
+  const activeCogChar = localStorage.getItem('identity5_cog_goal_active');
+  if (activeCogChar) {
+    const savedCogGoal = loadCogGoal(activeCogChar);
+    if (savedCogGoal) {
+      showCogTrack(savedCogGoal);
     }
   }
 }
@@ -1497,6 +1490,7 @@ function showCogTrack(goal) {
   document.getElementById('cog-section').querySelector('.ch-card').classList.add('hidden');
   cogTrackEl.classList.remove('hidden');
   cogTrackEl.dataset.char = goal.char;
+  localStorage.setItem('identity5_cog_goal_active', goal.char);
   document.getElementById('cog-track-title').textContent = `認知pt 追跡中（${goal.char}）`;
   showCogTrackBtn(false);
 
@@ -1538,6 +1532,7 @@ function resetCogGoal() {
   if (!char) return;
   if (!confirm(`${char}の認知ptゴールをリセットしますか？`)) return;
   deleteCogGoal(char);
+  localStorage.removeItem('identity5_cog_goal_active');
   cogTrackEl.classList.add('hidden');
   delete cogTrackEl.dataset.char;
   document.getElementById('cog-section').querySelector('.ch-card').classList.remove('hidden');

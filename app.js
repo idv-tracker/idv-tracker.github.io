@@ -87,6 +87,7 @@
       { id: 'hunter-date',           persistKey: 'persist-hunter-date',           isDate: true },
       { id: 'hunter-rank',           persistKey: 'persist-hunter-rank' },
       { id: 'my-hunter',             persistKey: 'persist-my-hunter' },
+      { id: 'hunter-trait',          persistKey: 'persist-hunter-trait', isTrait: true },
       { id: 'opponent-survivor-1',   persistKey: 'persist-opponent-survivor-1' },
       { id: 'opponent-survivor-2',   persistKey: 'persist-opponent-survivor-2' },
       { id: 'opponent-survivor-3',   persistKey: 'persist-opponent-survivor-3' },
@@ -270,6 +271,7 @@
     
     let currentPerspective = 'survivor';
     let selectedEscapeCount = { survivor: null, hunter: null };
+    let selectedTrait = null;
     let matches = [];
     let editingMatchId = null;
     
@@ -675,6 +677,7 @@
       initAllSearchableSelects();
       initAutoFocus();
       initGroupExclude();
+      initTraitPicker();
 
       // プレースホルダースタイルを初期化（選択肢更新の前に実行）
       initializePlaceholderStyles();
@@ -917,12 +920,28 @@
       }
     }
     
-    // 試合履歴の全フィルター選択肢を更新（相手キャラ・自キャラ・マップ）
+    // 試合履歴の全フィルター選択肢を更新（相手キャラ・自キャラ・マップ・特質）
     function updateAllHistoryFilters() {
       updateHistoryOpponentFilter();
       updateHistoryCharFilter();
       const charVal = document.getElementById('history-char-filter')?.value || 'all';
       updateHistoryMapFilter(charVal);
+      updateHistoryTraitFilter();
+    }
+
+    function updateHistoryTraitFilter() {
+      const filter = document.getElementById('history-trait-filter');
+      if (!filter) return;
+      const currentValue = filter.value;
+      const usedTraits = new Set(
+        matches.filter(m => m.perspective === 'hunter' && m.trait).map(m => m.trait)
+      );
+      const options = ['<option value="all">すべて</option>'];
+      TRAITS.forEach(t => {
+        if (usedTraits.has(t)) options.push(`<option value="${t}">${t}</option>`);
+      });
+      filter.innerHTML = options.join('');
+      filter.value = usedTraits.has(currentValue) ? currentValue : 'all';
     }
 
     // 試合履歴の相手キャラフィルターを更新
@@ -1376,10 +1395,11 @@
     
     // 試合を記録
     function submitMatch(perspective) {
+      const _existingMatch = editingMatchId ? matches.find(m => m.id === editingMatchId) : null;
       let match = {
-        id: editingMatchId || Date.now(),
+        id: _existingMatch ? _existingMatch.id : Date.now(),
         perspective: perspective,
-        timestamp: new Date().toISOString()
+        timestamp: _existingMatch ? _existingMatch.timestamp : new Date().toISOString()
       };
       
       if (perspective === 'survivor') {
@@ -1392,12 +1412,23 @@
         const opponentHunter = document.getElementById('opponent-hunter').value;
         const map = document.getElementById('survivor-map').value;
         const escapeCount = selectedEscapeCount.survivor;
-        
-        if (!date || !rank || !mySurvivor || !teammate1 || !teammate2 || !teammate3 || !opponentHunter || !map || escapeCount === null) {
-          showToast('全ての項目を入力してください', 'error');
+
+        const missing = [];
+        if (!date) missing.push('survivor-date');
+        if (!rank) missing.push('survivor-rank');
+        if (!mySurvivor) missing.push('my-survivor');
+        if (!teammate1) missing.push('teammate-1');
+        if (!teammate2) missing.push('teammate-2');
+        if (!teammate3) missing.push('teammate-3');
+        if (!opponentHunter) missing.push('opponent-hunter');
+        if (!map) missing.push('survivor-map');
+        if (escapeCount === null) missing.push('survivor-escape');
+        if (missing.length > 0) {
+          showToast('入力されていない項目があります', 'error');
+          highlightMissingFields(missing);
           return;
         }
-        
+
         match.date = date;
         match.rank = rank;
         match.myCharacter = mySurvivor;
@@ -1419,15 +1450,28 @@
         const opponentSurvivor4 = document.getElementById('opponent-survivor-4').value;
         const map = document.getElementById('hunter-map').value;
         const escapeCount = selectedEscapeCount.hunter;
-        
-        if (!date || !rank || !myHunter || !opponentSurvivor1 || !opponentSurvivor2 || !opponentSurvivor3 || !opponentSurvivor4 || !map || escapeCount === null) {
-          showToast('全ての項目を入力してください', 'error');
+
+        const missing = [];
+        if (!date) missing.push('hunter-date');
+        if (!rank) missing.push('hunter-rank');
+        if (!myHunter) missing.push('my-hunter');
+        if (!selectedTrait) missing.push('hunter-trait');
+        if (!opponentSurvivor1) missing.push('opponent-survivor-1');
+        if (!opponentSurvivor2) missing.push('opponent-survivor-2');
+        if (!opponentSurvivor3) missing.push('opponent-survivor-3');
+        if (!opponentSurvivor4) missing.push('opponent-survivor-4');
+        if (!map) missing.push('hunter-map');
+        if (escapeCount === null) missing.push('hunter-escape');
+        if (missing.length > 0) {
+          showToast('入力されていない項目があります', 'error');
+          highlightMissingFields(missing);
           return;
         }
-        
+
         match.date = date;
         match.rank = rank;
         match.myCharacter = myHunter;
+        match.trait = selectedTrait;
         match.opponentSurvivors = [opponentSurvivor1, opponentSurvivor2, opponentSurvivor3, opponentSurvivor4];
         match.map = map;
         match.escapeCount = escapeCount;
@@ -1509,6 +1553,9 @@
         SS_SURVIVOR_IDS.forEach(syncSearchableSelect);
       } else {
         selectedEscapeCount.hunter = null;
+        if (!document.getElementById('persist-hunter-trait').checked) {
+          resetTraitPicker();
+        }
         document.getElementById('hunter-comment').value = '';
         document.getElementById('hunter-detail-input-area').classList.add('hidden');
         document.getElementById('hunter-detail-toggle-arrow').classList.remove('open');
@@ -1575,7 +1622,9 @@
           if (isChecked && persistCheckbox) {
             persistCheckbox.checked = true;
           }
-          if (savedValue && element) {
+          if (field.isTrait) {
+            if (isChecked && savedValue && TRAITS.includes(savedValue)) selectTrait(savedValue);
+          } else if (savedValue && element) {
             element.value = savedValue;
           } else if (field.isDate && element && !element.value) {
             // 日付フィールドで保持していない場合は今日の日付
@@ -1599,7 +1648,11 @@
           const element = document.getElementById(field.id);
           if (persistCheckbox && persistCheckbox.checked) {
             localStorage.setItem(`persist_checkbox_${field.persistKey}`, 'true');
-            if (element) localStorage.setItem(`persist_value_${field.id}`, element.value);
+            if (field.isTrait) {
+              if (selectedTrait) localStorage.setItem(`persist_value_${field.id}`, selectedTrait);
+            } else if (element) {
+              localStorage.setItem(`persist_value_${field.id}`, element.value);
+            }
           } else {
             localStorage.removeItem(`persist_checkbox_${field.persistKey}`);
             localStorage.removeItem(`persist_value_${field.id}`);
@@ -1634,6 +1687,7 @@
           updateSurvivorSelectOptions();
           SS_SURVIVOR_IDS.forEach(syncSearchableSelect);
         } else {
+          resetTraitPicker();
           updateHunterOpponentSelectOptions();
           SS_HUNTER_IDS.forEach(syncSearchableSelect);
         }
@@ -3324,8 +3378,17 @@
       if (mapFilter !== 'all') {
         perspectiveMatches = perspectiveMatches.filter(m => m.map === mapFilter);
       }
-      
-      perspectiveMatches = [...perspectiveMatches].reverse();
+
+      // 特質でフィルター
+      const traitFilter = document.getElementById('history-trait-filter')?.value || 'all';
+      if (traitFilter !== 'all') {
+        perspectiveMatches = perspectiveMatches.filter(m => m.trait === traitFilter);
+      }
+
+      perspectiveMatches = [...perspectiveMatches].sort((a, b) => {
+        if (a.date !== b.date) return (b.date || '') > (a.date || '') ? 1 : -1;
+        return (b.id || 0) - (a.id || 0);
+      });
       
       if (perspectiveMatches.length === 0) {
         container.innerHTML = buildEmptyState();
@@ -3356,8 +3419,9 @@
           vsHTML = `<div class="match-vs-row">${rankIconHTML}<div class="match-vs-side">${mySide}</div><span class="match-vs-text">vs</span><div class="match-vs-side">${oppSide}</div></div>`;
         } else {
           const mySide  = match.myCharacter ? charIconImg(match.myCharacter, 'hunter') : '';
+          const traitIcon = match.trait ? `<img class="match-trait-icon" src="${buildTraitIconPath(match.trait)}" alt="${escapeHTML(match.trait)}" title="${escapeHTML(match.trait)}" onerror="this.style.display='none'">` : '';
           const oppSide = (match.opponentSurvivors || []).map(s => charIconImg(s, 'survivor')).join('');
-          vsHTML = `<div class="match-vs-row">${rankIconHTML}<div class="match-vs-side">${mySide}</div><span class="match-vs-text">vs</span><div class="match-vs-side">${oppSide}</div></div>`;
+          vsHTML = `<div class="match-vs-row">${rankIconHTML}<div class="match-vs-side">${mySide}${traitIcon}</div><span class="match-vs-text">vs</span><div class="match-vs-side">${oppSide}</div></div>`;
         }
 
         const commentHTML = match.comment ? `<div class="match-comment">${escapeHTML(match.comment)}</div>` : '';
@@ -3434,6 +3498,11 @@
         document.getElementById('hunter-date').value = match.date || getToday();
         document.getElementById('hunter-rank').value = match.rank || '';
         document.getElementById('my-hunter').value = match.myCharacter;
+        if (match.trait && TRAITS.includes(match.trait)) {
+          selectTrait(match.trait);
+        } else {
+          resetTraitPicker();
+        }
         const oppSurvivors = match.opponentSurvivors || [];
         document.getElementById('opponent-survivor-1').value = oppSurvivors[0] || '';
         document.getElementById('opponent-survivor-2').value = oppSurvivors[1] || '';
@@ -3812,6 +3881,85 @@
       }
     }
 
+    // ===== バリデーションハイライト =====
+    function highlightMissingFields(fieldIds) {
+      // 前回のハイライトをクリア
+      document.querySelectorAll('.validation-error').forEach(el => el.classList.remove('validation-error'));
+
+      let firstEl = null;
+      fieldIds.forEach(id => {
+        if (id === 'hunter-trait') {
+          const btn = document.getElementById('trait-selected-btn');
+          if (btn) {
+            btn.classList.add('validation-error');
+            btn.addEventListener('click', () => btn.classList.remove('validation-error'), { once: true });
+            if (!firstEl) firstEl = btn;
+          }
+        } else if (id === 'survivor-escape' || id === 'hunter-escape') {
+          const container = id === 'survivor-escape' ? document.getElementById('survivor-input') : document.getElementById('hunter-input');
+          const buttons = container?.querySelector('.result-buttons');
+          if (buttons) {
+            buttons.classList.add('validation-error');
+            buttons.addEventListener('click', () => buttons.classList.remove('validation-error'), { once: true });
+            if (!firstEl) firstEl = buttons;
+          }
+        } else {
+          const ss = searchableSelects[id];
+          if (ss) {
+            ss.input.classList.add('validation-error');
+            ss.input.addEventListener('focus', () => ss.input.classList.remove('validation-error'), { once: true });
+            if (!firstEl) firstEl = ss.input;
+          } else {
+            const el = document.getElementById(id);
+            if (el) {
+              el.classList.add('validation-error');
+              el.addEventListener('focus', () => el.classList.remove('validation-error'), { once: true });
+              if (!firstEl) firstEl = el;
+            }
+          }
+        }
+      });
+      if (firstEl) firstEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // ===== 特質ピッカー =====
+    function initTraitPicker() {
+      const grid = document.getElementById('trait-grid');
+      if (!grid) return;
+      grid.innerHTML = TRAITS.map(t =>
+        `<button type="button" class="trait-icon-btn" data-trait="${t}" onclick="selectTrait('${t}')">
+           <img src="${buildTraitIconPath(t)}" alt="${t}" title="${t}" onerror="this.style.display='none'">
+         </button>`
+      ).join('');
+      // 外クリックで閉じる
+      document.addEventListener('click', (e) => {
+        const picker = document.getElementById('trait-picker');
+        if (picker && !picker.contains(e.target)) {
+          document.getElementById('trait-grid').classList.add('hidden');
+        }
+      });
+    }
+
+    function toggleTraitPicker() {
+      document.getElementById('trait-grid').classList.toggle('hidden');
+    }
+
+    function selectTrait(traitName) {
+      selectedTrait = traitName;
+      const btn = document.getElementById('trait-selected-btn');
+      btn.innerHTML = `<img class="trait-selected-icon" src="${buildTraitIconPath(traitName)}" alt="${escapeHTML(traitName)}"><span>${escapeHTML(traitName)}</span>`;
+      document.getElementById('trait-grid').classList.add('hidden');
+      document.querySelectorAll('.trait-icon-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelector(`.trait-icon-btn[data-trait="${traitName}"]`)?.classList.add('selected');
+    }
+
+    function resetTraitPicker() {
+      selectedTrait = null;
+      const btn = document.getElementById('trait-selected-btn');
+      if (btn) btn.innerHTML = '<span class="trait-placeholder">選択してください</span>';
+      document.querySelectorAll('.trait-icon-btn').forEach(b => b.classList.remove('selected'));
+    }
+
     function initAutoFocus() {
       ['survivor-date', 'hunter-date'].forEach(id => {
         const el = document.getElementById(id);
@@ -3839,7 +3987,20 @@
       ].forEach(([id, perspective]) => {
         const ss = searchableSelects[id];
         if (!ss) return;
-        ss.onSelected = () => focusNextField(perspective, id);
+        if (id === 'my-hunter') {
+          ss.onSelected = () => {
+            if (!selectedTrait) {
+              const grid = document.getElementById('trait-grid');
+              if (grid && grid.classList.contains('hidden')) {
+                grid.classList.remove('hidden');
+              }
+            } else {
+              focusNextField(perspective, id);
+            }
+          };
+        } else {
+          ss.onSelected = () => focusNextField(perspective, id);
+        }
       });
 
       // マップは最終フィールドのため選択後にフォーカスを解除
@@ -4346,7 +4507,8 @@
           return [
             { id: 'history-opponent-filter', label: '相手キャラ' },
             { id: 'history-char-filter', label: '自キャラ' },
-            { id: 'history-map-filter', label: 'マップ' }
+            { id: 'history-map-filter', label: 'マップ' },
+            ...(currentPerspective === 'hunter' ? [{ id: 'history-trait-filter', label: '特質' }] : [])
           ];
         default:
           return [];
@@ -4663,8 +4825,39 @@
           </div>
         </div>`;
 
+      // 特質別成績（ハンター視点のみ）
+      if (currentPerspective === 'hunter') {
+        const traitMatches = perspectiveMatches.filter(m => m.trait);
+        if (traitMatches.length > 0) {
+          html += buildTraitSection(traitMatches);
+        }
+      }
+
       // マップ別成績
-      html += buildDetailBarSection('マップ別成績', perspectiveMatches, m => m.map, 'map', 'dbs-char-map', true);
+      const traitExpandFn = (currentPerspective === 'hunter' && perspectiveMatches.some(m => m.trait))
+        ? (groupKey, groupMatches) => {
+            const traits = {};
+            groupMatches.forEach(m => {
+              if (!m.trait) return;
+              traits[m.trait] = traits[m.trait] || [];
+              traits[m.trait].push(m);
+            });
+            if (Object.keys(traits).length < 2) return '';
+            return Object.entries(traits)
+              .sort((a, b) => b[1].length - a[1].length)
+              .map(([tName, ms]) => {
+                const ts = calculateWinrate(ms, 'hunter');
+                return `<div class="bar-trait-expand-row">
+                  <img class="bar-trait-expand-icon" src="${buildTraitIconPath(tName)}" alt="${escapeHTML(tName)}" onerror="this.style.display='none'">
+                  <span class="bar-trait-expand-name">${escapeHTML(tName)}</span>
+                  <span class="bar-trait-expand-count">${ms.length}試合</span>
+                  <span class="bar-trait-expand-record">${ts.wins}勝${ts.losses}敗${ts.draws}分</span>
+                  <span class="bar-trait-expand-wr">${ts.winrate}%</span>
+                </div>`;
+              }).join('');
+          }
+        : null;
+      html += buildDetailBarSection('マップ別成績', perspectiveMatches, m => m.map, 'map', 'dbs-char-map', true, traitExpandFn);
 
       // 対戦相手別成績
       if (currentPerspective === 'survivor') {
@@ -4832,9 +5025,9 @@
             <span class="ban-record-note">(BAN記録 ${banTotal}試合)</span>
             <span class="stats-count-badge">全${totalItems}件</span>
           </div>
-          <div class="detail-bar-sort-control">
-            <button type="button" class="detail-sort-arrow-btn${descActive}" onclick="changeBanBarDir('desc')">↓</button>
-            <button type="button" class="detail-sort-arrow-btn${ascActive}" onclick="changeBanBarDir('asc')">↑</button>
+          <div class="sort-control" style="margin-bottom:0">
+            <button type="button" class="sort-arrow-btn${descActive}" onclick="changeBanBarDir('desc')">↓</button>
+            <button type="button" class="sort-arrow-btn${ascActive}" onclick="changeBanBarDir('asc')">↑</button>
           </div>
         </div>
         <div class="bar-chart-horizontal detail-bar-card">${rowsHtml}</div>`;
@@ -4850,7 +5043,102 @@
       rebuildDetailPageBody();
     }
 
-    function buildDetailBarSection(title, matchList, keyFn, type, sectionId, showPie = false) {
+    let traitSortOrder = 'count';
+    let traitSortDir = 'desc';
+    let _cachedTraitMatches = null;
+
+    function switchTraitSort(order) {
+      traitSortOrder = order;
+      if (_cachedTraitMatches) rebuildDetailPageBody();
+    }
+    function switchTraitSortDir(dir) {
+      traitSortDir = dir;
+      if (_cachedTraitMatches) rebuildDetailPageBody();
+    }
+
+    function buildTraitSection(traitMatches) {
+      _cachedTraitMatches = traitMatches;
+      const traitStats = {};
+      traitMatches.forEach(m => {
+        if (!traitStats[m.trait]) traitStats[m.trait] = { wins: 0, losses: 0, draws: 0, total: 0 };
+        const s = traitStats[m.trait];
+        s.total++;
+        if (m.result === 'hunter_win') s.wins++;
+        else if (m.result === 'draw') s.draws++;
+        else s.losses++;
+      });
+
+      const entries = Object.entries(traitStats);
+      if (entries.length === 0) return '';
+
+      const TRAIT_COLORS = ['#3b82f6','#ef4444','#f59e0b','#10b981','#8b5cf6','#06b6d4','#f97316','#ec4899'];
+      const colorMap = {};
+      entries.sort((a, b) => b[1].total - a[1].total).forEach(([name], i) => {
+        colorMap[name] = TRAIT_COLORS[i % TRAIT_COLORS.length];
+      });
+      const total = traitMatches.length;
+      const sectionId = 'dbs-trait';
+
+      // Chart.js 用データ（常に試合数降順）
+      const chartEntries = [...entries].sort((a, b) => b[1].total - a[1].total);
+      const pieData = chartEntries.map(([name, s]) => ({
+        label: name,
+        total: s.total,
+        pct: (s.total / total * 100).toFixed(1),
+        color: colorMap[name]
+      }));
+      detailPieDataCache[sectionId] = { pieData, totalAll: total, noOther: false, hiddenCount: 0 };
+
+      // テーブル用ソート
+      const tableEntries = [...entries].sort((a, b) => {
+        let diff;
+        if (traitSortOrder === 'count') {
+          diff = b[1].total - a[1].total;
+        } else {
+          const wrA = (a[1].wins + a[1].losses) > 0 ? a[1].wins / (a[1].wins + a[1].losses) : -1;
+          const wrB = (b[1].wins + b[1].losses) > 0 ? b[1].wins / (b[1].wins + b[1].losses) : -1;
+          diff = wrB - wrA;
+        }
+        return traitSortDir === 'asc' ? -diff : diff;
+      });
+
+      const showSort = entries.length >= 3;
+      const sortBtns = showSort ? `
+        <div class="sort-control">
+          <button type="button" class="sort-key-btn${traitSortOrder === 'count' ? ' active' : ''}" onclick="switchTraitSort('count')">試合数</button>
+          <button type="button" class="sort-key-btn${traitSortOrder === 'winrate' ? ' active' : ''}" onclick="switchTraitSort('winrate')">勝率</button>
+          <div class="sort-divider"></div>
+          <button type="button" class="sort-arrow-btn${traitSortDir === 'desc' ? ' active' : ''}" onclick="switchTraitSortDir('desc')">↓</button>
+          <button type="button" class="sort-arrow-btn${traitSortDir === 'asc' ? ' active' : ''}" onclick="switchTraitSortDir('asc')">↑</button>
+        </div>` : '';
+
+      const tableHTML = `
+        <div class="trait-table-header"><span style="width:10px;flex-shrink:0"></span><span style="width:20px;flex-shrink:0"></span><span class="trait-table-name">特質</span><span class="trait-table-record">試合数</span><span class="trait-table-wr">勝率</span></div>
+        ${tableEntries.map(([name, s]) => {
+          const wr = calcWinratePct(s.wins, s.losses);
+          return `<div class="trait-table-row">
+            <span class="map-color-dot" style="background:${colorMap[name]}"></span>
+            <img class="trait-table-icon" src="${buildTraitIconPath(name)}" alt="" onerror="this.style.display='none'">
+            <span class="trait-table-name">${escapeHTML(name)}</span>
+            <span class="trait-table-record">${s.total}試合（${s.wins}勝${s.losses}敗${s.draws}分）</span>
+            <span class="trait-table-wr">${wr}</span>
+          </div>`;
+        }).join('')}`;
+
+      return `
+        <div class="detail-section">
+          <div class="detail-section-title">特質別成績</div>
+          <div class="trait-pie-layout">
+            <div class="detail-pie-canvas-wrap"><canvas id="detail-pie-${sectionId}"></canvas></div>
+            <div class="trait-table-wrap">
+              ${sortBtns}
+              ${tableHTML}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function buildDetailBarSection(title, matchList, keyFn, type, sectionId, showPie = false, traitExpandFn = null) {
       const groups = {};
       matchList.forEach(m => {
         const k = keyFn(m);
@@ -4858,10 +5146,10 @@
         if (!groups[k]) groups[k] = [];
         groups[k].push(m);
       });
-      return buildDetailBarSectionFromStats(title, groups, type, sectionId, showPie);
+      return buildDetailBarSectionFromStats(title, groups, type, sectionId, showPie, traitExpandFn);
     }
 
-    function buildDetailBarSectionFromStats(title, groups, type, sectionId, showPie = false) {
+    function buildDetailBarSectionFromStats(title, groups, type, sectionId, showPie = false, traitExpandFn = null) {
       const keys = Object.keys(groups);
       if (keys.length === 0) return '';
       // データが1件のみの場合は非表示
@@ -4941,12 +5229,12 @@
           ${escapeHTML(title)}
           <span class="stats-count-badge">全${totalItems}件</span>
         </div>
-        <div class="detail-bar-sort-control">
-          <button type="button" class="detail-sort-key-btn${wrActive}" onclick="changeDetailBarSort('${sid}','winrate')">勝率</button>
-          <button type="button" class="detail-sort-key-btn${mcActive}" onclick="changeDetailBarSort('${sid}','games')">試合数</button>
-          <div class="detail-sort-divider"></div>
-          <button type="button" class="detail-sort-arrow-btn${descActive}" onclick="changeDetailBarSortDir('${sid}','desc')">↓</button>
-          <button type="button" class="detail-sort-arrow-btn${ascActive}" onclick="changeDetailBarSortDir('${sid}','asc')">↑</button>
+        <div class="sort-control">
+          <button type="button" class="sort-key-btn${wrActive}" onclick="changeDetailBarSort('${sid}','winrate')">勝率</button>
+          <button type="button" class="sort-key-btn${mcActive}" onclick="changeDetailBarSort('${sid}','games')">試合数</button>
+          <div class="sort-divider"></div>
+          <button type="button" class="sort-arrow-btn${descActive}" onclick="changeDetailBarSortDir('${sid}','desc')">↓</button>
+          <button type="button" class="sort-arrow-btn${ascActive}" onclick="changeDetailBarSortDir('${sid}','asc')">↑</button>
         </div>
       </div>
       <div class="min-match-control" style="margin-bottom: 8px;">
@@ -4967,9 +5255,15 @@
       let html = `<div class="detail-section">
         ${sortBar}
         <div class="bar-chart-horizontal detail-bar-card">`;
+      const hasAnyExpand = traitExpandFn && pageItems.some(({ key }) => {
+        const ex = traitExpandFn(key, groups[key]);
+        return ex !== '';
+      });
       pageItems.forEach(({ key, s }) => {
+        const expandHTML = traitExpandFn ? traitExpandFn(key, groups[key]) : '';
+        const hasExpand = expandHTML !== '';
         html += `
-          <div class="bar-row">
+          <div class="bar-row${hasExpand ? ' trait-expandable' : ''}" ${hasExpand ? `onclick="this.classList.toggle('expanded');this.nextElementSibling.classList.toggle('open')"` : ''}>
             <div class="bar-label-wrapper">
               ${getBarIconHTML(key, type)}
               <div class="bar-label-text">
@@ -4978,7 +5272,9 @@
               </div>
             </div>
             <div class="bar-wrapper">${renderBarHTML(s.winrate)}</div>
-          </div>`;
+            ${hasAnyExpand ? `<span class="bar-trait-arrow">${hasExpand ? '▶' : ''}</span>` : ''}
+          </div>
+          ${hasExpand ? `<div class="bar-trait-expand">${expandHTML}</div>` : ''}`;
       });
       html += '</div>';
 
@@ -5098,8 +5394,9 @@
           vsHTML = `<div class="match-vs-row">${rankIconHTML}<div class="match-vs-side">${mySide}</div><span class="match-vs-text">vs</span><div class="match-vs-side">${oppSide}</div></div>`;
         } else {
           const mySide  = match.myCharacter ? charIconImg(match.myCharacter, 'hunter') : '';
+          const traitIcon = match.trait ? `<img class="match-trait-icon" src="${buildTraitIconPath(match.trait)}" alt="${escapeHTML(match.trait)}" title="${escapeHTML(match.trait)}" onerror="this.style.display='none'">` : '';
           const oppSide = (match.opponentSurvivors || []).map(s => charIconImg(s, 'survivor')).join('');
-          vsHTML = `<div class="match-vs-row">${rankIconHTML}<div class="match-vs-side">${mySide}</div><span class="match-vs-text">vs</span><div class="match-vs-side">${oppSide}</div></div>`;
+          vsHTML = `<div class="match-vs-row">${rankIconHTML}<div class="match-vs-side">${mySide}${traitIcon}</div><span class="match-vs-text">vs</span><div class="match-vs-side">${oppSide}</div></div>`;
         }
 
         const commentHTML = match.comment ? `<div class="match-comment">${escapeHTML(match.comment)}</div>` : '';

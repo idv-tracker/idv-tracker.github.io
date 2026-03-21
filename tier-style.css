@@ -644,7 +644,7 @@ body {
 
 /* ===== ソートコントロール（トラッカーと共通デザイン） ===== */
 .sort-control {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   background: var(--s-overlay);
   border-radius: var(--r-md);
@@ -653,7 +653,7 @@ body {
   margin-bottom: 8px;
 }
 .sort-key-btn {
-  padding: 6px 12px;
+  padding: 8px 16px;
   border: none;
   border-radius: var(--r-input);
   background: transparent;
@@ -671,13 +671,13 @@ body {
 }
 .sort-divider {
   width: 1px;
-  height: 20px;
-  background: var(--b-default);
+  height: 24px;
+  background: var(--b-strong);
   margin: 0 2px;
 }
 .sort-arrow-btn {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border: none;
   border-radius: var(--r-input);
   background: transparent;
@@ -940,3 +940,24 @@ body.dark-mode .history-filter-btn.active { color: var(--c-primary-light); }
 @media (max-width: 767px) {
   body.dark-mode { background: var(--s-base); }
 }
+
+/* ===== 特質アイコン（履歴） ===== */
+.history-trait-icon { width: 18px; height: 18px; vertical-align: middle; margin-left: 2px; opacity: 0.85; }
+
+/* ===== 自キャラ別 特質展開 ===== */
+.mychar-row.expandable { cursor: pointer; }
+.mychar-expand-arrow { font-size: 10px; color: #999; transition: transform 0.2s; margin-left: auto; }
+.mychar-row.expanded .mychar-expand-arrow { transform: rotate(90deg); }
+.mychar-trait-detail {
+  max-height: 0; overflow: hidden; transition: max-height 0.25s ease;
+  padding-left: 32px;
+}
+.mychar-row.expanded + .mychar-trait-detail { max-height: 500px; }
+.mychar-trait-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 0; font-size: 12px; color: var(--t-secondary, #666);
+}
+.mychar-trait-icon { width: 18px; height: 18px; opacity: 0.85; }
+.mychar-trait-name { min-width: 3em; }
+.mychar-trait-count { margin-left: auto; }
+.mychar-trait-wr { min-width: 3.5em; text-align: right; font-weight: 600; }

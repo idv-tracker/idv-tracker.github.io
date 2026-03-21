@@ -251,6 +251,16 @@
           </div>
 
           <div class="form-group">
+            <label class="form-label">特質 <input type="checkbox" id="persist-hunter-trait" class="persist-check"><span class="persist-label">保持</span></label>
+            <div class="trait-picker" id="trait-picker">
+              <button type="button" class="trait-selected-btn" id="trait-selected-btn" onclick="toggleTraitPicker()">
+                <span class="trait-placeholder" id="trait-placeholder">選択してください</span>
+              </button>
+              <div class="trait-grid hidden" id="trait-grid"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
             <label class="form-label">相手サバイバー</label>
             <div class="opponent-survivor-grid">
               <div>

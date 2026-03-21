@@ -210,6 +210,7 @@ class SearchableSelect {
       this.input.focus();
     };
     this._onDocClick = (e) => {
+      if (this._skipNextDocClick) { this._skipNextDocClick = false; return; }
       if (!this.wrapper.contains(e.target)) {
         this._close();
         this.input.value = this.value || '';
@@ -423,10 +424,12 @@ class SearchableSelect {
   _selectOption(opt) {
     this.setValue(opt.value);
     this._close();
-    this.input.blur();
+    // blur は onSelected の後に遅延（次フィールドへの focus() でキーボードを維持するため）
     if (this.onSelected) this.onSelected();
     if (this.onChange) this.onChange(opt.value);
     this.select.dispatchEvent(new Event('change', { bubbles: true }));
+    // onSelected で別フィールドに focus 済みなら blur 不要（暗黙的に解除済み）
+    if (document.activeElement === this.input) this.input.blur();
   }
 
   setValue(val) {

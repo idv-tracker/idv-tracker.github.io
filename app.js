@@ -3888,10 +3888,8 @@
       const ss = searchableSelects[nextId];
       if (ss) {
         ss.input.value = '';
-        // 同期的に focus して、タッチイベントのユーザージェスチャーチェーンを維持
-        // （setTimeout だとチェーンが切れてモバイルでキーボードが開かない）
-        ss._skipNextDocClick = true;
-        ss.input.focus();
+        // setTimeout で document の click ハンドラ（閉じる処理）より後に focus を呼ぶ
+        setTimeout(() => ss.input.focus(), 0);
       } else {
         const el = document.getElementById(nextId);
         if (el) el.focus();

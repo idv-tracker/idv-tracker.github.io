@@ -93,7 +93,12 @@ let rankIconSide = localStorage.getItem('identity5_challenge_rank_side') || 'hun
 
 // ===== 接続モジュール =====
 const _conn = createConnectModule({
-  onConnected(m, lu) { matches = m; lastUpdated = lu; showMainPage(); },
+  onConnected(m, lu) {
+    matches = m; lastUpdated = lu; showMainPage();
+    // ページ接続時にローカルのゴールをクラウドに再アップロード
+    // （旧コードでgoalsが消えた場合の復旧 & 常に最新状態を保証）
+    syncGoalsToCloud();
+  },
   onNoData()         { showConnectPage(); },
   onGoalsLoaded(goals) { importGoalsFromCloud(goals); },
 });

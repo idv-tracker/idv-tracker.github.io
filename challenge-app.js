@@ -1035,9 +1035,37 @@ function importGoalsFromCloud(goals) {
   }
   // 認知ゴール（クラウドで常に上書き）
   if (goals.cogGoals) {
+    const importedChars = [];
     for (const [charName, goal] of Object.entries(goals.cogGoals)) {
       if (goal) {
         localStorage.setItem('identity5_cog_goal_' + charName, JSON.stringify(goal));
+        importedChars.push(charName);
+      }
+    }
+    // クラウドからゴールを取り込んだ場合、対応するキャラカードを自動生成
+    if (importedChars.length > 0) {
+      const existingSet = new Set(cogCards.map(c => c.charName));
+      let added = false;
+      importedChars.forEach(charName => {
+        if (!existingSet.has(charName)) {
+          const g = goals.cogGoals[charName];
+          const lastCalib = g.calibrations && g.calibrations.length > 0
+            ? g.calibrations[g.calibrations.length - 1] : null;
+          cogCards.push({
+            charName,
+            currentPt:   String(g.startPt || ''),
+            targetPt:    String(g.targetPt || ''),
+            winSamples:  String(lastCalib && lastCalib.winAvg != null ? lastCalib.winAvg : g.winAvg || ''),
+            drawSamples: String(lastCalib && lastCalib.drawAvg != null ? lastCalib.drawAvg : g.drawAvg || ''),
+            lossSamples: String(lastCalib && lastCalib.lossAvg != null ? lastCalib.lossAvg : g.lossAvg || ''),
+          });
+          added = true;
+        }
+      });
+      if (added) saveCogCards();
+      // アクティブキャラが未設定なら最初のゴールキャラをセット
+      if (!localStorage.getItem('identity5_cog_goal_active')) {
+        localStorage.setItem('identity5_cog_goal_active', importedChars[0]);
       }
     }
   }

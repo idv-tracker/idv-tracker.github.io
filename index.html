@@ -121,19 +121,19 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">日付 <input type="checkbox" id="persist-survivor-date" class="persist-check"><span class="persist-label">保持</span></label>
+            <div class="form-label">日付 <label class="persist-wrap"><input type="checkbox" id="persist-survivor-date" class="persist-check"><span class="persist-label">保持</span></label></div>
             <input type="date" id="survivor-date" class="input-date">
           </div>
 
           <div class="form-group">
-            <label class="form-label">段位 <input type="checkbox" id="persist-survivor-rank" class="persist-check"><span class="persist-label">保持</span></label>
+            <div class="form-label">段位 <label class="persist-wrap"><input type="checkbox" id="persist-survivor-rank" class="persist-check"><span class="persist-label">保持</span></label></div>
             <select id="survivor-rank">
               <option value="">選択してください</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label">自分のサバイバー <input type="checkbox" id="persist-my-survivor" class="persist-check"><span class="persist-label">保持</span></label>
+            <div class="form-label">自分のサバイバー <label class="persist-wrap"><input type="checkbox" id="persist-my-survivor" class="persist-check"><span class="persist-label">保持</span></label></div>
             <select id="my-survivor" onchange="updateSurvivorSelectOptions()">
               <option value="">選択してください</option>
             </select>
@@ -164,7 +164,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">相手ハンター <input type="checkbox" id="persist-opponent-hunter" class="persist-check"><span class="persist-label">保持</span></label>
+            <div class="form-label">相手ハンター <label class="persist-wrap"><input type="checkbox" id="persist-opponent-hunter" class="persist-check"><span class="persist-label">保持</span></label></div>
             <select id="opponent-hunter">
               <option value="">選択してください</option>
             </select>
@@ -192,7 +192,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">マップ <input type="checkbox" id="persist-survivor-map" class="persist-check"><span class="persist-label">保持</span></label>
+            <div class="form-label">マップ <label class="persist-wrap"><input type="checkbox" id="persist-survivor-map" class="persist-check"><span class="persist-label">保持</span></label></div>
             <select id="survivor-map">
               <option value="">選択してください</option>
             </select>
@@ -218,7 +218,7 @@
             </div>
           </div>
 
-          <button type="button" class="submit-button" onclick="submitMatch('survivor')">試合を記録</button>
+          <button type="button" class="submit-button" onclick="submitMatch('survivor')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>試合を記録</button>
           <a href="predict.html" id="predict-back-link" class="predict-back-link hidden">← ハンター予測に戻る</a>
         </div>
 
@@ -232,26 +232,26 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">日付 <input type="checkbox" id="persist-hunter-date" class="persist-check"><span class="persist-label">保持</span></label>
+            <div class="form-label">日付 <label class="persist-wrap"><input type="checkbox" id="persist-hunter-date" class="persist-check"><span class="persist-label">保持</span></label></div>
             <input type="date" id="hunter-date" class="input-date">
           </div>
 
           <div class="form-group">
-            <label class="form-label">段位 <input type="checkbox" id="persist-hunter-rank" class="persist-check"><span class="persist-label">保持</span></label>
+            <div class="form-label">段位 <label class="persist-wrap"><input type="checkbox" id="persist-hunter-rank" class="persist-check"><span class="persist-label">保持</span></label></div>
             <select id="hunter-rank">
               <option value="">選択してください</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label">自分のハンター <input type="checkbox" id="persist-my-hunter" class="persist-check"><span class="persist-label">保持</span></label>
+            <div class="form-label">自分のハンター <label class="persist-wrap"><input type="checkbox" id="persist-my-hunter" class="persist-check"><span class="persist-label">保持</span></label></div>
             <select id="my-hunter">
               <option value="">選択してください</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label">特質 <input type="checkbox" id="persist-hunter-trait" class="persist-check"><span class="persist-label">保持</span></label>
+            <div class="form-label">特質 <label class="persist-wrap"><input type="checkbox" id="persist-hunter-trait" class="persist-check"><span class="persist-label">保持</span></label></div>
             <div class="trait-picker" id="trait-picker">
               <button type="button" class="trait-selected-btn" id="trait-selected-btn" onclick="toggleTraitPicker()">
                 <span class="trait-placeholder" id="trait-placeholder">選択してください</span>
@@ -291,7 +291,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">マップ <input type="checkbox" id="persist-hunter-map" class="persist-check"><span class="persist-label">保持</span></label>
+            <div class="form-label">マップ <label class="persist-wrap"><input type="checkbox" id="persist-hunter-map" class="persist-check"><span class="persist-label">保持</span></label></div>
             <select id="hunter-map">
               <option value="">選択してください</option>
             </select>
@@ -317,7 +317,7 @@
             </div>
           </div>
 
-          <button type="button" class="submit-button" onclick="submitMatch('hunter')">試合を記録</button>
+          <button type="button" class="submit-button" onclick="submitMatch('hunter')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>試合を記録</button>
         </div>
 
       </div>

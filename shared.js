@@ -387,6 +387,7 @@ class SearchableSelect {
 
   _open() {
     this.isOpen = true;
+    this.dropdown.scrollTop = 0;
     this.dropdown.classList.add('open');
     this.wrapper.classList.add('ss-active');
     this.input.style.borderRadius = '6px 6px 0 0';

@@ -197,21 +197,25 @@ select:focus {
 
 .submit-button {
   width: 100%;
-  padding: var(--sp-5);
-  background: linear-gradient(135deg, #0f3460 0%, #533483 100%);
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #0f3460 0%, #2563eb 100%);
   color: white;
   border: none;
-  border-radius: var(--r-input);
+  border-radius: var(--r-pill);
   font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
   margin-top: 20px;
-  transition: transform var(--transition-hover);
+  transition: transform var(--transition-hover), box-shadow var(--transition-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .submit-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(15, 52, 96, 0.4);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
 }
 
 .submit-button:active {
@@ -1188,7 +1192,7 @@ body.dark-mode .result-button.selected {
   border-color: var(--c-primary);
 }
 body.dark-mode .submit-button {
-  background: linear-gradient(135deg, #1a4a8a 0%, #6d3fa0 100%);
+  background: linear-gradient(135deg, #0f3460 0%, #2563eb 100%);
 }
 body.dark-mode .stats-card {
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
@@ -1380,10 +1384,11 @@ body.dark-mode a[href="privacy.html"] {
   color: var(--t-muted) !important;
 }
 /* 保持チェックボックスラベル */
+.persist-wrap { cursor: pointer; }
 .persist-label { font-size: var(--fs-sm); color: var(--t-muted); margin-left: 2px; }
 body.dark-mode .persist-label { color: var(--t-secondary); }
 .persist-check { margin-left: var(--sp-2); }
-.persist-sub-label { display: block; margin-top: 5px; font-size: var(--fs-sm); color: var(--t-muted); }
+.persist-sub-label { display: inline-flex; align-items: center; margin-top: 5px; font-size: var(--fs-sm); color: var(--t-muted); cursor: pointer; }
 .persist-sub-check { margin-right: 4px; }
 
 /* ===== マップ円グラフ ===== */

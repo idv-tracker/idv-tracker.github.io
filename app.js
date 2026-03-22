@@ -1524,8 +1524,14 @@
       
       resetForm(perspective);
       
-      showToast('試合を記録しました！');
+      const wasEditing = !!_existingMatch;
+      showToast(wasEditing ? '試合を更新しました！' : '試合を記録しました！');
       refreshAfterDataChange({ rebuildSelects: true });
+
+      // 編集モードだった場合は履歴タブに自動復帰
+      if (wasEditing) {
+        switchTab('history', document.querySelector('.main-tab[data-tab="history"]'));
+      }
     }
     
     // フォームをリセット（保持設定に応じて）
@@ -2047,7 +2053,10 @@
       // モードに応じてフィルタリング
       let displayMatches;
       if (overallMode === 'recent100') {
-        displayMatches = perspectiveMatches.slice(-100);
+        displayMatches = [...perspectiveMatches].sort((a, b) => {
+          if (a.date !== b.date) return (a.date || '') > (b.date || '') ? 1 : -1;
+          return (a.id || 0) - (b.id || 0);
+        }).slice(-100);
       } else if (periodValue !== 'all') {
         displayMatches = filterByPeriod(perspectiveMatches, periodValue);
       } else {

@@ -1285,6 +1285,12 @@
     function switchPerspective(perspective, el) {
       currentPerspective = perspective;
 
+      // 詳細ページが開いていれば閉じる（旧視点で構築された内容が残るのを防ぐ）
+      const _detailEl = document.getElementById('detail-page');
+      if (_detailEl && !_detailEl.classList.contains('hidden')) {
+        closeDetailPage();
+      }
+
       document.querySelectorAll('.perspective-tab').forEach(tab => {
         tab.classList.remove('active');
       });
@@ -1331,7 +1337,13 @@
         content.classList.remove('active');
       });
       document.getElementById(tabName + '-tab').classList.add('active');
-      
+
+      // 視点切替タブは視点に依存しないタブ（設定・追加機能）では非表示
+      const perspectiveTabsEl = document.querySelector('.perspective-tabs');
+      if (perspectiveTabsEl) {
+        perspectiveTabsEl.classList.toggle('hidden', tabName === 'settings' || tabName === 'extra');
+      }
+
       // 設定タブに切り替えた時はデータ情報を更新
       if (tabName === 'settings') {
         updateDataInfo();
@@ -4440,34 +4452,35 @@
     }
 
     // ===== ヘッダー統計 =====
+    // 直近100試合（百戦勝率）ベース。シーズン開始直後でも安定した実力指標を出す
+    // （統計タブのデフォルトが最新シーズンなので、ヘッダーは別レンズとして百戦を表示する）
     function updateHeaderStats() {
-      const todayStr = getToday();
-      const currentSeason = SEASONS.find(s => todayStr >= s.start && (!s.end || todayStr <= s.end));
-      const periodId = currentSeason ? currentSeason.id : 'all';
-      const seasonLabel = currentSeason ? currentSeason.label : '全期間';
-
       const perspectiveMatches = matches.filter(m => m.perspective === currentPerspective);
-      const filtered = filterByPeriod(perspectiveMatches, periodId);
+      const recent100 = [...perspectiveMatches].sort((a, b) => {
+        if (a.date !== b.date) return (a.date || '') > (b.date || '') ? 1 : -1;
+        return (a.id || 0) - (b.id || 0);
+      }).slice(-100);
 
       const statsEl = document.getElementById('header-stats');
       if (!statsEl) return;
 
-      if (filtered.length === 0) {
+      if (recent100.length === 0) {
         statsEl.innerHTML = `
-          <div class="hstats-item"><span class="hstats-val">—</span><span class="hstats-label">試合</span></div>
-          <div class="hstats-item"><span class="hstats-val">—</span><span class="hstats-label">勝率</span></div>`;
+          <div class="hstats-item"><span class="hstats-val">—</span><span class="hstats-label">総試合</span></div>
+          <div class="hstats-item"><span class="hstats-val">—</span><span class="hstats-label">百戦勝率</span></div>`;
         return;
       }
 
-      const stats = calculateWinrate(filtered, currentPerspective);
+      const stats = calculateWinrate(recent100, currentPerspective);
       const streak = calculateWinStreak(perspectiveMatches, currentPerspective);
       const streakHtml = streak >= 2
         ? `<div class="hstats-item"><span class="hstats-val hstats-streak">🔥${streak}</span><span class="hstats-label">連勝中</span></div>`
         : '';
 
+      // 総試合 = 現在の視点の全記録数（勝率・連勝と基準を揃える）
       statsEl.innerHTML = `
-        <div class="hstats-item"><span class="hstats-val">${stats.totalWithDraws}</span><span class="hstats-label">試合</span></div>
-        <div class="hstats-item"><span class="hstats-val">${stats.winrate}%</span><span class="hstats-label">勝率</span></div>
+        <div class="hstats-item"><span class="hstats-val">${perspectiveMatches.length}</span><span class="hstats-label">総試合</span></div>
+        <div class="hstats-item"><span class="hstats-val">${stats.winrate}%</span><span class="hstats-label">百戦勝率</span></div>
         ${streakHtml}`;
     }
 

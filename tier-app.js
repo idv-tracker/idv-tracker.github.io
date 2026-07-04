@@ -431,7 +431,7 @@ function renderRisingChar(weekData) {
   sec.classList.remove('hidden');
   sec.innerHTML = `
     <div class="priority-heading">📈 急上昇キャラ</div>
-    <div class="rising-card" onclick="navigateToDetail('${escapeHTML(top.char)}')">
+    <div class="rising-card" onclick="navigateToDetail('${escapeJSAttr(top.char)}')">
       <img class="rising-card-icon" src="${iconSrc}" alt="${escapeHTML(top.char)}" onerror="this.style.display='none'">
       <div class="rising-card-info">
         <div class="rising-card-name">${escapeHTML(top.char)}</div>
@@ -459,7 +459,7 @@ function renderPriorityCards(statsMap) {
   if (top3.length === 0) { container.innerHTML = ''; return; }
 
   container.innerHTML = top3.map((s, i) => `
-    <div class="priority-card" onclick="navigateToDetail('${escapeHTML(s.char)}')">
+    <div class="priority-card" onclick="navigateToDetail('${escapeJSAttr(s.char)}')">
       <img class="priority-card-icon" src="${getCharIconPath(s.char)}" alt="${escapeHTML(s.char)}" onerror="this.style.display='none'">
       <span class="priority-rank">${i + 1}位</span>
       <span class="priority-name">${escapeHTML(s.char)}</span>
@@ -480,7 +480,7 @@ function renderTierTable(tiered, weekData) {
         ${chars.map(s => {
           const trend = computeTrend(s.char, weekData);
           const arrowBadge = trend ? `<span class="tier-icon-arrow" style="color:${ARROW_COLORS[trend.arrow]}">${trend.arrow}</span>` : '';
-          return `<button type="button" class="tier-char-btn" title="${escapeHTML(s.char)}" onclick="navigateToDetail('${escapeHTML(s.char)}')"><img class="tier-char-icon" src="${getCharIconPath(s.char)}" alt="${escapeHTML(s.char)}" onerror="this.style.display='none'">${arrowBadge}</button>`;
+          return `<button type="button" class="tier-char-btn" title="${escapeHTML(s.char)}" onclick="navigateToDetail('${escapeJSAttr(s.char)}')"><img class="tier-char-icon" src="${getCharIconPath(s.char)}" alt="${escapeHTML(s.char)}" onerror="this.style.display='none'">${arrowBadge}</button>`;
         }).join('')}
         ${chars.length === 0 ? '<span class="tier-empty">-</span>' : ''}
       </div>

@@ -399,7 +399,7 @@ function renderResult(top5, allScores) {
   // ハンター選択ボタン（TOP5 + その他）
   hunterBtns.innerHTML = top5.map(entry => {
     const iconSrc = buildIconPath(entry.hunter, 'hunter');
-    return `<button type="button" class="pr-hunter-btn" onclick="goToInput('${escapeHTML(entry.hunter)}')">
+    return `<button type="button" class="pr-hunter-btn" onclick="goToInput('${escapeJSAttr(entry.hunter)}')">
       <img class="pr-hunter-btn-icon" src="${iconSrc}" alt="" onerror="this.style.display='none'">
       <span class="pr-hunter-btn-name">${escapeHTML(entry.hunter)}</span>
       <span class="pr-hunter-btn-pct">${entry.pct.toFixed(1)}%</span>

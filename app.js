@@ -2,12 +2,13 @@
     const MAP_ICON_OVERRIDES = {
       '軍需工場': 'maps/gunju_kojou.PNG',
     };
+    // 各パスはsrc属性に直接埋め込まれるため属性エスケープ（正規データでは無変化）
     function getMapIconPath(mapName) {
-      return MAP_ICON_OVERRIDES[mapName] || `maps/${mapName}.PNG`;
+      return escapeHTML(MAP_ICON_OVERRIDES[mapName] || `maps/${mapName}.PNG`);
     }
     function getRankIconPath(rank, perspective) {
       const folder = perspective === 'survivor' ? 'survivors' : 'hunters';
-      return `ranks/${folder}/${rank}.PNG`;
+      return escapeHTML(`ranks/${folder}/${rank}.PNG`);
     }
     function charIconImg(charName, type) {
       return `<img class="match-char-icon" src="${buildIconPath(charName, type)}" alt="${escapeHTML(charName)}" title="${escapeHTML(charName)}" onerror="this.style.display='none'">`;
@@ -107,37 +108,36 @@
     ];
 
     const SEASONS = [
-      { id: 'S41', label: 'S41', start: '2026-02-05', end: '2026-04-22' }
-      // 新しいシーズンはここに追加
-      // { id: 'S42', label: 'S42', start: '2026-04-23', end: '2026-07-15' }
+      { id: 'S41', label: 'S41', start: '2026-02-05', end: '2026-04-22' },
+      { id: 'S42', label: 'S42', start: '2026-04-23', end: '2026-07-02' },
+      { id: 'S43', label: 'S43', start: '2026-07-03', end: null }
+      // 新しいシーズンはここに追加（進行中シーズンは end: null。次シーズン追加時に終了日を設定する）
     ];
-    
+
+    // 最新シーズン（配列の最後）が各期間フィルターのデフォルトになる
+    const LATEST_SEASON = SEASONS[SEASONS.length - 1];
+
     // 期間フィルターにシーズンを追加
+    // 最新シーズンのみ「全期間」の上（＝先頭・デフォルト選択）、過去シーズンは末尾に新しい順で追加
     function populatePeriodFilters() {
-      const sortedSeasons = [...SEASONS].reverse();
+      const pastSeasons = SEASONS.slice(0, -1).reverse();
 
-      // 総合勝率タブの期間フィルター（全期間、今日、直近7日、直近30日はHTML側に静的定義済み。シーズンを動的追加）
-      const overallFilter = document.getElementById('overall-period-filter');
-      if (overallFilter) {
-        sortedSeasons.forEach(season => {
-          const option = document.createElement('option');
-          option.value = season.id;
-          option.textContent = season.label;
-          overallFilter.appendChild(option);
-        });
-      }
-
-      // 他のタブの期間フィルター（全期間、今日、直近7日、直近30日、シーズン）
-      const filterIds = ['character-period-filter', 'map-period-filter', 'opponent-period-filter', 'history-period-filter'];
+      // 全期間、今日、直近7日、直近30日はHTML側に静的定義済み
+      const filterIds = ['overall-period-filter', 'character-period-filter', 'map-period-filter', 'opponent-period-filter', 'history-period-filter'];
       filterIds.forEach(filterId => {
         const filter = document.getElementById(filterId);
         if (!filter) return;
-        sortedSeasons.forEach(season => {
+        const latestOption = document.createElement('option');
+        latestOption.value = LATEST_SEASON.id;
+        latestOption.textContent = LATEST_SEASON.label;
+        filter.insertBefore(latestOption, filter.querySelector('option[value="all"]'));
+        pastSeasons.forEach(season => {
           const option = document.createElement('option');
           option.value = season.id;
           option.textContent = season.label;
           filter.appendChild(option);
         });
+        filter.value = LATEST_SEASON.id;
       });
     }
     
@@ -257,12 +257,12 @@
         });
       }
       
-      // シーズンでフィルター
+      // シーズンでフィルター（end: null は進行中シーズン）
       const season = SEASONS.find(s => s.id === periodValue);
       if (season) {
         return matches.filter(m => {
           if (!m.date) return false;
-          return m.date >= season.start && m.date <= season.end;
+          return m.date >= season.start && (!season.end || m.date <= season.end);
         });
       }
       
@@ -2033,19 +2033,6 @@
       const rankFilter = getRankFilterValue('overall-rank-filter');
       let perspectiveMatches = getFilteredMatches(rankFilter);
 
-      if (perspectiveMatches.length === 0) {
-        container.innerHTML = buildEmptyState();
-        if (winrateChart) { winrateChart.destroy(); winrateChart = null; }
-        if (resultPieChart) { resultPieChart.destroy(); resultPieChart = null; }
-        const rpc = document.getElementById('result-pie-content');
-        if (rpc) rpc.innerHTML = '';
-        const rbc = document.getElementById('recent-blocks-content');
-        if (rbc) rbc.innerHTML = '';
-        const hsc = document.getElementById('highlight-summary-content');
-        if (hsc) hsc.innerHTML = '';
-        return;
-      }
-
       // 期間フィルターを取得
       const periodFilter = document.getElementById('overall-period-filter');
       const periodValue = periodFilter ? periodFilter.value : 'all';
@@ -2061,6 +2048,21 @@
         displayMatches = filterByPeriod(perspectiveMatches, periodValue);
       } else {
         displayMatches = perspectiveMatches;
+      }
+
+      // 期間フィルター適用後に空判定（例: 新シーズンで試合0件でも「0.00%」を出さない）
+      if (displayMatches.length === 0) {
+        const hasData = matches.some(m => m.perspective === currentPerspective);
+        container.innerHTML = buildEmptyState(hasData);
+        if (winrateChart) { winrateChart.destroy(); winrateChart = null; }
+        if (resultPieChart) { resultPieChart.destroy(); resultPieChart = null; }
+        const rpc = document.getElementById('result-pie-content');
+        if (rpc) rpc.innerHTML = '';
+        const rbc = document.getElementById('recent-blocks-content');
+        if (rbc) rbc.innerHTML = '';
+        const hsc = document.getElementById('highlight-summary-content');
+        if (hsc) hsc.innerHTML = '';
+        return;
       }
 
       const stats = calculateWinrate(displayMatches, currentPerspective);
@@ -2138,10 +2140,10 @@
       const totalMatches = mapStats.reduce((sum, s) => sum + s.total, 0);
       mapStats.forEach(s => { s.mapPct = (s.total / totalMatches * 100).toFixed(1); });
 
-      // データなし
+      // 最低試合数フィルターで0件（呼び出し元で空チェック済みのためデータ自体は存在する）
       if (mapStats.length === 0) {
         if (mapPieChart) { mapPieChart.destroy(); mapPieChart = null; }
-        container.innerHTML = buildEmptyState();
+        container.innerHTML = buildEmptyState(true);
         return;
       }
 
@@ -2502,7 +2504,7 @@
       const mapIconWorst = worstMap ? `<img class="highlight-char-icon" src="${getMapIconPath(worstMap.name)}" alt="" onerror="this.style.display='none'">` : '';
 
       const worstOppHTML = worstOpponent
-        ? `<div class="highlight-item highlight-worst" onclick="openDetailPage('opponent', '${escapeHTML(worstOpponent.name)}')" style="cursor:pointer">
+        ? `<div class="highlight-item highlight-worst" onclick="openDetailPage('opponent', '${escapeJSAttr(worstOpponent.name)}')" style="cursor:pointer">
               <div class="highlight-category">苦手${opponentLabel}</div>
               ${oppIconWorst}
               <div class="highlight-name">${escapeHTML(worstOpponent.name)}</div>
@@ -2516,7 +2518,7 @@
             </div>`;
 
       const worstMapHTML = worstMap
-        ? `<div class="highlight-item highlight-worst" onclick="openDetailPage('map', '${escapeHTML(worstMap.name)}')" style="cursor:pointer">
+        ? `<div class="highlight-item highlight-worst" onclick="openDetailPage('map', '${escapeJSAttr(worstMap.name)}')" style="cursor:pointer">
               <div class="highlight-category">苦手マップ</div>
               ${mapIconWorst}
               <div class="highlight-name">${escapeHTML(worstMap.name)}</div>
@@ -2533,14 +2535,14 @@
         <div class="stats-card highlight-summary-card">
           <div class="highlight-summary-title">ハイライト</div>
           <div class="highlight-summary-grid">
-            <div class="highlight-item highlight-best" onclick="openDetailPage('opponent', '${escapeHTML(bestOpponent.name)}')" style="cursor:pointer">
+            <div class="highlight-item highlight-best" onclick="openDetailPage('opponent', '${escapeJSAttr(bestOpponent.name)}')" style="cursor:pointer">
               <div class="highlight-category">得意${opponentLabel}</div>
               ${oppIconBest}
               <div class="highlight-name">${escapeHTML(bestOpponent.name)}</div>
               <div class="highlight-rate">${bestOpponent.winrate.toFixed(1)}%（${bestOpponent.total}試合）</div>
             </div>
             ${worstOppHTML}
-            <div class="highlight-item highlight-best" onclick="openDetailPage('map', '${escapeHTML(bestMap.name)}')" style="cursor:pointer">
+            <div class="highlight-item highlight-best" onclick="openDetailPage('map', '${escapeJSAttr(bestMap.name)}')" style="cursor:pointer">
               <div class="highlight-category">得意マップ</div>
               ${mapIconBest}
               <div class="highlight-name">${escapeHTML(bestMap.name)}</div>
@@ -2565,6 +2567,12 @@
           console.error('Canvas element not found');
           return;
         }
+
+        // 時系列順にソート（編集時にmatches配列の末尾へ移動するため挿入順は信頼できない）
+        perspectiveMatches = [...perspectiveMatches].sort((a, b) => {
+          if (a.date !== b.date) return (a.date || '') > (b.date || '') ? 1 : -1;
+          return (a.id || 0) - (b.id || 0);
+        });
 
         // 総試合数に応じてグループサイズと参照数を決定
         const matchesPerPoint = Math.max(1, Math.ceil(perspectiveMatches.length / 100));
@@ -2884,7 +2892,7 @@
       }
       
       if (perspectiveMatches.length === 0) {
-        container.innerHTML = buildEmptyState();
+        container.innerHTML = buildEmptyState(matches.some(m => m.perspective === currentPerspective));
         if (charPieChart) { charPieChart.destroy(); charPieChart = null; }
         const cpc = document.getElementById('char-pie-content');
         if (cpc) cpc.innerHTML = '';
@@ -2935,7 +2943,7 @@
             ? `平均脱出${avgEscape}人`
             : `平均脱落${(4 - parseFloat(avgEscape)).toFixed(1)}人`;
           html += `
-            <div class="bar-row clickable" onclick="openDetailPage('char','${escapeHTML(char)}')">
+            <div class="bar-row clickable" onclick="openDetailPage('char','${escapeJSAttr(char)}')">
               <div class="bar-label-wrapper">
                 ${getBarIconHTML(char, 'char')}
                 <div class="bar-label-text">
@@ -2970,7 +2978,7 @@
       }
       
       if (perspectiveMatches.length === 0) {
-        container.innerHTML = buildEmptyState();
+        container.innerHTML = buildEmptyState(matches.some(m => m.perspective === currentPerspective));
         if (mapPieChart) { mapPieChart.destroy(); mapPieChart = null; }
         const mpc = document.getElementById('map-pie-content');
         if (mpc) mpc.innerHTML = '';
@@ -3013,7 +3021,7 @@
         filteredMaps.forEach(map => {
           const stats = calculateWinrate(mapStats[map], currentPerspective);
           html += `
-            <div class="bar-row clickable" onclick="openDetailPage('map','${escapeHTML(map)}')">
+            <div class="bar-row clickable" onclick="openDetailPage('map','${escapeJSAttr(map)}')">
               <div class="bar-label-wrapper">
                 ${getBarIconHTML(map, 'map')}
                 <div class="bar-label-text">
@@ -3060,7 +3068,7 @@
       }
 
       if (perspectiveMatches.length === 0) {
-        container.innerHTML = buildEmptyState();
+        container.innerHTML = buildEmptyState(matches.some(m => m.perspective === currentPerspective));
         return;
       }
 
@@ -3117,7 +3125,7 @@
         filteredHunters.slice(hunterStartIndex, hunterEndIndex).forEach(hunter => {
           const stats = calculateWinrate(hunterStats[hunter], currentPerspective);
           html += `
-            <div class="bar-row clickable" onclick="openDetailPage('opponent','${escapeHTML(hunter)}')">
+            <div class="bar-row clickable" onclick="openDetailPage('opponent','${escapeJSAttr(hunter)}')">
               <div class="bar-label-wrapper">
                 ${getBarIconHTML(hunter, 'opponent-hunter')}
                 <div class="bar-label-text">
@@ -3239,7 +3247,7 @@
         filteredSurvivors.slice(survivorStartIndex, survivorEndIndex).forEach(survivor => {
           const stats = calculateWinrate(survivorStats[survivor], currentPerspective);
           html += `
-            <div class="bar-row clickable" onclick="openDetailPage('opponent','${escapeHTML(survivor)}')">
+            <div class="bar-row clickable" onclick="openDetailPage('opponent','${escapeJSAttr(survivor)}')">
               <div class="bar-label-wrapper">
                 ${getBarIconHTML(survivor, 'survivor')}
                 <div class="bar-label-text">
@@ -3400,10 +3408,10 @@
       });
       
       if (perspectiveMatches.length === 0) {
-        container.innerHTML = buildEmptyState();
+        container.innerHTML = buildEmptyState(matches.some(m => m.perspective === currentPerspective));
         return;
       }
-      
+
       const totalMatches = perspectiveMatches.length;
       const totalPages = Math.ceil(totalMatches / historyItemsPerPage);
       const startIndex = (currentPages.matchHistory - 1) * historyItemsPerPage;
@@ -3847,8 +3855,7 @@
       document.body.classList.toggle('dark-mode', isOn);
       localStorage.setItem('identity5_dark_mode', isOn ? 'on' : 'off');
       applyChartDefaults();
-      // 全グラフの色を更新
-      updateOverallStatsTab();
+      // 全グラフの色を更新（アクティブタブを再描画、他タブはdirtyマークで切替時に更新）
       updateAllStats();
     }
 
@@ -4264,12 +4271,36 @@
     }
 
     // 自動同期（saveData呼び出し時、サイレント実行）
+    // クラウドの方が新しい場合は上書きせず手動同期を促す（複数端末での並行記録によるデータ欠損防止）
     let _autoSyncFailCount = 0;
+    let _autoSyncConflictNotified = false;
+    let _autoSyncInFlight = false;
+    let _autoSyncQueued = false;
     function autoSync() {
       if (!db || !getSyncCode()) return;
       if (_autoSyncFailCount >= 3) return; // 連続3回失敗で停止
-      uploadToCloud()
-        .then(() => { _autoSyncFailCount = 0; updateSyncUI(); })
+      // 実行中なら完了後に1回だけ再実行（連続保存時、自分のアップロードを「クラウドの新データ」と誤検知するのを防ぐ）
+      if (_autoSyncInFlight) { _autoSyncQueued = true; return; }
+      _autoSyncInFlight = true;
+      db.collection('idv_tracker').doc(getSyncCode()).get()
+        .then(snap => {
+          if (snap.exists) {
+            const cloudTime = new Date(snap.data().lastModified || 0).getTime();
+            const localTime = new Date(localStorage.getItem('identity5_data_modified') || 0).getTime();
+            if (cloudTime > localTime) {
+              if (!_autoSyncConflictNotified) {
+                _autoSyncConflictNotified = true;
+                showToast('クラウドに新しいデータがあります。設定の「今すぐ同期」で確認してください', 'error', 5000);
+              }
+              return;
+            }
+          }
+          return uploadToCloud().then(() => {
+            _autoSyncFailCount = 0;
+            _autoSyncConflictNotified = false;
+            updateSyncUI();
+          });
+        })
         .catch(() => {
           _autoSyncFailCount++;
           if (_autoSyncFailCount === 1) {
@@ -4277,6 +4308,10 @@
           } else if (_autoSyncFailCount >= 3) {
             showToast('同期を一時停止しました。設定から手動同期してください', 'error', 5000);
           }
+        })
+        .finally(() => {
+          _autoSyncInFlight = false;
+          if (_autoSyncQueued) { _autoSyncQueued = false; autoSync(); }
         });
     }
 
@@ -4407,7 +4442,7 @@
     // ===== ヘッダー統計 =====
     function updateHeaderStats() {
       const todayStr = getToday();
-      const currentSeason = SEASONS.find(s => todayStr >= s.start && todayStr <= s.end);
+      const currentSeason = SEASONS.find(s => todayStr >= s.start && (!s.end || todayStr <= s.end));
       const periodId = currentSeason ? currentSeason.id : 'all';
       const seasonLabel = currentSeason ? currentSeason.label : '全期間';
 
@@ -4595,7 +4630,7 @@
       const cardClass = isBest ? 'top-card top-card-best' : 'top-card top-card-worst';
 
       return `
-        <div class="${cardClass}" onclick="openDetailPage('${detailPage}','${escapeHTML(name)}')">
+        <div class="${cardClass}" onclick="openDetailPage('${detailPage}','${escapeJSAttr(name)}')">
           <div class="top-card-head">${headLabel}</div>
           <div class="top-card-body">
             <div class="top-card-icon-wrap">
@@ -4829,7 +4864,7 @@
         }
       }
       const perspectiveMatches = _allFiltered.filter(m => m.myCharacter === charName);
-      if (perspectiveMatches.length === 0) return buildEmptyState();
+      if (perspectiveMatches.length === 0) return buildEmptyState(matches.some(m => m.perspective === currentPerspective));
 
       const stats = calculateWinrate(perspectiveMatches, currentPerspective);
       const avgEscape = calculateAverageEscapeCount(perspectiveMatches, currentPerspective);
@@ -4910,7 +4945,7 @@
         _allFiltered = _allFiltered.filter(m => m.myCharacter === detailFilterState.mapTabChar);
       }
       const perspectiveMatches = _allFiltered.filter(m => m.map === mapName);
-      if (perspectiveMatches.length === 0) return buildEmptyState();
+      if (perspectiveMatches.length === 0) return buildEmptyState(matches.some(m => m.perspective === currentPerspective));
 
       const stats = calculateWinrate(perspectiveMatches, currentPerspective);
       const totalMatches = _allFiltered.length;
@@ -4963,7 +4998,7 @@
       } else {
         perspectiveMatches = _allFiltered.filter(m => m.opponentSurvivors && m.opponentSurvivors.includes(oppName));
       }
-      if (perspectiveMatches.length === 0) return buildEmptyState();
+      if (perspectiveMatches.length === 0) return buildEmptyState(matches.some(m => m.perspective === currentPerspective));
 
       const stats = calculateWinrate(perspectiveMatches, currentPerspective);
       const totalMatches = _allFiltered.length;

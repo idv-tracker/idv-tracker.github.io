@@ -426,8 +426,8 @@ function isWin(match) {
 
 function sortedByRecent(ms) {
   return [...ms].sort((a, b) => {
-    if (b.date !== a.date) return b.date.localeCompare(a.date);
-    return b.id - a.id;
+    if (b.date !== a.date) return (b.date || '').localeCompare(a.date || '');
+    return (b.id || 0) - (a.id || 0);
   });
 }
 
@@ -571,8 +571,8 @@ function renderCogCardsRow() {
     const imgSrc  = buildIconPath(card.charName, SURVIVORS.includes(card.charName) ? 'survivor' : 'hunter');
     return `<div class="cog-card${active}" onclick="onCogCardClick(${idx})">
       <button type="button" class="card-delete-btn" onclick="deleteCogCard(${idx}, event)">×</button>
-      <img class="cog-card-icon" src="${imgSrc}" alt="${card.charName}" onerror="this.style.display='none'">
-      <div class="cog-card-name">${card.charName}</div>
+      <img class="cog-card-icon" src="${imgSrc}" alt="${escapeHTML(card.charName)}" onerror="this.style.display='none'">
+      <div class="cog-card-name">${escapeHTML(card.charName)}</div>
     </div>`;
   }).join('');
 
@@ -901,8 +901,9 @@ function saveRankInputs() {
 }
 
 function loadSavedInputs() {
-  // 認知pt
-  const cog = JSON.parse(localStorage.getItem('identity5_challenge_cognition') || 'null');
+  // 認知pt（localStorage破損時に初期化全体を止めない）
+  let cog = null;
+  try { cog = JSON.parse(localStorage.getItem('identity5_challenge_cognition') || 'null'); } catch (_) {}
   if (cog) {
     setCogCharValue(cog.char || '');
     document.getElementById('cog-current').value       = cog.current     || '';
@@ -913,7 +914,8 @@ function loadSavedInputs() {
   }
 
   // 段位pt
-  const saved = JSON.parse(localStorage.getItem('identity5_challenge_rank') || 'null');
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('identity5_challenge_rank') || 'null'); } catch (_) {}
   if (saved) {
     if (saved.cur && saved.cur.rank) {
       rankSel.cur = {
@@ -1431,7 +1433,7 @@ function buildTrackSummaryHtml(goal, totalSinceGoal, predictedPt, wr, lastExp, w
   }
 
   html += `
-    <div class="track-matches-row">${goal.createdDate} スタート · ${perspectiveLabel || ''}${totalSinceGoal}試合経過　${wr ? `（勝ち率 ${(wr.winRate * 100).toFixed(1)}%）` : ''}</div>
+    <div class="track-matches-row">${escapeHTML(goal.createdDate)} スタート · ${escapeHTML(perspectiveLabel || '')}${totalSinceGoal}試合経過　${wr ? `（勝ち率 ${(wr.winRate * 100).toFixed(1)}%）` : ''}</div>
     <div class="track-progress-wrap">
       <div class="track-progress-bar" style="width:${progress.toFixed(1)}%"></div>
     </div>
